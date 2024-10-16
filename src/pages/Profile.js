@@ -244,7 +244,11 @@ export default function Profile() {
               <br />
               <br />
 
-              <NavLink className="nav-link" to="/" style={{ color: "green" }}>
+              <NavLink
+                className="nav-link"
+                to={`/editProfile/${user.id}`}
+                style={{ color: "green" }}
+              >
                 Edit profile
               </NavLink>
             </div>

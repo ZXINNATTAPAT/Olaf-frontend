@@ -12,6 +12,8 @@ import PersistLogin from './components/PersistLogin';
 import Navbar from './components/Nav/Navbar';
 import Profile from './pages/Profile';
 import Addcontent from './userview/Addcontent';
+import EditPost from './posts/EditPost/EditPost';
+import EditProfile from './userview/Editprofile';
 // import ProtectedRoute from './authutication/ProtectedRoute';
 
 function App() {
@@ -53,7 +55,10 @@ function App() {
 
           {/* เพิ่มPost content */}
           <Route path='/addcontent' element={<Addcontent />}/>
-          
+          <Route path='/editContent/:post_id' element={<EditPost />}/>
+          <Route path='/editProfile/:user_id' element={<EditProfile />}/>
+
+
         </Route>
 
         <Route path='/vFeed/:id' element={<View />}></Route>

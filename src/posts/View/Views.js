@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Iconpath } from "../../components/Iconpath";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 // import Navbar from '../../components/Nav/Navbar';
 import "./view.css";
 import Navtype from "../../components/Nav/Navtype";
@@ -22,6 +22,7 @@ export default function View() {
   const [commentsCount, setCommentsCount] = useState(0);
   const [likesCount, setLikesCount] = useState(0);
   const [deleted, setDeleted] = useState(false);
+  const navigate = useNavigate();
 
   const handleCommentsCountChange = (count) => {
     setCommentsCount(count);
@@ -35,6 +36,9 @@ export default function View() {
     setDeleted(true);
   };
 
+  const handleEdit = () => {
+    navigate(`/editContent/${p_data.post_id}`); 
+  };
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -170,12 +174,18 @@ export default function View() {
                 url={`http://192.168.1.57:3000/vFeed/${p_data.post_id}`}
                 title={`${p_data.header}`}
               />
-              <DeletePost
-                post_id={p_data.post_id}
-                postUserId={p_data.user}
-                currentUserId={user.id}
-                onDeleteSuccess={handleDeletePost}
-              />
+              <div className="d-flex gap-2">
+              <button className="btn btn-success" onClick={handleEdit}>Edit</button>
+
+                <DeletePost
+                  post_id={p_data.post_id}
+                  postUserId={p_data.user}
+                  currentUserId={user.id}
+                  onDeleteSuccess={handleDeletePost}
+                />
+
+                </div>
+             
             </div>
           </div>
         </div>
