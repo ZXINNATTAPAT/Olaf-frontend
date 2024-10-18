@@ -15,6 +15,7 @@ export default function User() {
     async function onLogout(e) {
         e.preventDefault();
         setLoading(true)
+        sessionStorage.clear('reloaded')
 
         // localStorage.clear('us');
         await logout()

@@ -38,7 +38,8 @@ export default function Loginauth() {
             // console.log(response?.data?.access_token);
             // console.log(response.headers["x-csrftoken"]);
 
-            navigate(fromLocation, { replace: true })
+            // navigate(fromLocation, { replace: true })
+            window.location.href='/Feed'
         } catch (error) {
             console.log(JSON.stringify({
                 email,
@@ -103,27 +104,7 @@ export default function Loginauth() {
 
                   <div className='row'>
 
-                    <div className='card p-1 m-1' style={{ width: '60px', height: '60px', padding: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                      <div className='card-body' 
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img
-                          src='https://cdn-icons-png.flaticon.com/512/2991/2991148.png'
-                          alt='Icon'
-                          style={{ width: '45px', height: '45px' }}
-                        />
-                      </div>
-                    </div>
-
-                    <div className='card p-1 m-1' style={{ width: '60px', height: '60px', padding: '5px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
-                      <div className='card-body' 
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img
-                          src='https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/2023_Facebook_icon.svg/600px-2023_Facebook_icon.svg.png'
-                          alt='Icon'
-                          style={{ width: '45px', height: '45px' }}
-                        />
-                      </div>
-                    </div>
+                    
                   
                   </div>
 

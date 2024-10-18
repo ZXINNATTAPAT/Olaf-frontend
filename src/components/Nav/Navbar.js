@@ -1,10 +1,19 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "../../App.css";
 import { NavLink } from "react-router-dom";
 import useAuth from "../../hook/useAuth";
 
 export default function Navbar() {
   const { user } = useAuth();
+  
+  useEffect(() => {
+    // Check if the user is logged in and if the page has already reloaded
+    if (user.email && !sessionStorage.getItem('reloaded')) {
+      // Set a flag in sessionStorage to prevent multiple reloads
+      sessionStorage.setItem('reloaded', 'true');
+      window.location.reload(); // Reload the page
+    }
+  }, [user.email]); // Only run when the user.email changes
 
   return (
     <>

@@ -83,6 +83,30 @@
   color: #61dafb;
 }
 
+.cards-button {
+  transition: background-color 0.5s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+.cards-button:hover {
+  background-color: #343a40; /* Dark background on hover */
+  color: white;              /* White text on hover */
+  transform: translateY(-5px); /* Float up by 5px */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */            /* White text on hover */
+}
+
+.data-item {
+  opacity: 0;
+  transform: translateY(10px); /* Initially position data below */
+  transition: opacity 0.5s ease, transform 0.5s ease; /* Smooth fade-in and slide-in effect */
+}
+
+.data-item.show {
+  opacity: 1;
+  
+}
+
+
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);

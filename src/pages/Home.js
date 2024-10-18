@@ -2,9 +2,24 @@ import React from 'react';
 // import Navbar from '../components/Nav/Navbar';
 // import Mininav from '../components/Nav/Mininav';
 import Footer from '../components/Footer';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
+import useAuth from '../hook/useAuth';
+
+
 
 export default function Home() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+
+
+  const handleButtonClick = () => {
+    if (!user.email) {
+      navigate('/auth/login'); // Redirect to login if not logged in
+    } else {
+      navigate('/feed'); // Proceed to the feed if logged in
+    }
+  };
+
   return (
     <>
       {/* <Navbar /> */}
@@ -24,10 +39,10 @@ export default function Home() {
             </p><br/>
 
             <button className='btn btn-dark 
-              crimson-text-regular'>
-                <NavLink to='/feed' className='nav-link'>
+              crimson-text-regular' onClick={handleButtonClick}>
+                
                   Start to write
-                </NavLink>
+                
             </button>
 
           </div>

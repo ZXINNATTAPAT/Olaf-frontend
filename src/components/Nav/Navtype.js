@@ -12,7 +12,7 @@ export default function Navtype() {
         <div  style={{textAlign:'center',fontSize:'16px'}}>
             <button type="button" 
               class="btn btn-outline-dark rounded-pill 
-               m-1" style={{fontSize:'16px'}} onClick={aboutpage} > Life </button>
+               m-1" style={{fontSize:'16px'}} > Life </button>
             <button type="button" 
               class="btn btn-outline-dark rounded-pill 
                m-1"  style={{fontSize:'16px'}}>Work</button>

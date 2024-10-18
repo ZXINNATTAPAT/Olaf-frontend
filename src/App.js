@@ -14,9 +14,11 @@ import Profile from './pages/Profile';
 import Addcontent from './userview/Addcontent';
 import EditPost from './posts/EditPost/EditPost';
 import EditProfile from './userview/Editprofile';
+import useAuth from './hook/useAuth';
 // import ProtectedRoute from './authutication/ProtectedRoute';
 
 function App() {
+  
   return <>
     <Navbar />
     
@@ -68,7 +70,7 @@ function App() {
       
 
       {/* เส้นทาง fallback: ถ้าผู้ใช้เข้าถึงเส้นทางที่ไม่ถูกต้อง จะถูกนำไปยังหน้าแรก '/' */}
-      <Route path='*' element={<Navigate to='/' />}></Route>
+      <Route path='*' element={<Navigate to='/auth/login' />}></Route>
     </Routes>
   </>
 }

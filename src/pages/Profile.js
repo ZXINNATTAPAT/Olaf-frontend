@@ -150,6 +150,7 @@ export default function Profile() {
       {/* <Navbar /> */}
       <div className="container">
         <br />
+
         <div className="row">
           <div className="col-8">
             <div className="col ">
@@ -162,14 +163,14 @@ export default function Profile() {
               <br />
 
               {p_data ? (
-                p_data.map((post, index) => (
+                p_data.map((post, index) => (<>
                   <NavLink
                     to={`/vFeed/${post.post_id}`}
                     key={post.post_id}
                     style={{ textDecoration: "none" }}
                   >
                     <div
-                      className="card border border-dark shadow-sm h-100"
+                      className="card border cards-button shadow-sm h-100"
                       style={{ border: "none" }}
                     >
                       <img
@@ -213,7 +214,7 @@ export default function Profile() {
                         </p>
                       </div>
                     </div>
-                  </NavLink>
+                  </NavLink><br/></>
                 ))
               ) : (
                 <p>No posts available</p>
@@ -254,6 +255,7 @@ export default function Profile() {
             </div>
           </div>
         </div>
+
       </div>
 
       {/* <Footer /> */}

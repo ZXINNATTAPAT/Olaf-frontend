@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from "react";
 // import Navbar from '../components/Nav/Navbar'
 // import { Navigate } from 'react-router-dom';
-import Navtype from "../components/Nav/Navtype";
+// import Navtype from "../components/Nav/Navtype";
 import Footer from "../components/Footer";
 import { Iconpath } from "../components/Iconpath";
 import { useRedirect } from "../hook/redirect/useRedirect";
 import ShareButtons from "../hook/shares/ShareButtons";
 import { FaHeart } from "react-icons/fa"; // ใช้ไอคอนหัวใจจาก react-icons
+import useAuth from "../hook/useAuth";
 const baseUrl = process.env.REACT_APP_BASE_URL;
 
 export default function Feed() {
   const redirectx = useRedirect();
   const [p_data, setp_data] = useState([]);
   const [imgSrc, setImgSrcs] = useState([]);
+  const [showData, setShowData] = useState(false);
   // คำค้นหาที่ผู้ใช้กรอก
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -132,11 +134,52 @@ export default function Feed() {
     fetchPosts();
   }, []);
 
+  useEffect(() => {
+    if (p_data) {
+      // Delay the display of data to trigger the transition
+      setTimeout(() => {
+        setShowData(true);
+      }, 200); // Adjust the delay as necessary
+    }
+  }, [p_data]); 
+
+  const { user } = useAuth(); // Get user status from the useAuth hook
+  
+  // useEffect(() => {
+  //   // Check if the user is logged in and if the page has already reloaded
+  //   if (user.email && !sessionStorage.getItem('reloaded')) {
+  //     // Set a flag in sessionStorage to prevent multiple reloads
+  //     sessionStorage.setItem('reloaded', 'true');
+  //     window.location.reload(); // Reload the page
+  //   }
+  // }, [user.email]); // Only run when the user.email changes
+
   return (
     <>
       <div className="container">
         <br />
-        <Navtype />
+        {/* Topic buttons */}
+        <div style={{ textAlign: "center", fontSize: "16px" }}>
+          {["Life", "Work", "Society", "Technology", "Software Development", "Culture"].map(
+            (topic) => (
+              <button
+                key={topic}
+                type="button"
+                className="btn btn-outline-dark rounded-pill m-1"
+                style={{ fontSize: "16px" }}
+                onClick={() => {
+                  setSearchKeyword(topic)
+                  setShowData(false);  
+                  setTimeout(() => {
+                    setShowData(true);
+                  }, 200);      }
+                } // Handle button click to set the keyword
+              >
+                {topic}
+              </button>
+            )
+          )}
+        </div>
         <br />
         <h1
           style={{
@@ -159,22 +202,25 @@ export default function Feed() {
                 className="form-control"
                 placeholder="Search . . ."
                 value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
+                onChange={(e) => {
+                  setSearchKeyword(e.target.value);  // Update searchKeyword state
+                  setShowData(false);  
+                  setTimeout(() => {
+                    setShowData(true);
+                  }, 200);              // Also set showData to false
+                }}
+                
                 // อัปเดต searchKeyword
               />
             </div>
             <br />
-            <p style={{ fontSize: "16px" }}>
-              Reccommend : Programming Data Science Technology
-            </p>
+         
           </center>
         </div>
         <br />
-        <br />
-        <br />
-        <br />
+
       </div>
-      <hr />
+    
 
       <div className="container">
         <div className="row ">
@@ -186,9 +232,9 @@ export default function Feed() {
               .map((post, index) => (
                 <>
                   <div className="col-sm-6" key={post.post_id}>
+                  
                     <div
-                      className="card border 
-                        border-dark shadow-sm h-100"
+                      className={`data-item card border cards-button shadow-sm h-100 ${showData ? "show " : ""}`}
                       style={{ border: "none" }}
                     >
                       <img
@@ -267,8 +313,7 @@ export default function Feed() {
                 <>
                   <div className="col" key={post.post_id}>
                     <div
-                      className="card border border-dark shadow-sm 
-                        h-100"
+                      className={`data-item card border cards-button shadow-sm h-100 ${showData ? "show" : ""}`}
                       style={{ border: "none" }}
                     >
                       <img
@@ -337,8 +382,11 @@ export default function Feed() {
           )}
         </div>
       </div>
+      <br/>
+      <br/>
+      <br/>
 
-      <hr />
+  
 
       <Footer />
     </>
