@@ -8,6 +8,7 @@ import Registerauth from './authutication/Registerauth';
 import Home from './pages/Home';
 import User from './authutication/userauth';
 import PersistLogin from './components/PersistLogin';
+
 // import Hometest from './pages/Hometest';
 import Navbar from './components/Nav/Navbar';
 import Profile from './pages/Profile';
