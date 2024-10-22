@@ -40,9 +40,5 @@ export default function PullUsers( {ids} ) {
     return <p>Loading...</p>; // แสดงข้อความระหว่างโหลด
   }
 
-//   if (error) {
-//     return <p>Error: {error.message}</p>; // แสดงข้อความข้อผิดพลาดถ้ามี
-//   }
-
   return <>{user || 'User not found'}</>; // แสดงชื่อผู้ใช้หรือข้อความถ้าไม่พบ
 }

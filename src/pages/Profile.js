@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
-// import Navbar from '../components/Navbar';
-// import Footer from '../components/Footer';
 import { NavLink } from "react-router-dom";
 import useAuth from "../hook/useAuth";
-// import { useRedirect } from '../hook/redirect/useRedirect';
-// import ShareButtons from '../hook/shares/ShareButtons';
 import { Iconpath } from "../components/Iconpath";
 import { FaHeart } from "react-icons/fa";
 const baseUrl = process.env.REACT_APP_BASE_URL;
@@ -17,7 +13,7 @@ export default function Profile() {
 
   const Ic = Iconpath();
   const star = Ic[0];
-  const Like = Ic[1];
+  // const Like = Ic[1];
   const comment = Ic[2];
 
   useEffect(() => {

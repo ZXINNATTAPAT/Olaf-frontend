@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Iconpath } from "../../components/Iconpath";
 import { useParams, useNavigate } from "react-router-dom";
-// import Navbar from '../../components/Nav/Navbar';
 import "./view.css";
-import Navtype from "../../components/Nav/Navtype";
 import { axiosInstanceGet } from "../../axios";
 import Comment from "../CommentPost/Comment";
 import PostLikeButton from "../Likepost/Likepost";

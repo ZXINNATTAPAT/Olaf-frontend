@@ -6,24 +6,24 @@ export default function Footer() {
       <div className="container">
         <ul className="nav nav-pills" style={{ fontSize: '16px' }}>
           <li className="nav-item">
-            <a className="nav-link" href="#" aria-current="page">
+            <a className="nav-link" href="###" aria-current="page">
               For you
             </a>
           </li>
           <li className="nav-item">
-            <a className="nav-link" href="#">
+            <a className="nav-link" href="###">
               Following
             </a>
           </li>
           <li className="nav-item">
-            <a className="nav-link" href="#">
+            <a className="nav-link" href="###">
               Web dev
             </a>
           </li>
           <li className="nav-item">
             <a
               className="nav-link disabled"
-              href="#"
+              href="###"
               tabIndex="-1"
               aria-disabled="true"
             >

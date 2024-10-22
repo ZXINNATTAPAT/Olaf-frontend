@@ -5,8 +5,6 @@ import Footer from '../components/Footer';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuth from '../hook/useAuth';
 
-
-
 export default function Home() {
   const { user } = useAuth();
   const navigate = useNavigate();

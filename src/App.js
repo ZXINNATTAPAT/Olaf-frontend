@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Feed from './pages/Feed';
 import View from './posts/View/Views';
@@ -8,15 +8,12 @@ import Registerauth from './authutication/Registerauth';
 import Home from './pages/Home';
 import User from './authutication/userauth';
 import PersistLogin from './components/PersistLogin';
-
-// import Hometest from './pages/Hometest';
 import Navbar from './components/Nav/Navbar';
 import Profile from './pages/Profile';
 import Addcontent from './userview/Addcontent';
 import EditPost from './posts/EditPost/EditPost';
 import EditProfile from './userview/Editprofile';
-import useAuth from './hook/useAuth';
-// import ProtectedRoute from './authutication/ProtectedRoute';
+
 
 function App() {
   

@@ -1,16 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-// import { jwtDecode } from "jwt-decode";
 import axios from 'axios';
 const baseUrl = process.env.REACT_APP_BASE_URL;
-
 
 export default function ProtectedRoute( children ) {
 
   const [isAuthenticated, setIsAuthenticated] = useState(null);
-   // เริ่มต้นเป็น null เพื่อแสดงว่าเรายังไม่รู้สถานะการพิสูจน์ตัวตน
-
-  // const TKs = localStorage.getItem('accessToken');
 
   useEffect(() => {
     const checkAuthentication = async () => {
@@ -53,20 +48,4 @@ export default function ProtectedRoute( children ) {
   // ถ้าผ่านการพิสูจน์ตัวตนแล้ว ให้แสดง children
   return children;
 }
-
-// function isTokenExpired(token) {
-//     try {
-//       const decoded = jwtDecode(token);
-//       const currentTime = Date.now() / 1000;
-//       console.log(decoded.exp < currentTime);
-
-//       if(decoded.exp < currentTime){
-//         localStorage.removeItem('token');
-//       }
-      
-//       return decoded.exp < currentTime;
-//     } catch (error) {
-//       return true; // If there is an error decoding, treat the token as expired
-//     }
-//   }
 

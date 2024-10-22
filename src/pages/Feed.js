@@ -143,16 +143,8 @@ export default function Feed() {
     }
   }, [p_data]); 
 
-  const { user } = useAuth(); // Get user status from the useAuth hook
+  // const { user } = useAuth(); // Get user status from the useAuth hook
   
-  // useEffect(() => {
-  //   // Check if the user is logged in and if the page has already reloaded
-  //   if (user.email && !sessionStorage.getItem('reloaded')) {
-  //     // Set a flag in sessionStorage to prevent multiple reloads
-  //     sessionStorage.setItem('reloaded', 'true');
-  //     window.location.reload(); // Reload the page
-  //   }
-  // }, [user.email]); // Only run when the user.email changes
 
   return (
     <>
