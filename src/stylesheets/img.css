@@ -1,0 +1,10 @@
+.iconMan{
+    background: url('../images/Man\ with\ Laptop.png ');
+    background-repeat: no-repeat;
+    background-size: cover;
+    width: 500px;
+    height: 700px;
+    margin-left: 1150px;
+    bottom: 75px;
+    position: fixed;
+  }
