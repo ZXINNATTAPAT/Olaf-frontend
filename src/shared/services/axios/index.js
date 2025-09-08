@@ -37,29 +37,14 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error) => {
-    const originalRequest = error.config;
-
-    // ถ้า error เป็น 401 (Unauthorized) และยังไม่ได้ retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
-
-      try {
-        // ลอง refresh token
-        const refreshResponse = await axiosInstance.post('/auth/refresh', {}, {
-          withCredentials: true
-        });
-
-        // ถ้า refresh สำเร็จ ให้ retry request เดิม
-        if (refreshResponse.status === 200) {
-          return axiosInstance(originalRequest);
-        }
-      } catch (refreshError) {
-        // ถ้า refresh ไม่สำเร็จ ให้ redirect ไป login
-        localStorage.removeItem('us');
-        localStorage.removeItem('csrfToken');
-        window.location.href = '/auth/login';
-        return Promise.reject(refreshError);
-      }
+    // ใช้ HttpOnly cookies เป็นหลัก
+    // ถ้า error เป็น 401 (Unauthorized) ให้ redirect ไป login
+    if (error.response?.status === 401) {
+      // ลบเฉพาะ localStorage flags
+      localStorage.removeItem('us');
+      localStorage.removeItem('csrfToken');
+      // ไม่ลบ accessToken เพราะใช้ cookies เป็นหลัก
+      window.location.href = '/auth/login';
     }
 
     return Promise.reject(error);
