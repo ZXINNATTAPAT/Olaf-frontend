@@ -1,0 +1,244 @@
+/* Modern Footer Styling - Monochrome Theme */
+
+.footer {
+  background: var(--bg-primary);
+  border-top: 1px solid var(--border-color);
+  margin-top: 4rem;
+  padding: 2rem 0 1rem;
+  transition: all 0.2s ease;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.footer-main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.footer-section h5 {
+  color: var(--text-primary);
+  font-weight: 700;
+  font-size: 1.125rem;
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.footer-section h5::after {
+  display: none;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.footer-section li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-section a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.3s ease;
+  display: inline-block;
+  position: relative;
+}
+
+.footer-section a:hover {
+  color: var(--text-primary);
+}
+
+.footer-section a::before {
+  display: none;
+}
+
+.footer-nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding: 1rem 0;
+  border-top: 1px solid var(--border-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.footer-nav .nav-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+}
+
+.footer-nav .nav-link:hover {
+  color: var(--text-primary);
+  background: var(--bg-tertiary);
+}
+
+.footer-nav .nav-link.active {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+.footer-nav .nav-link.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.footer-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+}
+
+.footer-logo {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.footer-logo:hover {
+  color: var(--text-primary);
+}
+
+.footer-copyright {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.footer-social {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.footer-social a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border-radius: 50%;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  border: 2px solid var(--border-color);
+}
+
+.footer-social a:hover {
+  background: var(--text-primary);
+  color: var(--bg-primary);
+}
+
+.footer-social i {
+  font-size: 1.125rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .footer {
+    padding: 2rem 0 1rem;
+  }
+  
+  .footer-main {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+  }
+  
+  .footer-nav {
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .footer-nav .nav-link {
+    width: 100%;
+    text-align: center;
+    max-width: 200px;
+  }
+  
+  .footer-bottom {
+    gap: 0.75rem;
+  }
+  
+  .footer-social {
+    gap: 0.75rem;
+  }
+  
+  .footer-social a {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 480px) {
+  .footer {
+    padding: 1.5rem 0 1rem;
+  }
+  
+  .footer-content {
+    padding: 0 0.5rem;
+  }
+  
+  .footer-section h5 {
+    font-size: 1rem;
+  }
+  
+  .footer-nav .nav-link {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}
+
+/* Animation for footer appearance */
+.footer-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.footer-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Hover effects for interactive elements */
+.footer-section a:focus,
+.footer-nav .nav-link:focus,
+.footer-social a:focus {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+/* Dark mode specific adjustments */
+[data-theme="dark"] .footer {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .footer-section a::before {
+  background: var(--accent-color);
+}
+
+[data-theme="dark"] .footer-nav .nav-link::before {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
