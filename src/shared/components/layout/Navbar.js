@@ -4,7 +4,7 @@ import { NavLink } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
 
 export default function Navbar() {
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth(); // ใช้ user เป็นหลัก เพราะใช้ cookies
   
 
   return (
@@ -23,7 +23,7 @@ export default function Navbar() {
 
           <div className="d-flex">
             {/* Signup Button */}
-            {!accessToken && (
+            {(!user || Object.keys(user).length === 0) && (
               <button
                 className="btn btn-success m-1"
                 style={{ fontSize: "16px" }}
@@ -35,7 +35,7 @@ export default function Navbar() {
             )}
 
             {/* Signin Button */}
-            {!accessToken && (
+            {(!user || Object.keys(user).length === 0) && (
               <button
                 className="btn btn-outline-dark m-1"
                 style={{ fontSize: "16px" }}
@@ -46,7 +46,7 @@ export default function Navbar() {
               </button>
             )}
 
-            {accessToken && (
+            {user && Object.keys(user).length > 0 && (
               <button
                 className="btn btn-outline-dark m-1"
                 style={{ fontSize: "16px" }}
@@ -58,7 +58,7 @@ export default function Navbar() {
             )}
 
             {/* User Profile Dropdown */}
-            {accessToken && user.username && (
+            {user && user.username && (
               <div className="btn-group">
                 <button
                   className="btn btn-outline-white m-1"
