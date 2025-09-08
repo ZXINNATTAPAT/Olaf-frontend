@@ -10,6 +10,7 @@ import PullUsers from "../../../shared/hooks/pullusers/Pullusers";
 import ShareButtons from "../../../shared/hooks/shares/ShareButtons";
 import { FaHeart } from "react-icons/fa"; // ใช้ไอคอนหัวใจจาก react-icons
 import useAuth from "../../../shared/hooks/useAuth"; // นำเข้า useAuth
+import { getImageUrl } from "../../../shared/services/CloudinaryService";
 
 export default function View() {
   const { id } = useParams(); // รับ id จาก URL path
@@ -21,6 +22,7 @@ export default function View() {
   const [likesCount, setLikesCount] = useState(0);
   const [, setDeleted] = useState(false);
   const navigate = useNavigate();
+
 
   const handleCommentsCountChange = (count) => {
     setCommentsCount(count);
@@ -147,12 +149,12 @@ export default function View() {
         <div className="d-flex justify-content-center">
           <img
             className="rounded shadow-sm"
-            src={
-              p_data.image ||
-              "https://miro.medium.com/v2/resize:fit:1100/format:webp/1*1Eq0WTubrn1gd_NofdVtJg.png"
-            }
+            src={getImageUrl(p_data.image, 'VIEW_MAIN')}
             alt="x"
             style={{ width: "70%" }}
+            onError={(e) => {
+              e.target.src = getImageUrl(null, 'DEFAULT');
+            }}
           />
         </div>
         <br />

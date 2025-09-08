@@ -3,6 +3,7 @@ import { NavLink } from "react-router-dom";
 import useAuth from "../../../shared/hooks/useAuth";
 import { IconPath } from "../../../shared/components";
 import { FaHeart } from "react-icons/fa";
+import { getImageUrl } from "../../../shared/services/CloudinaryService";
 const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
 
 export default function Profile() {
@@ -15,6 +16,9 @@ export default function Profile() {
   const star = Ic[0];
   // const Like = Ic[1];
   const comment = Ic[2];
+
+
+  
 
   useEffect(() => {
     const fetchPosts = async () => {
@@ -114,7 +118,7 @@ export default function Profile() {
           user: post.userFullName || post.user, // ใช้ userFullName ถ้ามี
           header: post.header,
           short: post.short,
-          image: post.image || "https://default-image-url.com", // Default image if none
+          image: getImageUrl(post.image, 'DEFAULT'), // Process Cloudinary image URL
           post_datetime: calculateTimePassed(post.post_datetime),
           likesCount: post.like_count !== undefined ? post.like_count : 0, // ใช้การตรวจสอบค่าที่ชัดเจน
           commentsCount:
@@ -127,9 +131,7 @@ export default function Profile() {
 
         // Set valid images after fetching data
         const validImages = processedPosts.map(
-          (post) =>
-            post.image ||
-            "https://miro.medium.com/v2/resize:fit:1100/format:webp/1*1Eq0WTubrn1gd_NofdVtJg.png"
+          (post) => getImageUrl(post.image, 'PROFILE_THUMB')
         );
         setImgSrcs(validImages);
       } catch (error) {

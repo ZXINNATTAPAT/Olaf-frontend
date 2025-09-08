@@ -1,0 +1,238 @@
+/* Modern Card Styling for Feed - Monochrome Theme */
+
+/* Card Container */
+.feed-card {
+  border: none;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  background: var(--bg-primary);
+  position: relative;
+}
+
+.feed-card:hover {
+  border-color: var(--border-hover);
+}
+
+/* Card Image */
+.feed-card-image {
+  border: none;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  position: relative;
+}
+
+.feed-card img {
+  transition: none;
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+}
+
+/* Card Body */
+.feed-card-body {
+  padding: 1.5rem;
+  background: var(--bg-primary);
+}
+
+/* User Info */
+.feed-card-user {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.feed-card-user i {
+  margin-right: 0.5rem;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+/* Card Title */
+.feed-card-title {
+  font-size: 1.25rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card Description */
+.feed-card-description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card Stats */
+.feed-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.feed-card-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.feed-card-stat i,
+.feed-card-stat img {
+  width: 16px;
+  height: 16px;
+}
+
+.feed-card-stat .fa-heart {
+  color: var(--text-primary);
+}
+
+.feed-card-stat .comment-icon {
+  filter: invert(0.6);
+}
+
+[data-theme="dark"] .feed-card-stat .comment-icon {
+  filter: invert(0.8);
+}
+
+/* Loading Skeleton */
+.card-skeleton {
+  background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-color) 50%, var(--bg-tertiary) 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.skeleton-image {
+  height: 200px;
+  width: 100%;
+  border-radius: 16px 16px 0 0;
+}
+
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.skeleton-text.large {
+  height: 1.5rem;
+  width: 80%;
+}
+
+.skeleton-text.medium {
+  height: 1.25rem;
+  width: 60%;
+}
+
+.skeleton-text.small {
+  height: 1rem;
+  width: 40%;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .feed-card-body {
+    padding: 1rem;
+  }
+  
+  .feed-card-title {
+    font-size: 1.25rem;
+  }
+  
+  .feed-card-description {
+    font-size: 0.875rem;
+  }
+  
+  .feed-card img {
+    height: 150px;
+  }
+}
+
+/* Animation for card appearance */
+.card-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.card-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+/* Share Button Styling */
+.share-button-container {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* Topic Button Styling */
+.topic-button {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-weight: 400;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.topic-button:hover {
+  background: var(--bg-tertiary);
+}
+
+/* Search Input Styling */
+.search-input-container {
+  position: relative;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.search-input {
+  border: 1px solid var(--border-color);
+  border-radius: 0;
+  padding: 0.75rem 1rem 0.75rem 3rem;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.search-input:focus {
+  border-color: var(--border-hover);
+  outline: none;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+}
