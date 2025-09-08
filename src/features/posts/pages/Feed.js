@@ -2,17 +2,22 @@ import React, { useEffect, useState } from "react";
 // import Navbar from '../components/Nav/Navbar'
 // import { Navigate } from 'react-router-dom';
 // import Navtype from "../components/Nav/Navtype";
-import { Footer, IconPath } from "../../../shared/components";
+import { Footer, IconPath, LazyImage, CardSkeleton, ThemeToggle } from "../../../shared/components";
 import { useRedirect, ShareButtons } from "../../../shared/hooks";
 import { FaHeart } from "react-icons/fa"; // ใช้ไอคอนหัวใจจาก react-icons
+import { getImageUrl } from "../../../shared/services/CloudinaryService";
+import "../../../assets/styles/card.css";
+import "../../../assets/styles/theme.css";
 // import useAuth from "../../../shared/hooks/useAuth";
-const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+const baseUrl =
+  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
 
 export default function Feed() {
   const redirectx = useRedirect();
   const [p_data, setp_data] = useState([]);
   const [, setImgSrcs] = useState([]);
   const [showData, setShowData] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   // คำค้นหาที่ผู้ใช้กรอก
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredData, setFilteredData] = useState([]);
@@ -21,6 +26,7 @@ export default function Feed() {
   const star = Ic[0];
   // const Like = Ic[1];
   const comment = Ic[2];
+
 
   useEffect(() => {
     // ทำการกรองข้อมูลเมื่อ searchKeyword เปลี่ยนแปลง
@@ -36,6 +42,7 @@ export default function Feed() {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
+        setIsLoading(true);
         // Fetch posts
         const [postResponse, userResponse] = await Promise.all([
           fetch(`${baseUrl}/posts/`, {
@@ -83,7 +90,7 @@ export default function Feed() {
 
           if (diffHours < 24) {
             if (diffHours === 0) return `${diffMinutes} minutes ago`;
-            return `${diffHours} hours and ${diffMinutes} minutes ago`;
+            return `${diffHours} hr ${diffMinutes} min ago`;
           } else {
             const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Days
             if (diffDays < 30) return `${diffDays} days ago`;
@@ -105,7 +112,7 @@ export default function Feed() {
             user: post.user,
             header: post.header,
             short: post.short,
-            image: post.image, // Default image if none
+            image: getImageUrl(post.image, 'DEFAULT'), // Process Cloudinary image URL
             post_datetime: calculateTimePassed(post.post_datetime),
             likesCount: post.like_count !== undefined ? post.like_count : 0, // ใช้การตรวจสอบค่าที่ชัดเจน
             commentsCount:
@@ -118,15 +125,15 @@ export default function Feed() {
         setp_data(latestPosts); // Set post data
 
         const validImages = latestPosts.map(
-          (post) =>
-            post.image ||
-            "https://miro.medium.com/v2/resize:fit:1100/format:webp/1*1Eq0WTubrn1gd_NofdVtJg.png"
+          (post) => getImageUrl(post.image, 'DEFAULT')
         );
 
         setImgSrcs(validImages);
+        setIsLoading(false);
       } catch (error) {
         console.error("Error:", error);
         setError("Fetching posts failed. Please try again.");
+        setIsLoading(false);
       }
     };
     fetchPosts();
@@ -139,42 +146,49 @@ export default function Feed() {
         setShowData(true);
       }, 200); // Adjust the delay as necessary
     }
-  }, [p_data]); 
+  }, [p_data]);
 
   // const { user } = useAuth(); // Get user status from the useAuth hook
-  
 
   return (
     <>
+      <ThemeToggle />
       <div className="container">
         <br />
         {/* Topic buttons */}
         <div style={{ textAlign: "center", fontSize: "16px" }}>
-          {["Life", "Work", "Society", "Technology", "Software Development", "Culture"].map(
-            (topic) => (
-              <button
-                key={topic}
-                type="button"
-                className="btn btn-outline-dark rounded-pill m-1"
-                style={{ fontSize: "16px" }}
-                onClick={() => {
-                  setSearchKeyword(topic)
-                  setShowData(false);  
-                  setTimeout(() => {
-                    setShowData(true);
-                  }, 200);      }
-                } // Handle button click to set the keyword
-              >
-                {topic}
-              </button>
-            )
-          )}
+          {[
+            "Life",
+            "Work",
+            "Society",
+            "Technology",
+            "Software Development",
+            "Culture",
+          ].map((topic) => (
+            <button
+              key={topic}
+              type="button"
+              className="btn topic-button rounded-pill m-1"
+              style={{ fontSize: "16px" }}
+              onClick={() => {
+                setSearchKeyword(topic);
+                setShowData(false);
+                setTimeout(() => {
+                  setShowData(true);
+                }, 200);
+              }} // Handle button click to set the keyword
+            >
+              {topic}
+            </button>
+          ))}
         </div>
         <br />
         <h1
+          className="text-primary"
           style={{
             textAlign: "center",
-            fontWeight: "bold",
+            fontWeight: "400",
+            fontSize: "1.5rem",
           }}
         >
           Explore topics
@@ -183,102 +197,96 @@ export default function Feed() {
 
         <div className="container">
           <center>
-            <div className="input-group mb-3 " style={{ width: "75%" }}>
-              <span className="input-group-text" id="basic-addon1">
-                <i className="bi bi-search"></i>
-              </span>
-
+            <div className="search-input-container">
+              <i className="bi bi-search search-icon"></i>
               <input
-                className="form-control"
-                placeholder="Search . . ."
+                className="form-control search-input"
+                placeholder="Search topics, posts, or authors..."
                 value={searchKeyword}
                 onChange={(e) => {
-                  setSearchKeyword(e.target.value);  // Update searchKeyword state
-                  setShowData(false);  
+                  setSearchKeyword(e.target.value); // Update searchKeyword state
+                  setShowData(false);
                   setTimeout(() => {
                     setShowData(true);
-                  }, 200);              // Also set showData to false
+                  }, 200); // Also set showData to false
                 }}
-                
-                // อัปเดต searchKeyword
               />
             </div>
             <br />
-         
           </center>
         </div>
         <br />
-
       </div>
-    
 
       <div className="container">
         <div className="row ">
-          {p_data ? (
+          {isLoading ? (
+            // Loading skeleton for large cards
+            <>
+              <CardSkeleton type="medium" />
+              <CardSkeleton type="medium" />
+            </>
+          ) : p_data ? (
             filteredData
               .filter((item, index) => {
                 return index < 2;
               })
               .map((post, index) => (
-                <>
-                  <div className="col-sm-6" key={post.post_id}>
-                  
-                    <div
-                      className={`data-item card border cards-button shadow-sm h-100 ${showData ? "show " : ""}`}
-                      style={{ border: "none" }}
-                    >
-                      <img
-                        className="
-                        img-fluid 
-                        card-img-top 
-                        cardimgcs1 "
-                        style={{ cursor: "pointer" }}
+                <div className="col-sm-6" key={post.post_id}>
+                  <div
+                    className={`feed-card shadow h-100 ${
+                      showData ? "card-enter-active" : "card-enter"
+                    }`}
+                  >
+                    <div className="feed-card-image">
+                      <LazyImage
                         src={post.image}
-                        alt="x"
+                        alt={post.header}
+                        className="img-fluid"
+                        imageType="FEED_LARGE"
                         onClick={() => redirectx(String(post.post_id))}
                       />
-                      <div className="card-body">
-                        <p className="card-title" style={{ fontSize: "16px" }}>
-                          <i className="bi bi-person-circle"></i>
-                          {post.user}
-                        </p>
+                    </div>
+                    <div className="feed-card-body">
+                      <div className="feed-card-user">
+                        <i className="bi bi-person-circle"></i>
+                        {post.user}
+                      </div>
 
-                        <h4
-                          className="card-title"
-                          style={{ fontWeight: "bold", fontSize: "24px" }}
-                        >
-                          {post.header}
-                        </h4>
+                      <h4 className="feed-card-title">
+                        {post.header}
+                      </h4>
 
-                        <p
-                          className="card-text"
-                          style={{ fontSize: "18px", opacity: "60%" }}
-                        >
-                          {post.short}
-                        </p>
+                      <p className="feed-card-description">
+                        {post.short}
+                      </p>
 
-                        <p className="card-text" style={{ fontSize: "12px" }}>
-                          <img className="m-1 iconsize" src={star} alt="x" />
-                          <span
-                            className="card-text"
-                            style={{ fontWeight: "bold" }}
-                          >
+                      <div className="feed-card-stats">
+                        <div className="feed-card-stat">
+                          <img src={star} alt="time" />
+                          <span style={{ fontWeight: "bold" }}>
                             {post.post_datetime}
                           </span>
-                          <FaHeart className="m-1 iconsize" alt="x" />
-                          <span className="card-text">
+                        </div>
+                        <div className="feed-card-stat">
+                          <FaHeart />
+                          <span>
                             {post.likesCount !== undefined
                               ? post.likesCount
                               : 0}
                           </span>
-                          <img className="m-1 iconsize" src={comment} alt="x" />
+                        </div>
+                        <div className="feed-card-stat">
+                          <img src={comment} alt="comments" className="comment-icon" />
                           <span>
                             {post.commentsCount !== undefined
                               ? post.commentsCount
                               : 0}
                           </span>
-                        </p>
+                        </div>
+                      </div>
 
+                      <div className="share-button-container">
                         <ShareButtons
                           url={`http://192.168.1.57:3000/vFeed/${post.post_id}`}
                           title={`${post.header}`}
@@ -286,10 +294,12 @@ export default function Feed() {
                       </div>
                     </div>
                   </div>
-                </>
+                </div>
               ))
           ) : (
-            <p>No posts available {error}</p>
+            <div className="col-12 text-center">
+              <p className="text-secondary">No posts available {error}</p>
+            </div>
           )}
         </div>
 
@@ -303,14 +313,19 @@ export default function Feed() {
                 <>
                   <div className="col" key={post.post_id}>
                     <div
-                      className={`data-item card border cards-button shadow-sm h-100 ${showData ? "show" : ""}`}
+                      className={`data-item card border cards-button shadow-sm h-100 ${
+                        showData ? "show" : ""
+                      }`}
                       style={{ border: "none" }}
                     >
-                      <img
-                        className="img-fluid card-img-top cardimgcs2"
-                        style={{ cursor: "pointer" }}
+                      <LazyImage
                         src={post.image}
-                        alt="x"
+                        alt={post.header}
+                        className="img-fluid card-img-top cardimgcs2"
+                        style={{
+                          cursor: "pointer",
+                        }}
+                        imageType="FEED_SMALL"
                         onClick={() => redirectx(String(post.post_id))}
                       />
 
@@ -368,15 +383,12 @@ export default function Feed() {
                 </>
               ))
           ) : (
-            <p>No posts available</p>
+            <div className="col-12 text-center">
+              <p className="text-secondary">No posts available</p>
+            </div>
           )}
         </div>
       </div>
-      <br/>
-      <br/>
-      <br/>
-
-  
 
       <Footer />
     </>

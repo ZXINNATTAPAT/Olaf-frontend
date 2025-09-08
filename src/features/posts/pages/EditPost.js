@@ -5,7 +5,9 @@ import axios from "axios";
 // import { IconPath } from "../../../shared/components";
 import useAuth from "../../../shared/hooks/useAuth";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+import { getImageUrl } from "../../../shared/services/CloudinaryService";
+const baseUrl =
+  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
 
 // Validation Schema using Yup
 const form = Yup.object().shape({
@@ -24,6 +26,7 @@ const EditPost = () => {
   const [message, setMessage] = useState("");
   const [post, setPost] = useState(null);
   // const Ic = IconPath();
+
 
   useEffect(() => {
     // Fetch post data when component loads
@@ -50,16 +53,12 @@ const EditPost = () => {
     }
 
     try {
-      await axios.put(
-        `${baseUrl}/posts/${post_id}/`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-          withCredentials: true,
-        }
-      );
+      await axios.put(`${baseUrl}/posts/${post_id}/`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        withCredentials: true,
+      });
       setMessage("Post updated successfully!");
       navigate(fromLocation, { replace: true });
     } catch (error) {
@@ -172,9 +171,12 @@ const EditPost = () => {
           <p>{post.short}</p>
           <p>{post.post_text}</p>
           <img
-            src={post.image || "https://via.placeholder.com/150"}
+            src={getImageUrl(post.image, 'EDIT_PREVIEW')}
             alt="Post Preview"
             style={{ width: "70%" }}
+            onError={(e) => {
+              e.target.src = getImageUrl(null, 'DEFAULT');
+            }}
           />
         </div>
       </div>
