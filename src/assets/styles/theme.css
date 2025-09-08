@@ -1,0 +1,130 @@
+/* Monochrome Theme Variables */
+
+:root {
+  /* Minimal Theme - Pure Black and White */
+  --bg-primary: #ffffff;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f8f8f8;
+  --text-primary: #000000;
+  --text-secondary: #000000;
+  --text-muted: #666666;
+  --border-color: #000000;
+  --border-hover: #000000;
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --accent-color: #000000;
+  --accent-hover: #000000;
+}
+
+[data-theme="dark"] {
+  /* Dark Theme - Pure Black and White */
+  --bg-primary: #000000;
+  --bg-secondary: #000000;
+  --bg-tertiary: #111111;
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
+  --text-muted: #999999;
+  --border-color: #ffffff;
+  --border-hover: #ffffff;
+  --shadow-sm: 0 1px 2px 0 rgba(255, 255, 255, 0.05);
+  --shadow-md: 0 1px 3px 0 rgba(255, 255, 255, 0.1);
+  --shadow-lg: 0 4px 6px -1px rgba(255, 255, 255, 0.1);
+  --shadow-xl: 0 10px 15px -3px rgba(255, 255, 255, 0.1);
+  --accent-color: #ffffff;
+  --accent-hover: #ffffff;
+}
+
+/* Base Theme Styles */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1000;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.theme-toggle:hover {
+  background: var(--bg-tertiary);
+}
+
+.theme-toggle i {
+  font-size: 1.2rem;
+  color: var(--text-primary);
+  transition: transform 0.3s ease;
+}
+
+.theme-toggle:hover i {
+  transform: rotate(180deg);
+}
+
+/* Container Background */
+.container {
+  background-color: var(--bg-primary);
+  transition: background-color 0.3s ease;
+}
+
+/* Text Colors */
+.text-primary {
+  color: var(--text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+/* Background Colors */
+.bg-primary {
+  background-color: var(--bg-primary) !important;
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary) !important;
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary) !important;
+}
+
+/* Border Colors */
+.border-theme {
+  border-color: var(--border-color) !important;
+}
+
+/* Shadow Utilities */
+.shadow-theme-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.shadow-theme-md {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.shadow-theme-lg {
+  box-shadow: var(--shadow-lg) !important;
+}
+
+.shadow-theme-xl {
+  box-shadow: var(--shadow-xl) !important;
+}
