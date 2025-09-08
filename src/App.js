@@ -1,23 +1,35 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
-import Feed from './pages/Feed';
-import View from './posts/View/Views';
-import AuthMiddleware from './middleware/Auth';
-import Loginauth from './authutication/Loginauth';
-import Registerauth from './authutication/Registerauth';
-import Home from './pages/Home';
-import User from './authutication/userauth';
-import PersistLogin from './components/PersistLogin';
-import Navbar from './components/Nav/Navbar';
-import Profile from './pages/Profile';
-import Addcontent from './userview/Addcontent';
-import EditPost from './posts/EditPost/EditPost';
-import EditProfile from './userview/Editprofile';
+import { Routes, Route, Navigate } from 'react-router-dom';
+import { 
+  FeedPage as Feed, 
+  ViewPage as View, 
+  EditPostPage as EditPost 
+} from './features/posts';
+import { 
+  LoginPage as Loginauth, 
+  RegisterPage as Registerauth, 
+  UserPage as User 
+} from './features/auth';
+import { 
+  HomePage as Home 
+} from './features/home';
+import { 
+  ProfilePage as Profile, 
+  AddContentPage as Addcontent, 
+  EditProfilePage as EditProfile 
+} from './features/user';
+import { 
+  AuthMiddleware, 
+  PersistLogin, 
+  Navbar,
+  Loader
+} from './shared';
 
 
 function App() {
   
   return <>
+    <Loader />
     <Navbar />
     
     {/* การกำหนดเส้นทาง (Routing) สำหรับหน้าเว็บ */}
