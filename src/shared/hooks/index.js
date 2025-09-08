@@ -12,3 +12,6 @@ export { default as usePullUsers } from './pullusers/Pullusers';
 
 // Share Hooks
 export { default as ShareButtons } from './shares/ShareButtons';
+
+// Intersection Observer Hook
+export { default as useIntersectionObserver } from './useIntersectionObserver';
