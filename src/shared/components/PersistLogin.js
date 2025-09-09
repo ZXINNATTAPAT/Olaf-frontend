@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react'
 import { Outlet } from 'react-router-dom'
 import useAuth from '../hooks/useAuth'
-import axiosInstance from '../services/axios/index'
+import authService from '../services/AuthService'
 
 export default function PersistLogin() {
-    const { user, setUser, setAccessToken } = useAuth()
+    const { user, setUser, setAccessToken, setInitializing } = useAuth()
     const [loading, setLoading] = useState(true)
 
     useEffect(() => {
@@ -14,18 +14,13 @@ export default function PersistLogin() {
             try {
                 // ตรวจสอบสถานะการล็อกอินจาก localStorage (ใช้เป็น flag เท่านั้น)
                 const isLoggedIn = localStorage.getItem('us')
-                console.log('PersistLogin: isLoggedIn =', isLoggedIn)
                 
                 if (isLoggedIn) {
-                    console.log('PersistLogin: Calling /auth/user/ API')
-                    // ใช้ HttpOnly cookies เป็นหลัก - ไม่ต้องส่ง Authorization header
-                    const response = await axiosInstance.get('/auth/user/', {
-                        withCredentials: true // ส่ง HttpOnly cookies อัตโนมัติ
-                    })
+                    // ใช้ AuthService เพื่อเรียก getUserProfile
+                    const response = await authService.getUserProfile()
                     
-                    console.log('PersistLogin: API response =', response.data)
-                    if (response.data && isMounted) {
-                        setUser(response.data)
+                    if (response && isMounted) {
+                        setUser(response)
                         // เก็บ accessToken ใน context เฉพาะกรณีที่จำเป็น
                         // (สำหรับ API calls ที่ต้องใช้ Authorization header)
                         const storedToken = localStorage.getItem('accessToken')
@@ -33,42 +28,54 @@ export default function PersistLogin() {
                             setAccessToken(storedToken)
                         }
                     }
-                } else {
-                    console.log('PersistLogin: No localStorage flag, skipping API call')
+                }
+                
+                // ถ้า backend ไม่ส่ง cookies และมี user data อยู่แล้ว ให้ข้าม API call
+                if (isMounted && user && Object.keys(user).length > 0) {
+                    setLoading(false)
+                    setInitializing(false)
                 }
             } catch (error) {
-                console.log('User verification failed:', error?.response)
                 // ถ้าไม่สามารถดึงข้อมูล user ได้ ให้ลบสถานะการล็อกอิน
                 // แต่ให้ AuthMiddleware จัดการ redirect
                 if (error?.response?.status === 401) {
                     // เฉพาะ 401 error เท่านั้นที่ลบ localStorage
                     localStorage.removeItem('us')
                     localStorage.removeItem('csrfToken')
+                    localStorage.removeItem('accessToken')
                 }
                 // ไม่ลบ accessToken เพราะใช้ cookies เป็นหลัก
             } finally {
                 if (isMounted) {
                     setLoading(false)
+                    setInitializing(false) // ตั้งค่า initializing เป็น false หลังจากเสร็จสิ้น
                 }
             }
         }
 
         // ตรวจสอบเฉพาะครั้งแรกเท่านั้น
         if (loading) {
+            const isLoggedIn = localStorage.getItem('us')
+            const hasUser = user && Object.keys(user).length > 0 && (user.username || user.email || user.id)
+            
+            // ถ้ามี user data อยู่แล้ว ให้ข้าม verification
+            if (hasUser) {
+                setLoading(false)
+                setInitializing(false)
+            }
             // ถ้ายังไม่มีข้อมูล user และมี localStorage ให้ตรวจสอบ
-            if ((!user || Object.keys(user).length === 0) && localStorage.getItem('us')) {
-                console.log('PersistLogin: Starting verification')
+            else if (isLoggedIn === 'true') {
                 verifyUser()
             } else {
-                console.log('PersistLogin: Skipping verification, user exists or no localStorage')
                 setLoading(false)
+                setInitializing(false)
             }
         }
 
         return () => {
             isMounted = false
         }
-    }, [loading, setAccessToken, setUser, user]) // เพิ่ม dependencies กลับมา
+     }, [loading, setAccessToken, setUser, setInitializing, user]) // เพิ่ม setInitializing ใน dependencies
 
     return (
         loading ? (

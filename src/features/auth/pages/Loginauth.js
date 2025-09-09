@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../shared/services/axios/index";
+import authService from "../../../shared/services/AuthService";
 import useAuth from "../../../shared/hooks/useAuth";
 import useLoader from "../../../shared/hooks/useLoader";
 
@@ -49,35 +49,23 @@ export default function Loginauth() {
     setError(null);
 
     try {
-      const response = await axiosInstance.post(
-        "/auth/login/",
-        {
-          email,
-          password,
-        },
-        {
-          withCredentials: true, // สำคัญสำหรับ httpOnly cookies
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await authService.login(email, password);
 
       // ใช้ HttpOnly cookies เป็นหลัก - token จะถูกส่งอัตโนมัติ
-      if (response.data.user) {
-        setUser(response.data.user);
+      if (response.user) {
+        setUser(response.user);
       }
 
       // บันทึก access token เฉพาะกรณีที่จำเป็น (สำหรับ API calls ที่ต้องใช้ Authorization header)
-      if (response.data.access_token) {
-        setAccessToken(response.data.access_token);
-        // localStorage.setItem('accessToken', response.data.access_token)
+      if (response.access_token) {
+        setAccessToken(response.access_token);
+        localStorage.setItem('accessToken', response.access_token);
       }
 
       // บันทึก CSRF token สำหรับ form submissions
-      if (response.headers["x-csrftoken"]) {
-        setCSRFToken(response.headers["x-csrftoken"]);
-        // localStorage.setItem('csrfToken', response.headers["x-csrftoken"])
+      if (authService.csrfToken) {
+        setCSRFToken(authService.csrfToken);
+        localStorage.setItem('csrfToken', authService.csrfToken);
       }
 
       setEmail("");
@@ -85,16 +73,19 @@ export default function Loginauth() {
       hideLoader();
 
       // บันทึกสถานะการล็อกอิน
-      localStorage.setItem("us", true);
+      localStorage.setItem("us", "true");
 
-      // Navigate to feed page
-      navigate("/Feed", { replace: true });
+      // รอสักครู่เพื่อให้ cookies ถูกตั้งค่า
+      setTimeout(() => {
+        navigate("/feed", { replace: true });
+      }, 100);
     } catch (error) {
-      console.error("Login error:", error);
       hideLoader();
 
       // แสดง error message ที่เข้าใจง่าย
-      if (error.response?.data?.message) {
+      if (error.message?.includes('Network error')) {
+        setError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
+      } else if (error.response?.data?.message) {
         setError(error.response.data.message);
       } else if (error.response?.data?.error) {
         setError(error.response.data.error);
@@ -106,7 +97,7 @@ export default function Loginauth() {
         setError("กรุณากรอกข้อมูลให้ครบถ้วน");
       } else if (error.response?.status === 500) {
         setError("เกิดข้อผิดพลาดในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง");
-      } else if (error.code === "NETWORK_ERROR") {
+      } else if (error.code === "NETWORK_ERROR" || error.code === "ERR_NETWORK") {
         setError(
           "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต"
         );
