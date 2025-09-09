@@ -10,81 +10,46 @@ import {
   RegisterPage as Registerauth, 
   UserPage as User 
 } from './features/auth';
-import { 
-  HomePage as Home 
-} from './features/home';
+import { HomePage as Home } from './features/home';
 import { 
   ProfilePage as Profile, 
   AddContentPage as Addcontent, 
   EditProfilePage as EditProfile 
 } from './features/user';
-import { 
-  AuthMiddleware, 
-  PersistLogin, 
-  Navbar,
-  Loader
-} from './shared';
-
+import { AuthMiddleware, PersistLogin, Navbar, Loader } from './shared';
 
 function App() {
-  
-  return <>
-    <Loader />
-    <Navbar />
-    
-    {/* การกำหนดเส้นทาง (Routing) สำหรับหน้าเว็บ */}
-    <Routes>
-    
-      {/* เส้นทางหลัก '/' จะทำงานร่วมกับ PersistLogin เพื่อคงสถานะการล็อกอินไว้ */}
-      <Route path='/' element={<PersistLogin />}>
-
-        {/* หน้าแรกที่จะแสดงคือ Hometest */}
-        <Route index exact element={<Home />}></Route>
-
-        {/* เส้นทางสำหรับการเข้าสู่ระบบและการลงทะเบียน */}
-        <Route path='/auth'>
-
-          {/* เส้นทางย่อยสำหรับหน้า Login */}
-          <Route path='login' element={<Loginauth />}></Route>
-
-          {/* เส้นทางย่อยสำหรับหน้า Register */}
-          <Route path='register' element={<Registerauth />}></Route>
-
-          {/* เส้นทางย่อย 'user' จะทำงานร่วมกับ AuthMiddleware 
-              เพื่อตรวจสอบการล็อกอินก่อนให้เข้าถึง User ได้ */}
-          <Route path='user' element={<AuthMiddleware />}>
-            <Route index element={<User />}></Route>
-          </Route>
-
-        </Route>
-
-        {/* เส้นทาง Feed จะทำงานร่วมกับ AuthMiddleware เพื่อป้องกันไม่ให้ผู้ใช้ที่ไม่ได้ล็อกอินเข้าถึง Feed */}
-        <Route element={<AuthMiddleware />}>
-
-          <Route path='/Feed' element={<Feed />} />
-
-          <Route path='/profile' element={<Profile />}/>
-
-          {/* เพิ่มPost content */}
-          <Route path='/addcontent' element={<Addcontent />}/>
-          <Route path='/editContent/:post_id' element={<EditPost />}/>
-          <Route path='/editProfile/:user_id' element={<EditProfile />}/>
-
-
-        </Route>
-
-        <Route path='/vFeed/:id' element={<View />}></Route>
-
-
-      </Route>
+  return (
+    <>
+      <Loader />
+      <Navbar />
       
+      <Routes>
+        {/* ---------- Public routes ---------- */}
+        <Route path="/" element={<Home />} />
+        <Route path="/vFeed/:id" element={<View />} />
+        
+        {/* ---------- Auth routes ---------- */}
+        <Route path="/auth/login" element={<Loginauth />} />
+        <Route path="/auth/register" element={<Registerauth />} />
 
-      {/* เส้นทาง fallback: ถ้าผู้ใช้เข้าถึงเส้นทางที่ไม่ถูกต้อง จะถูกนำไปยังหน้าแรก '/' */}
-      <Route path='*' element={<Navigate to='/auth/login' />}></Route>
-    </Routes>
-  </>
+        {/* ---------- Protected routes ---------- */}
+        <Route element={<PersistLogin />}>
+          <Route element={<AuthMiddleware />}>
+            <Route path="/feed" element={<Feed />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/addcontent" element={<Addcontent />} />
+            <Route path="/editContent/:post_id" element={<EditPost />} />
+            <Route path="/editProfile/:user_id" element={<EditProfile />} />
+            <Route path="/user" element={<User />} />
+          </Route>
+        </Route>
+
+        {/* ---------- Fallback ---------- */}
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </>
+  );
 }
 
-
 export default App;
-
