@@ -63,7 +63,10 @@ export default function Profile() {
           }
 
           // ถ้าไม่เจอผู้ใช้ที่ตรงกัน ให้คืนโพสต์เดิมกลับไป
-          return post;
+          return {
+            ...post,
+            userFullName: 'Unknown User', // Fallback when no matching user is found
+          };
         });
 
         // ค้นหา user object ของผู้ใช้ที่ล็อกอิน
@@ -178,7 +181,7 @@ export default function Profile() {
                       />
                       <div className="card-body">
                         <p className="card-text" style={{ fontSize: "14px" }}>
-                          <i className="bi bi-person-circle"></i> {post.user}
+                          <i className="bi bi-person-circle"></i> {post.userFullName}
                         </p>
                         <h4 style={{ fontWeight: "bold", fontSize: "24px" }}>
                           {post.header}

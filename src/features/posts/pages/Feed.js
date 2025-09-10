@@ -74,7 +74,10 @@ export default function Feed() {
               user: `${matchingUser.first_name} ${matchingUser.last_name}`,
             };
           }
-          return post;
+          return {
+            ...post,
+            user: 'Unknown User', // Fallback when no matching user is found
+          };
         });
 
         // Calculate time passed since post creation
@@ -112,7 +115,7 @@ export default function Feed() {
             user: post.user,
             header: post.header,
             short: post.short,
-            image: getImageUrl(post.image, 'DEFAULT'), // Process Cloudinary image URL
+            image: getImageUrl(post.primary_image_url || post.image_secure_url || post.image, 'DEFAULT'), // Process Cloudinary image URL
             post_datetime: calculateTimePassed(post.post_datetime),
             likesCount: post.like_count !== undefined ? post.like_count : 0, // ใช้การตรวจสอบค่าที่ชัดเจน
             commentsCount:
@@ -125,7 +128,7 @@ export default function Feed() {
         setp_data(latestPosts); // Set post data
 
         const validImages = latestPosts.map(
-          (post) => getImageUrl(post.image, 'DEFAULT')
+          (post) => getImageUrl(post.primary_image_url || post.image_secure_url || post.image, 'DEFAULT')
         );
 
         setImgSrcs(validImages);
