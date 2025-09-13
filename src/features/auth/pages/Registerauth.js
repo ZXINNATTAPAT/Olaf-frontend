@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../../shared/services/axios/index";
+import ApiController from "../../../shared/services/ApiController";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -116,24 +116,19 @@ export default function Register() {
     }
 
     try {
-      await axiosInstance.post(
-        "/auth/register/",
-        {
-          username,
-          email,
-          password,
-          password2: passwordConfirmation,
-          first_name: firstName,
-          last_name: lastName,
-          phone,
-        },
-        {
-          withCredentials: true,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const result = await ApiController.register({
+        username,
+        email,
+        password,
+        password2: passwordConfirmation,
+        first_name: firstName,
+        last_name: lastName,
+        phone,
+      });
+
+      if (!result.success) {
+        throw new Error(result.error || "Registration failed");
+      }
 
       // Clear form inputs
       setEmail("");
@@ -152,19 +147,19 @@ export default function Register() {
       setLoading(false);
 
       // แสดง error message ที่เข้าใจง่าย
-      if (error.response?.data?.message) {
-        setErrorMessage(error.response.data.message);
-      } else if (error.response?.data?.error) {
-        setErrorMessage(error.response.data.error);
-      } else if (error.response?.data?.detail) {
-        setErrorMessage(error.response.data.detail);
-      } else if (error.response?.status === 400) {
+      if (error.message?.includes('username')) {
+        setErrorMessage("ชื่อผู้ใช้นี้มีอยู่แล้ว");
+      } else if (error.message?.includes('email')) {
+        setErrorMessage("อีเมลนี้มีอยู่แล้ว");
+      } else if (error.message?.includes('password')) {
+        setErrorMessage("รหัสผ่านไม่ถูกต้อง");
+      } else if (error.message?.includes('400')) {
         setErrorMessage("ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบข้อมูลที่กรอก");
-      } else if (error.response?.status === 409) {
+      } else if (error.message?.includes('409')) {
         setErrorMessage("อีเมลหรือชื่อผู้ใช้นี้มีอยู่แล้ว");
-      } else if (error.response?.status === 500) {
+      } else if (error.message?.includes('500')) {
         setErrorMessage("เกิดข้อผิดพลาดในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง");
-      } else if (error.code === "NETWORK_ERROR") {
+      } else if (error.message?.includes('Network')) {
         setErrorMessage(
           "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต"
         );

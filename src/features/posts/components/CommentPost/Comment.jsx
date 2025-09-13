@@ -2,8 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Slider from "react-slick";
 import useAuth from "../../../../shared/hooks/useAuth";
 import Likecomment from "../Likecomment/Likecomment";
-const baseUrl =
-  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
+import ApiController from "../../../../shared/services/ApiController";
 
 export default function Comment({ post_id, onCommentsCountChange, initialComments = [], initialLoading = false }) {
   let sliderRef = useRef(null);
@@ -18,7 +17,7 @@ export default function Comment({ post_id, onCommentsCountChange, initialComment
   // ใช้ useEffect เพื่อเรียก onCommentsCountChange เมื่อ comments เปลี่ยน
   useEffect(() => {
     onCommentsCountChange(comments.length);
-  }, [comments.length]); // ลบ onCommentsCountChange ออกจาก dependencies
+  }, [comments.length, onCommentsCountChange]); // เพิ่ม onCommentsCountChange ใน dependencies
 
   const handleLikesCountChange = (comment_id, count) => {
     setLikesCount((prev) => ({ ...prev, [comment_id]: count }));
@@ -100,27 +99,22 @@ export default function Comment({ post_id, onCommentsCountChange, initialComment
     }
 
     try {
-      const response = await fetch(`${baseUrl}/comments/`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          post: post_id,
-          user: user.id, // ใช้ user id ของผู้ใช้ปัจจุบัน
-          comment_datetime: new Date().toISOString(), // กำหนดเวลาปัจจุบัน
-          comment_text: newComment, // คอมเมนต์ที่ผู้ใช้กรอก
-          like_count: 0, // จำนวน like เริ่มต้นเป็น 0
-        }),
-      });
+      const commentData = {
+        post: post_id,
+        user: user.id, // ใช้ user id ของผู้ใช้ปัจจุบัน
+        comment_datetime: new Date().toISOString(), // กำหนดเวลาปัจจุบัน
+        comment_text: newComment, // คอมเมนต์ที่ผู้ใช้กรอก
+        like_count: 0, // จำนวน like เริ่มต้นเป็น 0
+      };
 
-      if (response.ok) {
-        const data = await response.json();
-        setComments([...comments, data]); // เพิ่มคอมเมนต์ใหม่เข้าไปในรายการคอมเมนต์
+      const result = await ApiController.createComment(commentData);
+
+      if (result.success) {
+        setComments([...comments, result.data]); // เพิ่มคอมเมนต์ใหม่เข้าไปในรายการคอมเมนต์
         setNewComment(""); // ล้างฟอร์มหลังจากเพิ่มคอมเมนต์สำเร็จ
       } else {
-        console.error("Failed to add comment");
+        console.error("Failed to add comment:", result.error);
+        setError("Failed to add comment");
       }
     } catch (error) {
       console.error("Error:", error);

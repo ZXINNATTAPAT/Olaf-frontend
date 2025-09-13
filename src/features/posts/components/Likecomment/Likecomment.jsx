@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { FaHeart } from "react-icons/fa";
 import useAuth from "../../../../shared/hooks/useAuth";
-const baseUrl =
-  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
+import ApiController from "../../../../shared/services/ApiController";
 
 export default function Likecomment({
   comment_id,
@@ -28,42 +27,24 @@ export default function Likecomment({
       return;
     }
 
-    const likedCommentId = `${comment_id}/${user.id}`;
-
     try {
-      let response;
-      let data = null;
+      let result;
 
       if (liked) {
         // ส่งคำขอ DELETE
-        response = await fetch(`${baseUrl}/commentlikes/${likedCommentId}/`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
+        result = await ApiController.unlikeComment(comment_id, user.id);
       } else {
         // ส่งคำขอ POST
-        response = await fetch(`${baseUrl}/commentlikes/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            comment: comment_id,
-            user: user.id,
-          }),
-        });
-        data = await response.json();
+        result = await ApiController.likeComment(comment_id, user.id);
       }
 
-      if (response.ok) {
+      if (result.success) {
         const newLiked = !liked;
         setLiked(newLiked);
 
-        if (data) {
-          setLikesCount(data.like_count);
-          onLikesCountChange(data.like_count);
+        if (result.data && result.data.like_count !== undefined) {
+          setLikesCount(result.data.like_count);
+          onLikesCountChange(result.data.like_count);
         } else {
           setLikesCount(likesCount + (newLiked ? 1 : -1));
           onLikesCountChange(likesCount + (newLiked ? 1 : -1));
@@ -74,7 +55,7 @@ export default function Likecomment({
           newLiked ? "true" : "false"
         );
       } else {
-        console.error("Failed to update like status");
+        console.error("Failed to update like status:", result.error);
       }
     } catch (error) {
       console.error("Error updating like status:", error);

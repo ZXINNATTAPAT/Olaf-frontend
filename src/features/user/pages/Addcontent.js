@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
-import axios from "axios";
 import { IconPath, Loader } from "../../../shared/components";
 import useAuth from "../../../shared/hooks/useAuth";
 import useLoader from "../../../shared/hooks/useLoader";
 import { useLocation, useNavigate } from "react-router-dom";
-const baseUrl =
-  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
+import ApiController from "../../../shared/services/ApiController";
+import axiosInstance from "../../../shared/services/axios/index";
 
 // Validation Schema using Yup
 const form = Yup.object().shape({
@@ -18,7 +17,7 @@ const form = Yup.object().shape({
 });
 
 const Addcontent = () => {
-  const { user, accessToken } = useAuth();
+  const { user } = useAuth();
   const { showLoader, hideLoader } = useLoader();
   const navigate = useNavigate();
   const location = useLocation();
@@ -132,38 +131,47 @@ const Addcontent = () => {
       // Step 2: Create post with image using single API call
       console.log("Starting post creation");
       showLoader("กำลังสร้างโพสต์...");
-      const postData = {
-        header: values.header,
-        short: values.short,
-        post_text: values.post_text,
-        user_id: user.id,
-        ...(imageUrl && {
-          image_url: imageUrl,
-          caption: "Main image for my post",
-          is_primary: true,
-          sort_order: 0,
-        }),
-      };
-
-      console.log("Sending post data:", postData);
-      const response = await axios.post(
-        `${baseUrl}/posts/create-with-image/`,
-        postData,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-          withCredentials: true,
-        }
-      );
       
-      console.log("Post created successfully:", response.data);
-      setMessage(
-        imageUrl
-          ? "Post created successfully with image!"
-          : "Post created successfully!"
-      );
+      if (imageUrl) {
+        // Use special endpoint for posts with images
+        const formData = new FormData();
+        formData.append('header', values.header);
+        formData.append('short', values.short);
+        formData.append('post_text', values.post_text);
+        formData.append('user_id', user.id);
+        formData.append('image_url', imageUrl);
+        formData.append('caption', 'Main image for my post');
+        formData.append('is_primary', 'true');
+        formData.append('sort_order', '0');
+
+        console.log("Sending post data with image:", formData);
+        const response = await axiosInstance.post('/posts/create-with-image/', formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        });
+        
+        console.log("Post created successfully:", response.data);
+        setMessage("Post created successfully with image!");
+      } else {
+        // Use regular endpoint for posts without images
+        const postData = {
+          header: values.header,
+          short: values.short,
+          post_text: values.post_text,
+          user_id: user.id,
+        };
+
+        console.log("Sending post data:", postData);
+        const result = await ApiController.createPost(postData);
+        
+        if (!result.success) {
+          throw new Error(result.error || "Failed to create post");
+        }
+        
+        console.log("Post created successfully:", result.data);
+        setMessage("Post created successfully!");
+      }
 
       // Clean up local preview URL
       if (localImagePreview) {
