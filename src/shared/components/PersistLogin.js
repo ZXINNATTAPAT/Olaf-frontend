@@ -1,89 +1,76 @@
-import React, { useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
-import useAuth from '../hooks/useAuth'
-import authService from '../services/AuthService'
+import React, { useEffect, useState, useRef } from "react";
+import { Outlet } from "react-router-dom";
+import useAuth from "../hooks/useAuth";
+import authService from "../services/AuthService";
 
 export default function PersistLogin() {
-    const { user, setUser, setAccessToken, setInitializing } = useAuth()
-    const [loading, setLoading] = useState(true)
+  const { user, setUser, setAccessToken, setInitializing } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const hasChecked = useRef(false);
 
-    useEffect(() => {
-        let isMounted = true
+  useEffect(() => {
+    // ป้องกันการเรียกซ้ำ
+    if (hasChecked.current) return;
+    hasChecked.current = true;
 
-        async function verifyUser() {
-            try {
-                // ตรวจสอบสถานะการล็อกอินจาก localStorage (ใช้เป็น flag เท่านั้น)
-                const isLoggedIn = localStorage.getItem('us')
-                
-                if (isLoggedIn) {
-                    // ใช้ AuthService เพื่อเรียก getUserProfile
-                    const response = await authService.getUserProfile()
-                    
-                    if (response && isMounted) {
-                        setUser(response)
-                        // เก็บ accessToken ใน context เฉพาะกรณีที่จำเป็น
-                        // (สำหรับ API calls ที่ต้องใช้ Authorization header)
-                        const storedToken = localStorage.getItem('accessToken')
-                        if (storedToken) {
-                            setAccessToken(storedToken)
-                        }
-                    }
-                }
-                
-                // ถ้า backend ไม่ส่ง cookies และมี user data อยู่แล้ว ให้ข้าม API call
-                if (isMounted && user && Object.keys(user).length > 0) {
-                    setLoading(false)
-                    setInitializing(false)
-                }
-            } catch (error) {
-                // ถ้าไม่สามารถดึงข้อมูล user ได้ ให้ลบสถานะการล็อกอิน
-                // แต่ให้ AuthMiddleware จัดการ redirect
-                if (error?.response?.status === 401) {
-                    // เฉพาะ 401 error เท่านั้นที่ลบ localStorage
-                    localStorage.removeItem('us')
-                    localStorage.removeItem('csrfToken')
-                    localStorage.removeItem('accessToken')
-                }
-                // ไม่ลบ accessToken เพราะใช้ cookies เป็นหลัก
-            } finally {
-                if (isMounted) {
-                    setLoading(false)
-                    setInitializing(false) // ตั้งค่า initializing เป็น false หลังจากเสร็จสิ้น
-                }
-            }
+    async function checkUser() {
+      try {
+        // ตรวจสอบว่ามี user data อยู่แล้วหรือไม่
+        if (user && Object.keys(user).length > 0) {
+          // มี user data อยู่แล้ว ไม่ต้องเรียก API
+          setLoading(false);
+          setInitializing(false);
+          return;
         }
 
-        // ตรวจสอบเฉพาะครั้งแรกเท่านั้น
-        if (loading) {
-            const isLoggedIn = localStorage.getItem('us')
-            const hasUser = user && Object.keys(user).length > 0 && (user.username || user.email || user.id)
-            
-            // ถ้ามี user data อยู่แล้ว ให้ข้าม verification
-            if (hasUser) {
-                setLoading(false)
-                setInitializing(false)
+        // ตรวจสอบสถานะการล็อกอินจาก localStorage
+        const isLoggedIn = localStorage.getItem("us");
+        
+        if (isLoggedIn === "true") {
+          // มีการล็อกอิน ให้เรียก API เพื่อดึงข้อมูล user
+          const response = await authService.getUserProfile();
+          
+          if (response) {
+            setUser(response);
+            // เก็บ accessToken ถ้ามี
+            const storedToken = localStorage.getItem("accessToken");
+            if (storedToken) {
+              setAccessToken(storedToken);
             }
-            // ถ้ายังไม่มีข้อมูล user และมี localStorage ให้ตรวจสอบ
-            else if (isLoggedIn === 'true') {
-                verifyUser()
-            } else {
-                setLoading(false)
-                setInitializing(false)
-            }
+          }
         }
-
-        return () => {
-            isMounted = false
+      } catch (error) {
+        // ถ้า API เรียกไม่สำเร็จ (เช่น 401 Unauthorized)
+        if (error?.response?.status === 401) {
+          // ลบข้อมูลการล็อกอิน
+          localStorage.removeItem("us");
+          localStorage.removeItem("csrfToken");
+          localStorage.removeItem("accessToken");
         }
-     }, [loading, setAccessToken, setUser, setInitializing, user]) // เพิ่ม setInitializing ใน dependencies
+      } finally {
+        // เสร็จแล้ว หยุด loading
+        setLoading(false);
+        setInitializing(false);
+      }
+    }
 
+    checkUser();
+  }, []); // เรียกเพียงครั้งเดียวเมื่อ component mount
+
+  // แสดง loading spinner ถ้ายังโหลดอยู่
+  if (loading) {
     return (
-        loading ? (
-            <div className="d-flex justify-content-center align-items-center" style={{ height: '100vh' }}>
-                <div className="spinner-border" role="status">
-                    <span className="visually-hidden">Loading...</span>
-                </div>
-            </div>
-        ) : <Outlet />
-    )
+      <div
+        className="d-flex justify-content-center align-items-center"
+        style={{ height: "100vh" }}
+      >
+        <div className="spinner-border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  // แสดง content เมื่อโหลดเสร็จ
+  return <Outlet />;
 }
