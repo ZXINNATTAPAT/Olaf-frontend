@@ -1,84 +1,77 @@
-// API Test Script - Test the API endpoints
-import ApiController from '../shared/services/ApiController';
+// API Connection Test - Debug utility
+import axios from 'axios';
 
-// Test function to check API connectivity
-export const testAPI = async () => {
-  console.log('🧪 Testing API endpoints...');
+const testApiConnection = async () => {
+  const baseURL = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+  
+  console.log('🔍 Testing API connection...');
+  console.log('Base URL:', baseURL);
   
   try {
-    // Test posts endpoint
-    console.log('📝 Testing posts endpoint...');
-    const postsResult = await ApiController.getPosts();
+    // Test 1: Basic connectivity
+    console.log('Test 1: Basic connectivity test');
+    const response = await axios.get(`${baseURL}/`, {
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    console.log('✅ Basic connectivity: OK');
+    console.log('Status:', response.status);
+    console.log('Headers:', response.headers);
     
-    if (postsResult.success) {
-      console.log('✅ Posts API working:', postsResult.data.length, 'posts found');
-    } else {
-      console.error('❌ Posts API failed:', postsResult.error);
-    }
+    // Test 2: Posts endpoint
+    console.log('\nTest 2: Posts endpoint test');
+    const postsResponse = await axios.get(`${baseURL}/posts/`, {
+      timeout: 10000,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    console.log('✅ Posts endpoint: OK');
+    console.log('Status:', postsResponse.status);
+    console.log('Data length:', postsResponse.data?.length || 0);
     
-    // Test users endpoint
-    console.log('👥 Testing users endpoint...');
-    const usersResult = await ApiController.getUsers();
-    
-    if (usersResult.success) {
-      console.log('✅ Users API working:', usersResult.data.length, 'users found');
-    } else {
-      console.error('❌ Users API failed:', usersResult.error);
-    }
+    // Test 3: With credentials (simulating browser behavior)
+    console.log('\nTest 3: With credentials test');
+    const credsResponse = await axios.get(`${baseURL}/posts/`, {
+      timeout: 10000,
+      withCredentials: true,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+    console.log('✅ With credentials: OK');
+    console.log('Status:', credsResponse.status);
     
     return {
-      posts: postsResult.success,
-      users: usersResult.success
+      success: true,
+      message: 'All tests passed!'
     };
     
   } catch (error) {
-    console.error('❌ API Test failed:', error);
+    console.error('❌ API test failed:', error);
+    
+    if (error.code === 'ECONNABORTED') {
+      console.error('Timeout error - server took too long to respond');
+    } else if (error.message === 'Network Error') {
+      console.error('Network error - check internet connection');
+    } else if (error.response) {
+      console.error('Server responded with error:', error.response.status, error.response.statusText);
+    } else {
+      console.error('Unknown error:', error.message);
+    }
+    
     return {
-      posts: false,
-      users: false,
-      error: error.message
+      success: false,
+      error: error.message,
+      code: error.code,
+      status: error.response?.status
     };
   }
 };
 
-// Test authentication
-export const testAuth = async () => {
-  console.log('🔐 Testing authentication...');
-  
-  try {
-    // Test user profile endpoint (requires authentication)
-    const userResult = await ApiController.getUserProfile();
-    
-    if (userResult.success) {
-      console.log('✅ Authentication working:', userResult.data);
-      return true;
-    } else {
-      console.log('❌ Authentication failed:', userResult.error);
-      return false;
-    }
-    
-  } catch (error) {
-    console.error('❌ Auth test failed:', error);
-    return false;
-  }
-};
+// Export for use in browser console
+window.testApiConnection = testApiConnection;
 
-// Run tests
-export const runAllTests = async () => {
-  console.log('🚀 Starting API tests...');
-  
-  const apiResults = await testAPI();
-  const authResults = await testAuth();
-  
-  console.log('📊 Test Results:', {
-    api: apiResults,
-    auth: authResults
-  });
-  
-  return {
-    api: apiResults,
-    auth: authResults
-  };
-};
-
-export default { testAPI, testAuth, runAllTests };
+export default testApiConnection;

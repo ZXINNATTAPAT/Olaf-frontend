@@ -161,12 +161,22 @@ export default function Profile() {
       }
       } catch (error) {
         console.error("Error:", error);
-          setError(
-            error.message || "Failed to load profile data. Please try again."
-          );
-      if (isLoadMore) {
-        setIsLoadingMore(false);
-      } else {
+        
+        // Provide more specific error messages
+        let errorMessage = "Failed to load profile data. Please try again.";
+        if (error.message.includes("Network error")) {
+          errorMessage = "Unable to connect to server. Please check your internet connection.";
+        } else if (error.message.includes("timeout")) {
+          errorMessage = "Request timed out. Please try again.";
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        setError(errorMessage);
+        
+        if (isLoadMore) {
+          setIsLoadingMore(false);
+        } else {
           setIsLoading(false);
         }
       }
