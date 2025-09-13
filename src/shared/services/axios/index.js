@@ -7,7 +7,7 @@ const baseURL = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender
 const axiosInstance = axios.create({
   baseURL: baseURL,
   withCredentials: true, // สำคัญสำหรับ httpOnly cookies
-  timeout: 10000, // 12 seconds timeout - เหมาะสำหรับ Render.com
+  timeout: 20000, // 20 seconds timeout - optimized for Render free tier
   headers: {
     'Content-Type': 'application/json',
   },

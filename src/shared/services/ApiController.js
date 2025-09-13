@@ -1,6 +1,6 @@
 // API Controller - Centralized API management for the entire project
 import axiosInstance from './axios/index';
-import { API_ENDPOINTS } from '../constants/apiConstants';
+import { API_ENDPOINTS, FEED_CONFIG } from '../constants/apiConstants';
 
 // const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
 
@@ -62,10 +62,19 @@ class ApiController {
    */
   static async getPosts(params = {}) {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.POSTS.BASE, { params });
+      const response = await axiosInstance.get(API_ENDPOINTS.POSTS.BASE, { 
+        params,
+        timeout: FEED_CONFIG.TIMEOUT // Use FEED_CONFIG timeout
+      });
       return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      console.error('ApiController.getPosts error:', error);
+      return { 
+        success: false, 
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        isNetworkError: !error.response
+      };
     }
   }
 

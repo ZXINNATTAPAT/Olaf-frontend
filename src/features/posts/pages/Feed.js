@@ -10,6 +10,7 @@ import { useRedirect } from "../../../shared/hooks";
 import { FaHeart } from "react-icons/fa"; // ใช้ไอคอนหัวใจจาก react-icons
 import { getImageUrl } from "../../../shared/services/CloudinaryService";
 import ApiController from "../../../shared/services/ApiController";
+import { ERROR_MESSAGES, FEED_CONFIG } from "../../../shared/constants/apiConstants";
 import "../../../assets/styles/card.css";
 import "../../../assets/styles/theme.css";
 
@@ -23,7 +24,10 @@ export default function Feed() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const hasFetched = useRef(false);
+  const isRetrying = useRef(false);
+  const cacheRef = useRef({ data: null, timestamp: 0 });
   const Ic = IconPath();
   const star = Ic[0];
   // const Like = Ic[1];
@@ -40,19 +44,44 @@ export default function Feed() {
     setFilteredData(result);
   }, [searchKeyword, p_data]); // กรองเมื่อ searchKeyword หรือ p_data เปลี่ยน
 
-  const fetchPosts = useCallback(async () => {
-    if (hasFetched.current) return; // Prevent duplicate calls
-    hasFetched.current = true;
+  const fetchPosts = useCallback(async (isRetry = false) => {
+    if (hasFetched.current && !isRetry) return; // Prevent duplicate calls
+    if (isRetrying.current) return; // Prevent overlapping retries
+    if (!isRetry) hasFetched.current = true;
+    
+    // Check cache first
+    const now = Date.now();
+    if (cacheRef.current.data && (now - cacheRef.current.timestamp) < FEED_CONFIG.CACHE_DURATION) {
+      console.log('✅ Cache HIT - Using cached posts data');
+      setp_data(cacheRef.current.data);
+      setIsLoading(false);
+      return;
+    }
+    
+    console.log('❌ Cache MISS - Fetching from API');
     
     try {
-      setIsLoading(true);
-      setError(null); // Clear previous errors
+      // Only show loading for initial load, not retries
+      if (!isRetry) {
+        setIsLoading(true);
+        setError(null); // Clear previous errors
+      }
       
       // Use ApiController to fetch posts
+      console.log('Fetching posts with timeout:', FEED_CONFIG.TIMEOUT);
+      const startTime = Date.now();
       const result = await ApiController.getPosts();
+      const endTime = Date.now();
+      console.log(`Posts API took ${endTime - startTime}ms`);
+      console.log('ApiController result:', result);
       
       if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch posts');
+        // Create error object with enhanced information from ApiController
+        const error = new Error(result.error || 'Failed to fetch posts');
+        error.isNetworkError = result.isNetworkError;
+        error.status = result.status;
+        console.log('Error details:', { message: error.message, isNetworkError: error.isNetworkError, status: error.status });
+        throw error;
       }
       
       const postData = result.data;
@@ -141,17 +170,79 @@ export default function Feed() {
       //   .map((post) => post.image);
 
       // setImgSrcs(validImages);
+      
+      // Cache the data
+      cacheRef.current = {
+        data: latestPosts,
+        timestamp: Date.now()
+      };
+      
+      console.log('✅ Posts loaded and cached successfully');
       setIsLoading(false);
+      setRetryCount(0); // Reset retry count on success
+      isRetrying.current = false; // Reset retry flag
+      setError(null); // Clear any previous errors
     } catch (error) {
       console.error("Error fetching posts:", error);
-      setError(`Failed to load posts: ${error.message}`);
+      
+      // Check if we should retry for network errors (especially for Render free tier)
+      const isNetworkError = (
+        error.isNetworkError || // From ApiController
+        error.message.includes("Network error") || 
+        error.message.includes("Backend server is not responding") ||
+        error.message.includes("Network Error") ||
+        error.message.includes("ECONNREFUSED") ||
+        error.message.includes("ETIMEDOUT") ||
+        error.message.includes("timeout")
+      );
+      
+      const shouldRetry = isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES;
+      
+      if (shouldRetry) {
+        isRetrying.current = true;
+        setRetryCount(prev => prev + 1);
+        
+        // Balanced retry delay for Render free tier
+        const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY : 
+                     FEED_CONFIG.RETRY_DELAY;
+        
+        console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES})`);
+        
+        setTimeout(() => {
+          isRetrying.current = false;
+          fetchPosts(true);
+        }, delay);
+        return;
+      }
+      
+      // Provide more specific error messages based on error type
+      let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
+      
+      if (isNetworkError) {
+        // Progressive error messages for Render free tier
+        if (retryCount >= 2) {
+          errorMessage = ERROR_MESSAGES.COLD_START; // Cold start after multiple retries
+        } else if (retryCount >= 1) {
+          errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER; // Free tier startup
+        } else {
+          errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING; // Initial network error
+        }
+      } else if (error.message.includes("timeout")) {
+        errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
+      } else if (error.message) {
+        errorMessage = `Failed to load posts: ${error.message}`;
+      }
+      
+      console.log(`❌ Final error after ${retryCount} retries:`, errorMessage);
+      setError(errorMessage);
       setIsLoading(false);
+      isRetrying.current = false;
       
       // Set empty data to show "No posts available" message
       setp_data([]);
       setFilteredData([]);
     }
-  }, []);
+  }, [retryCount]);
 
   useEffect(() => {
     fetchPosts();
@@ -411,7 +502,35 @@ export default function Feed() {
             ))
           ) : (
             <div className="col-12 text-center py-5">
-              <p className="text-muted">No posts available {error}</p>
+              <div className="mb-3">
+                <i className="bi bi-exclamation-triangle text-warning" style={{ fontSize: "2rem" }}></i>
+              </div>
+              <p className="text-muted mb-3">{error || "No posts available"}</p>
+              {error && (
+                <div className="d-flex flex-column align-items-center gap-2">
+                  {isRetrying.current && (
+                    <div className="d-flex align-items-center gap-2 mb-2">
+                      <span className="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
+                      <span className="text-muted small">
+                        Retrying... ({retryCount}/{FEED_CONFIG.MAX_RETRIES})
+                      </span>
+                    </div>
+                  )}
+                  <button 
+                    className="btn btn-outline-primary btn-sm"
+                    onClick={() => {
+                      setRetryCount(0);
+                      hasFetched.current = false;
+                      isRetrying.current = false;
+                      fetchPosts();
+                    }}
+                    disabled={isRetrying.current}
+                  >
+                    <i className="bi bi-arrow-clockwise me-2"></i>
+                    Try Again
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
