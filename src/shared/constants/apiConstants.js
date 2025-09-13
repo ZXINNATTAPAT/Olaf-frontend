@@ -86,15 +86,28 @@ export const HTTP_STATUS = {
 };
 
 export const API_CONFIG = {
-  TIMEOUT: 15000, // 10 seconds
+  TIMEOUT: 30000, // 10 seconds
   MAX_RETRIES: 3,
-  RETRY_DELAY: 1000, // 1 second
+  RETRY_DELAY: 2000, // 2 seconds
   BATCH_SIZE: 10,
+};
+
+export const FEED_CONFIG = {
+  MAX_RETRIES: 3, // Increased retries for Render free tier cold starts
+  RETRY_DELAY: 2000, // 2 seconds - longer delay for cold starts
+  TIMEOUT: 20000, // 20 seconds - longer timeout for cold starts
+  BACKEND_CHECK_INTERVAL: 5000, // 5 seconds between backend checks
+  RENDER_FREE_TIER_DELAY: 3000, // 3 seconds delay for Render free tier cold starts
+  CACHE_DURATION: 60000, // 60 seconds cache for posts (longer for free tier)
+  COLD_START_TIMEOUT: 60000, // 60 seconds for cold start detection
 };
 
 export const ERROR_MESSAGES = {
   NETWORK_ERROR: 'Network error. Please check your connection.',
-  TIMEOUT_ERROR: 'Request timeout. Please try again.',
+  BACKEND_NOT_RESPONDING: 'Backend server is not responding. Please check your connection and try again.',
+  RENDER_FREE_TIER: 'Server is starting up (free tier). Please wait a moment and try again.',
+  TIMEOUT_ERROR: 'Request timeout (20s). Server may be slow, please try again.',
+  COLD_START: 'Server is waking up from sleep (free tier). This may take up to 60 seconds...',
   UNAUTHORIZED: 'You are not authorized to perform this action.',
   FORBIDDEN: 'Access denied.',
   NOT_FOUND: 'Resource not found.',

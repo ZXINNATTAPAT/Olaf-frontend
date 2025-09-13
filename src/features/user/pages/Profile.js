@@ -1,10 +1,11 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { NavLink } from "react-router-dom";
 import useAuth from "../../../shared/hooks/useAuth";
 import { IconPath, LazyImage, ThemeToggle, ProfileSkeleton } from "../../../shared/components";
 import { FaHeart } from "react-icons/fa";
 import { getImageUrl } from "../../../shared/services/CloudinaryService";
 import ApiController from "../../../shared/services/ApiController";
+import { ERROR_MESSAGES, FEED_CONFIG } from "../../../shared/constants/apiConstants";
 import "../../../assets/styles/card.css";
 import "../../../assets/styles/theme.css";
 
@@ -16,23 +17,40 @@ export default function Profile() {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const [retryCount, setRetryCount] = useState(0);
   const { user } = useAuth();
+  
+  // Cache refs
+  const cacheRef = useRef({ data: null, timestamp: 0 });
+  const isRetrying = useRef(false);
 
   const Ic = IconPath();
   const star = Ic[0];
   // const Like = Ic[1];
   const comment = Ic[2];
 
-  const fetchProfileData = useCallback(async (page = 1, isLoadMore = false) => {
+  const fetchProfileData = useCallback(async (page = 1, isLoadMore = false, isRetry = false) => {
     let isMounted = true; // Flag to prevent state updates after component unmounts
 
-      try {
+    // Check cache first (only for initial load)
+    if (!isLoadMore && !isRetry) {
+      const now = Date.now();
+      if (cacheRef.current.data && (now - cacheRef.current.timestamp) < FEED_CONFIG.CACHE_DURATION) {
+        console.log('✅ Profile Cache HIT - Using cached data');
+        setp_data(cacheRef.current.data);
+        setIsLoading(false);
+        return;
+      }
+      console.log('❌ Profile Cache MISS - Fetching from API');
+    }
+
+    try {
       if (isLoadMore) {
         setIsLoadingMore(true);
-      } else {
+      } else if (!isRetry) {
         setIsLoading(true);
       }
-        setError(null);
+      setError(null);
 
       // Fetch profile data first to get user ID (only on initial load)
       if (!isLoadMore) {
@@ -149,10 +167,19 @@ export default function Profile() {
         setp_data(prevPosts => [...prevPosts, ...processedPosts]);
       } else {
         setp_data(processedPosts);
+        
+        // Cache the data for initial load only
+        cacheRef.current = {
+          data: processedPosts,
+          timestamp: Date.now()
+        };
+        console.log('✅ Profile data loaded and cached successfully');
       }
       
       setHasMore(processedPosts.length === 10 && p_data.length + processedPosts.length < totalCount);
       setCurrentPage(page);
+      setRetryCount(0); // Reset retry count on success
+      isRetrying.current = false; // Reset retry flag
       
       if (isLoadMore) {
         setIsLoadingMore(false);
@@ -160,17 +187,64 @@ export default function Profile() {
         setIsLoading(false);
       }
       } catch (error) {
-        console.error("Error:", error);
-          setError(
-            error.message || "Failed to load profile data. Please try again."
-          );
-      if (isLoadMore) {
-        setIsLoadingMore(false);
-      } else {
+        console.error("Profile Error:", error);
+        
+        // Check if we should retry for network errors
+        const isNetworkError = (
+          error.message.includes("Network error") || 
+          error.message.includes("Backend server is not responding") ||
+          error.message.includes("Network Error") ||
+          error.message.includes("ECONNREFUSED") ||
+          error.message.includes("ETIMEDOUT") ||
+          error.message.includes("timeout")
+        );
+        
+        const shouldRetry = isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES && !isLoadMore;
+        
+        if (shouldRetry) {
+          isRetrying.current = true;
+          setRetryCount(prev => prev + 1);
+          
+          const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY : 
+                       FEED_CONFIG.RETRY_DELAY;
+          
+          console.log(`🔄 Profile retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES})`);
+          
+          setTimeout(() => {
+            isRetrying.current = false;
+            fetchProfileData(page, isLoadMore, true);
+          }, delay);
+          return;
+        }
+        
+        // Provide more specific error messages
+        let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
+        
+        if (isNetworkError) {
+          // Progressive error messages for Render free tier
+          if (retryCount >= 2) {
+            errorMessage = ERROR_MESSAGES.COLD_START; // Cold start after multiple retries
+          } else if (retryCount >= 1) {
+            errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER; // Free tier startup
+          } else {
+            errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING; // Initial network error
+          }
+        } else if (error.message.includes("timeout")) {
+          errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        console.log(`❌ Profile final error after ${retryCount} retries:`, errorMessage);
+        setError(errorMessage);
+        
+        if (isLoadMore) {
+          setIsLoadingMore(false);
+        } else {
           setIsLoading(false);
         }
       }
-  }, [profileData?.id, user.id, p_data.length]);
+  }, [profileData?.id, user.id, p_data.length, retryCount]);
 
   const loadMorePosts = async () => {
     if (!isLoadingMore && hasMore) {
