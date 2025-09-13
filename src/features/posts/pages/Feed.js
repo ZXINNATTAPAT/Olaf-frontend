@@ -9,15 +9,14 @@ import {
 import { useRedirect } from "../../../shared/hooks";
 import { FaHeart } from "react-icons/fa"; // ใช้ไอคอนหัวใจจาก react-icons
 import { getImageUrl } from "../../../shared/services/CloudinaryService";
+import ApiController from "../../../shared/services/ApiController";
 import "../../../assets/styles/card.css";
 import "../../../assets/styles/theme.css";
-const baseUrl =
-  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
 
 export default function Feed() {
   const redirectx = useRedirect();
   const [p_data, setp_data] = useState([]);
-  const [imgSrcs, setImgSrcs] = useState([]);
+  // const [imgSrcs, setImgSrcs] = useState([]);
   const [showData, setShowData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   // คำค้นหาที่ผู้ใช้กรอก
@@ -49,29 +48,14 @@ export default function Feed() {
       setIsLoading(true);
       setError(null); // Clear previous errors
       
-      console.log('Fetching posts from:', `${baseUrl}/posts/`);
+      // Use ApiController to fetch posts
+      const result = await ApiController.getPosts();
       
-      // Fetch posts only - user data is included in the response
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch(`${baseUrl}/posts/`, {
-        method: "GET",
-        withCredentials: true,
-        credentials: "include",
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch posts');
       }
       
-      const postData = await response.json();
-      console.log('Posts data received:', postData.length, 'posts');
+      const postData = result.data;
 
       // Process posts - user data is now included in the response
       const updatedPosts = postData.map((post) => {
@@ -152,22 +136,15 @@ export default function Feed() {
 
       setp_data(latestPosts); // Set post data
 
-      const validImages = latestPosts
-        .filter((post) => post.image) // Only include posts with images
-        .map((post) => post.image);
+      // const validImages = latestPosts
+      //   .filter((post) => post.image) // Only include posts with images
+      //   .map((post) => post.image);
 
-      setImgSrcs(validImages);
+      // setImgSrcs(validImages);
       setIsLoading(false);
-      console.log('Posts loaded successfully');
     } catch (error) {
       console.error("Error fetching posts:", error);
-      
-      if (error.name === 'AbortError') {
-        setError("Request timed out. Please check your connection and try again.");
-      } else {
-        setError(`Failed to load posts: ${error.message}`);
-      }
-      
+      setError(`Failed to load posts: ${error.message}`);
       setIsLoading(false);
       
       // Set empty data to show "No posts available" message
@@ -178,7 +155,7 @@ export default function Feed() {
 
   useEffect(() => {
     fetchPosts();
-  }, []); // เรียกเพียงครั้งเดียวเมื่อ component mount
+  }, [fetchPosts]); // เรียกเพียงครั้งเดียวเมื่อ component mount
 
   useEffect(() => {
     if (p_data) {
