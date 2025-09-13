@@ -3,11 +3,18 @@ import authService from '../AuthService';
 
 const baseURL = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
 
+// Log API configuration in development
+if (process.env.NODE_ENV === 'development') {
+  console.log('🔧 API Configuration:');
+  console.log('Base URL:', baseURL);
+  console.log('Environment:', process.env.NODE_ENV);
+}
+
 // สร้าง axios instance สำหรับ httpOnly cookies
 const axiosInstance = axios.create({
   baseURL: baseURL,
   withCredentials: true, // สำคัญสำหรับ httpOnly cookies
-  timeout: 10000, // 12 seconds timeout - เหมาะสำหรับ Render.com
+  timeout: 30000, // 30 seconds timeout - เหมาะสำหรับ Render.com
   headers: {
     'Content-Type': 'application/json',
   },
@@ -49,7 +56,16 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     // จัดการ network errors
     if (!error.response) {
-      return Promise.reject(new Error('Network error: Backend server is not responding'));
+      // Check if it's a timeout error
+      if (error.code === 'ECONNABORTED') {
+        return Promise.reject(new Error('Request timeout: The server took too long to respond'));
+      }
+      // Check if it's a network connectivity issue
+      if (error.message === 'Network Error') {
+        return Promise.reject(new Error('Network error: Please check your internet connection'));
+      }
+      // Generic network error
+      return Promise.reject(new Error(`Network error: ${error.message || 'Unable to connect to server'}`));
     }
     
     // จัดการ token errors

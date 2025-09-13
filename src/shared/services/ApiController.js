@@ -42,7 +42,13 @@ class ApiController {
       const response = await axiosInstance.get(API_ENDPOINTS.AUTH.USER);
       return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      console.error('Error fetching user profile:', error);
+      return { 
+        success: false, 
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        isNetworkError: !error.response
+      };
     }
   }
 
@@ -65,7 +71,13 @@ class ApiController {
       const response = await axiosInstance.get(API_ENDPOINTS.POSTS.BASE, { params });
       return { success: true, data: response.data };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      console.error('Error fetching posts:', error);
+      return { 
+        success: false, 
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        isNetworkError: !error.response
+      };
     }
   }
 

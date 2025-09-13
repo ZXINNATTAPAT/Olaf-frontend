@@ -86,15 +86,15 @@ export const HTTP_STATUS = {
 };
 
 export const API_CONFIG = {
-  TIMEOUT: 15000, // 10 seconds
+  TIMEOUT: 30000, // 30 seconds - increased for Render.com
   MAX_RETRIES: 3,
-  RETRY_DELAY: 1000, // 1 second
+  RETRY_DELAY: 2000, // 2 seconds
   BATCH_SIZE: 10,
 };
 
 export const ERROR_MESSAGES = {
   NETWORK_ERROR: 'Network error. Please check your connection.',
-  TIMEOUT_ERROR: 'Request timeout. Please try again.',
+  TIMEOUT_ERROR: 'The server is taking too long to respond. This might be due to server load. Please try again.',
   UNAUTHORIZED: 'You are not authorized to perform this action.',
   FORBIDDEN: 'Access denied.',
   NOT_FOUND: 'Resource not found.',
