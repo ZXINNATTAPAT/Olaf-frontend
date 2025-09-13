@@ -190,7 +190,7 @@ export default function Feed() {
   }, [p_data]);
 
   return (
-    <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
+    <div className="min-vh-100">
       <ThemeToggle />
 
       {/* Header Section */}
