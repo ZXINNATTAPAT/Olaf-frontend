@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaHeart } from "react-icons/fa";
 import useAuth from '../../../../shared/hooks/useAuth';
-const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+import ApiController from '../../../../shared/services/ApiController';
 
 export default function PostLikeButton({ post_id, onLikesCountChange, initialLikesCount = 0, initialLiked = false }) {
   const [liked, setLiked] = useState(initialLiked);
@@ -27,52 +27,34 @@ export default function PostLikeButton({ post_id, onLikesCountChange, initialLik
       return;
     }
   
-    const likedPostId = `${post_id}/${user.id}`;  // ตรวจสอบการสร้าง likedPostId
-  
     try {
-      let response;
-      let data = null;
+      let result;
   
       if (liked) {
         // ส่งคำขอ DELETE
-        response = await fetch(`${baseUrl}/postlikes/${likedPostId}/`, {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        result = await ApiController.unlikePost(post_id, user.id);
       } else {
         // ส่งคำขอ POST
-        response = await fetch(`${baseUrl}/postlikes/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            post: post_id,
-            user: user.id,
-          }),
-        });
-        data = await response.json(); // Parse เฉพาะเมื่อเป็น POST ที่จะมีข้อมูลตอบกลับ
+        result = await ApiController.likePost(post_id, user.id);
       }
   
-      if (response.ok) {
+      if (result.success) {
         const newLiked = !liked;
         setLiked(newLiked); // อัปเดตสถานะไลค์
   
-        // อัปเดตยอดไลค์หลังจาก POST หรือ DELETE
-        if (data) {
-          setLikesCount(data.like_count); // ใช้จำนวนไลค์จากการ POST
-          onLikesCountChange(data.like_count);
+        // อัปเดตยอดไลค์
+        if (result.data && result.data.like_count !== undefined) {
+          setLikesCount(result.data.like_count);
+          onLikesCountChange(result.data.like_count);
         } else {
-          setLikesCount(likesCount + (newLiked ? 1 : -1)); // อัปเดตจำนวนไลค์ในกรณี DELETE
+          setLikesCount(likesCount + (newLiked ? 1 : -1));
           onLikesCountChange(likesCount + (newLiked ? 1 : -1));
         }
   
         // บันทึกสถานะการกดไลค์ใน Local Storage
         localStorage.setItem(`liked_post_${post_id}_user_${user.id}`, newLiked ? 'true' : 'false');
       } else {
-        console.error('Failed to update like status');
+        console.error('Failed to update like status:', result.error);
       }
     } catch (error) {
       console.error('Error updating like status:', error);

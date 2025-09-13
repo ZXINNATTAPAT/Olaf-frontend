@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import "../../../assets/styles/view.css";
-import axiosInstance from "../../../shared/services/axios/index";
+import ApiController from "../../../shared/services/ApiController";
 import Comment from "../components/CommentPost/Comment";
 import PostLikeButton from "../components/Likepost/Likepost";
 import DeletePost from "../components/DeletePost/Delete";
@@ -44,29 +44,20 @@ export default function View() {
   // ฟังก์ชันสำหรับดึง comments
   const fetchComments = async (postId) => {
     try {
-      const response = await fetch(`${process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api'}/comments/`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        const filteredComments = data.filter(
-          (comment) => comment.post === postId
-        );
-        setComments(filteredComments);
-        setCommentsCount(filteredComments.length);
+      const result = await ApiController.getComments(postId);
+      
+      if (result.success) {
+        setComments(result.data);
+        setCommentsCount(result.data.length);
       } else {
-        console.error("Failed to fetch comments");
+        console.error("Failed to fetch comments:", result.error);
       }
     } catch (error) {
       console.error("Error fetching comments:", error);
     }
   };
   
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
       // Double check ก่อนเรียก API
       if (hasFetched.current || isFetching.current) {
         console.log("API already fetched or currently fetching, skipping fetchUserData...");
@@ -79,19 +70,18 @@ export default function View() {
         setError(null);
 
         console.log("Fetching post with ID:", id);
-        const response = await axiosInstance.get(`/posts/${id}/`); // เรียก API โดยใช้ Axios
+        const result = await ApiController.getPostById(id);
 
-        // ตรวจสอบสถานะของการตอบกลับ
-        if (response.status !== 200) {
-          throw new Error("Fetching post failed"); // ถ้าสถานะไม่ใช่ 200 ให้โยนข้อผิดพลาด
+        if (!result.success) {
+          throw new Error(result.error || "Failed to fetch post");
         }
         
-        setp_data(response.data); // เก็บข้อมูลที่ดึงมาใน state
+        setp_data(result.data); // เก็บข้อมูลที่ดึงมาใน state
         hasFetched.current = true; // ตั้งค่าเรียกแล้ว
-        console.log("Post data loaded:", response.data);
+        console.log("Post data loaded:", result.data);
         
         // ดึง comments สำหรับ post นี้
-        await fetchComments(response.data.post_id);
+        await fetchComments(result.data.post_id);
       } catch (error) {
         console.error("Error:", error);
         setError("Fetching post failed. Please try again.");
@@ -100,7 +90,7 @@ export default function View() {
         isFetching.current = false; // ตั้งค่าหยุดเรียก API
         setLoading(false);
       }
-    };
+    }, [id]);
   
   useEffect(() => {
     // ตรวจสอบว่า id มีค่าหรือไม่
@@ -110,7 +100,7 @@ export default function View() {
       return;
     }
     fetchUserData(); // ดึงข้อมูลเมื่อ component mount หรือ id เปลี่ยน
-  }, [id]); // id จะเปลี่ยนเมื่อ URL path เปลี่ยน
+  }, [id, fetchUserData]); // id จะเปลี่ยนเมื่อ URL path เปลี่ยน
 
   // แสดง skeleton loading ขณะรอข้อมูล
   if (loading) {

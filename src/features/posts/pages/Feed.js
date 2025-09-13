@@ -9,22 +9,23 @@ import {
 import { useRedirect } from "../../../shared/hooks";
 import { FaHeart } from "react-icons/fa"; // ใช้ไอคอนหัวใจจาก react-icons
 import { getImageUrl } from "../../../shared/services/CloudinaryService";
+import ApiController from "../../../shared/services/ApiController";
 import "../../../assets/styles/card.css";
 import "../../../assets/styles/theme.css";
-const baseUrl =
-  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
 
 export default function Feed() {
   const redirectx = useRedirect();
   const [p_data, setp_data] = useState([]);
-  const [imgSrcs, setImgSrcs] = useState([]);
+  // const [imgSrcs, setImgSrcs] = useState([]);
   const [showData, setShowData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   // คำค้นหาที่ผู้ใช้กรอก
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [error, setError] = useState(null);
+  const [retryCount, setRetryCount] = useState(0);
   const hasFetched = useRef(false);
+  const isRetrying = useRef(false);
   const Ic = IconPath();
   const star = Ic[0];
   // const Like = Ic[1];
@@ -41,37 +42,33 @@ export default function Feed() {
     setFilteredData(result);
   }, [searchKeyword, p_data]); // กรองเมื่อ searchKeyword หรือ p_data เปลี่ยน
 
-  const fetchPosts = useCallback(async () => {
-    if (hasFetched.current) return; // Prevent duplicate calls
-    hasFetched.current = true;
+  const fetchPosts = useCallback(async (isRetry = false) => {
+    if (hasFetched.current && !isRetry) return; // Prevent duplicate calls
+    if (isRetrying.current) return; // Prevent overlapping retries
+    if (!isRetry) hasFetched.current = true;
     
     try {
       setIsLoading(true);
       setError(null); // Clear previous errors
       
-      console.log('Fetching posts from:', `${baseUrl}/posts/`);
+      // Use ApiController to fetch posts
+      const result = await ApiController.getPosts();
       
-      // Fetch posts only - user data is included in the response
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-      
-      const response = await fetch(`${baseUrl}/posts/`, {
-        method: "GET",
-        withCredentials: true,
-        credentials: "include",
-        signal: controller.signal,
-      });
-      
-      clearTimeout(timeoutId);
-
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!result.success) {
+        // Only retry for actual network errors, not timeout errors
+        if (result.isNetworkError && !result.error?.includes('timeout') && retryCount < 3) {
+          isRetrying.current = true;
+          setRetryCount(prev => prev + 1);
+          setTimeout(() => {
+            isRetrying.current = false;
+            fetchPosts(true);
+          }, 2000 * (retryCount + 1)); // Exponential backoff
+          return;
+        }
+        throw new Error(result.error || 'Failed to fetch posts');
       }
       
-      const postData = await response.json();
-      console.log('Posts data received:', postData.length, 'posts');
+      const postData = result.data;
 
       // Process posts - user data is now included in the response
       const updatedPosts = postData.map((post) => {
@@ -152,33 +149,40 @@ export default function Feed() {
 
       setp_data(latestPosts); // Set post data
 
-      const validImages = latestPosts
-        .filter((post) => post.image) // Only include posts with images
-        .map((post) => post.image);
+      // const validImages = latestPosts
+      //   .filter((post) => post.image) // Only include posts with images
+      //   .map((post) => post.image);
 
-      setImgSrcs(validImages);
+      // setImgSrcs(validImages);
       setIsLoading(false);
-      console.log('Posts loaded successfully');
+      setRetryCount(0); // Reset retry count on success
+      isRetrying.current = false; // Reset retry flag
     } catch (error) {
       console.error("Error fetching posts:", error);
       
-      if (error.name === 'AbortError') {
-        setError("Request timed out. Please check your connection and try again.");
-      } else {
-        setError(`Failed to load posts: ${error.message}`);
+      // Provide more specific error messages
+      let errorMessage = "Failed to load posts";
+      if (error.message.includes("Network error")) {
+        errorMessage = "Unable to connect to server. Please check your internet connection.";
+      } else if (error.message.includes("timeout")) {
+        errorMessage = "Request timed out. Please try again.";
+      } else if (error.message) {
+        errorMessage = `Failed to load posts: ${error.message}`;
       }
       
+      setError(errorMessage);
       setIsLoading(false);
+      isRetrying.current = false; // Reset retry flag on error
       
       // Set empty data to show "No posts available" message
       setp_data([]);
       setFilteredData([]);
     }
-  }, []);
+  }, [retryCount]);
 
   useEffect(() => {
     fetchPosts();
-  }, []); // เรียกเพียงครั้งเดียวเมื่อ component mount
+  }, [fetchPosts]); // เรียกเพียงครั้งเดียวเมื่อ component mount
 
   useEffect(() => {
     if (p_data) {
@@ -434,7 +438,41 @@ export default function Feed() {
             ))
           ) : (
             <div className="col-12 text-center py-5">
-              <p className="text-muted">No posts available {error}</p>
+              <div className="mb-3">
+                <i className="bi bi-exclamation-triangle text-warning" style={{ fontSize: "2rem" }}></i>
+              </div>
+              <p className="text-muted mb-3">{error || "No posts available"}</p>
+              {error && (
+                <div className="d-flex flex-column align-items-center gap-2">
+                  <button 
+                    className="btn btn-outline-primary"
+                    onClick={() => {
+                      setRetryCount(0);
+                      hasFetched.current = false;
+                      isRetrying.current = false;
+                      fetchPosts();
+                    }}
+                    disabled={isRetrying.current}
+                  >
+                    {isRetrying.current ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-arrow-clockwise me-2"></i>
+                        Try Again
+                      </>
+                    )}
+                  </button>
+                  {retryCount > 0 && (
+                    <small className="text-muted">
+                      Retry attempt {retryCount} of 3
+                    </small>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>

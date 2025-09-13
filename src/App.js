@@ -18,6 +18,11 @@ import {
 } from './features/user';
 import { AuthMiddleware, PersistLogin, Navbar, Loader } from './shared';
 
+// Import debug utility in development
+if (process.env.NODE_ENV === 'development') {
+  import('./debug/api-test');
+}
+
 function App() {
   return (
     <>

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FaDeleteLeft } from "react-icons/fa6"; // ไอคอนสำหรับปุ่มลบ
 import useAuth from '../../../../shared/hooks/useAuth'; // ดึงข้อมูล auth จาก hook
 import { useNavigate } from "react-router-dom"; // นำเข้า useNavigate
-const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+import ApiController from '../../../../shared/services/ApiController';
 
 export default function DeletePost({ post_id, postUserId, onDeleteSuccess }) {
     const { user } = useAuth(); // ดึงข้อมูลผู้ใช้ที่ล็อกอิน
@@ -13,24 +13,13 @@ export default function DeletePost({ post_id, postUserId, onDeleteSuccess }) {
     const handleDelete = async () => {
         const confirmDelete = window.confirm("Are you sure you want to delete this post?");
         if (!confirmDelete) return; // หากผู้ใช้กด Cancel จะไม่ลบโพสต์
-
-        // if (!user || !user.token) {
-        //     alert("You need to be logged in to delete a post.");
-        //     return; // ถ้าไม่มี token ให้แสดงข้อความและไม่ทำอะไรต่อ
-        // }
         
         setIsDeleting(true); // ตั้งสถานะการลบเป็น true
 
         try {
-            const response = await fetch(`${baseUrl}/posts/${post_id}/`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json',
-                    // 'Authorization': `Bearer ${user?.token}`, // ส่ง token ของผู้ใช้เพื่อยืนยันสิทธิ์
-                },
-            });
+            const result = await ApiController.deletePost(post_id);
 
-            if (response.ok) {
+            if (result.success) {
                 alert('Post deleted successfully.');
                 navigate('/Feed'); // เปลี่ยนเส้นทางไปยังหน้า Feed
                 onDeleteSuccess(); // ฟังก์ชันนี้จะถูกเรียกหลังลบสำเร็จ (เช่น รีเฟรชหน้าหรือดึงโพสต์ใหม่)
