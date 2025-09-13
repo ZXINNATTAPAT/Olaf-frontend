@@ -3,35 +3,16 @@ import { FaHeart } from "react-icons/fa";
 import useAuth from '../../../../shared/hooks/useAuth';
 const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
 
-export default function PostLikeButton({ post_id, onLikesCountChange }) {
-  const [liked, setLiked] = useState(false);
-  const [likesCount, setLikesCount] = useState(0);
+export default function PostLikeButton({ post_id, onLikesCountChange, initialLikesCount = 0, initialLiked = false }) {
+  const [liked, setLiked] = useState(initialLiked);
+  const [likesCount, setLikesCount] = useState(initialLikesCount);
   const { user } = useAuth(); // ดึงข้อมูล user ที่ล็อกอิน
 
-  // ดึงข้อมูลโพสต์และสถานะไลค์จาก backend เมื่อหน้าเว็บโหลด
+  // ใช้ props แทนการเรียก API
   useEffect(() => {
-    const fetchPostDetails = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/posts/${post_id}/`); // เรียก API เพื่อดึงข้อมูลโพสต์
-        if (response.ok) {
-          const data = await response.json();
-          setLikesCount(data.like_count); // แสดงยอดไลค์ทันที
-          onLikesCountChange(data.like_count); // ส่งค่ากลับไปยัง View
-
-          // ตรวจสอบสถานะไลค์จาก Local Storage
-          const likedStatus = localStorage.getItem(`liked_post_${post_id}_user_${user.id}`);
-          setLiked(likedStatus === 'true');
-        } else {
-          console.error('Failed to fetch post details');
-        }
-      } catch (error) {
-        console.error('Error fetching post details:', error);
-      }
-    };
-
-    fetchPostDetails();
-  }, [post_id, user, onLikesCountChange]);
-
+    setLikesCount(initialLikesCount);
+    setLiked(initialLiked);
+  }, [initialLikesCount, initialLiked]);
 
   // ฟังก์ชันสำหรับจัดการการกดไลก์/ยกเลิกไลก์
   const handleLike = async () => {
@@ -41,8 +22,8 @@ export default function PostLikeButton({ post_id, onLikesCountChange }) {
     }
   
     // ตรวจสอบว่า user.id มีค่าหรือไม่
-    if (!user.id) {
-      console.error('User ID is undefined');
+    if (!user || !user.id) {
+      console.error('User ID is undefined:', user);
       return;
     }
   

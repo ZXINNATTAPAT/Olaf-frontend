@@ -2,22 +2,27 @@ import React, { useEffect, useRef, useState } from "react";
 import Slider from "react-slick";
 import useAuth from "../../../../shared/hooks/useAuth";
 import Likecomment from "../Likecomment/Likecomment";
-const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+const baseUrl =
+  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
 
-export default function Comment({ post_id, onCommentsCountChange }) {
+export default function Comment({ post_id, onCommentsCountChange, initialComments = [], initialLoading = false }) {
   let sliderRef = useRef(null);
-  const [comments, setComments] = useState([]); // ตั้งค่าเริ่มต้นเป็น []
-  const [loading, setLoading] = useState(true);
+
+  const [comments, setComments] = useState(initialComments); // ใช้ props แทนการเรียก API
+  const [loading, setLoading] = useState(initialLoading);
   const [newComment, setNewComment] = useState(""); // state สำหรับจัดเก็บคอมเมนต์ใหม่
   const [error, setError] = useState(null); // สำหรับเก็บ error ถ้ามี
   const [likesCount, setLikesCount] = useState(0);
   const { user } = useAuth();
 
-  onCommentsCountChange(comments.length);
+  // ใช้ useEffect เพื่อเรียก onCommentsCountChange เมื่อ comments เปลี่ยน
+  useEffect(() => {
+    onCommentsCountChange(comments.length);
+  }, [comments.length]); // ลบ onCommentsCountChange ออกจาก dependencies
 
   const handleLikesCountChange = (comment_id, count) => {
-    setLikesCount(prev => ({ ...prev, [comment_id]: count }));
-  };  
+    setLikesCount((prev) => ({ ...prev, [comment_id]: count }));
+  };
 
   function SampleNextArrow(props) {
     const { className, style, onClick } = props;
@@ -80,38 +85,19 @@ export default function Comment({ post_id, onCommentsCountChange }) {
     prevArrow: <SamplePrevArrow />,
   };
 
+  // ใช้ props แทนการเรียก API
   useEffect(() => {
-    const fetchComments = async () => {
-      try {
-        const response = await fetch(`${baseUrl}/comments/`, {
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          // console.log(data)
-          const filteredComments = data.filter(
-            (comment) => comment.post === post_id
-          );
-          setComments(filteredComments);
-        } else {
-          console.error("Failed to fetch comments");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchComments();
-  }, [post_id]); // ทำการดึงข้อมูลเมื่อ post_id เปลี่ยนแปลง
+    setComments(initialComments);
+    setLoading(initialLoading);
+  }, [initialComments, initialLoading]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!user || !user.id) {
+      alert("You need to log in to comment.");
+      return;
+    }
 
     try {
       const response = await fetch(`${baseUrl}/comments/`, {
@@ -167,11 +153,16 @@ export default function Comment({ post_id, onCommentsCountChange }) {
                           {comment.comment_text}
                         </p>
                         <Likecomment
-                          post_id={post_id}
                           comment_id={comment.comment_id}
-                          onLikesCountChange={(count) => handleLikesCountChange(comment.comment_id, count)}
+                          onLikesCountChange={(count) =>
+                            handleLikesCountChange(comment.comment_id, count)
+                          }
+                          initialLikesCount={comment.like_count || 0}
+                          initialLiked={localStorage.getItem(`liked_comment_${comment.comment_id}_user_${user?.id}`) === 'true'}
                         />
-                        <p style={{ fontSize: "12px", marginBottom: "0" }}>{likesCount[comment.comment_id] || 0}</p>
+                        <p style={{ fontSize: "12px", marginBottom: "0" }}>
+                          {likesCount[comment.comment_id] || 0}
+                        </p>
                       </div>
                       <small style={{ fontSize: "12px" }}>
                         {new Date(comment.comment_datetime).toLocaleDateString(
