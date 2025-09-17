@@ -5,7 +5,7 @@ import useAuth from "../../../shared/hooks/useAuth";
 import useLoader from "../../../shared/hooks/useLoader";
 
 export default function Loginauth() {
-  const { setUser, setCSRFToken, setAccessToken } = useAuth();
+  const { setUser, setCSRFToken } = useAuth();
   const { showLoader, hideLoader } = useLoader();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -56,24 +56,14 @@ export default function Loginauth() {
         setUser(response.user);
       }
 
-      // บันทึก access token เฉพาะกรณีที่จำเป็น (สำหรับ API calls ที่ต้องใช้ Authorization header)
-      if (response.access_token) {
-        setAccessToken(response.access_token);
-        localStorage.setItem('accessToken', response.access_token);
-      }
-
       // บันทึก CSRF token สำหรับ form submissions
       if (authService.csrfToken) {
         setCSRFToken(authService.csrfToken);
-        localStorage.setItem('csrfToken', authService.csrfToken);
       }
 
       setEmail("");
       setPassword("");
       hideLoader();
-
-      // บันทึกสถานะการล็อกอิน
-      localStorage.setItem("us", "true");
 
       // รอสักครู่เพื่อให้ cookies ถูกตั้งค่า
       setTimeout(() => {
@@ -109,13 +99,11 @@ export default function Loginauth() {
 
   return (
     <div className="min-vh-85 d-flex align-items-center justify-content-center">
-
       <div className="container-fluid">
         <div className="row justify-content-center">
           <div className="col-md-6 col-lg-4">
             <div className="card border-0">
               <div className="card-body p-5">
-
                 {/* Logo */}
                 <div className="text-center mb-4">
                   <h1 className="crimson-text-bold-italic  mb-2">OLAF</h1>

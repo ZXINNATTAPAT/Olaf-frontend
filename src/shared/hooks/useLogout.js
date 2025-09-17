@@ -1,38 +1,33 @@
+import { useNavigate } from "react-router-dom";
 import useAuth from "./useAuth";
-import axiosInstance from "../services/axios/index";
+import authService from "../services/AuthService";
 
 export default function useLogout() {
+  const navigate = useNavigate();
   const { setUser, setAccessToken, setCSRFToken } = useAuth();
 
   const logout = async () => {
     try {
-      // ใช้ HttpOnly cookies - server จะลบ cookies อัตโนมัติ
-      const response = await axiosInstance.post(
-        "/auth/logout/",
-        {},
-        {
-          withCredentials: true,
-        }
-      );
-      console.log(response);
-
-      // ล้าง context
+      // เรียก logout API
+      await authService.logout();
+      
+      // Clear context state
+      setUser({});
       setAccessToken(null);
       setCSRFToken(null);
-      setUser({});
-
-      // ลบเฉพาะ localStorage flags
-      localStorage.removeItem("us");
-      localStorage.removeItem("csrfToken");
-      // ไม่ลบ accessToken เพราะใช้ cookies เป็นหลัก
+      
+      // Navigate to login page
+      navigate("/auth/login", { replace: true });
     } catch (error) {
-      console.log(error);
-      // แม้จะ error ก็ให้ล้าง context
+      console.error("Logout error:", error);
+      
+      // Clear state even if API call fails
+      setUser({});
       setAccessToken(null);
       setCSRFToken(null);
-      setUser({});
-      localStorage.removeItem("us");
-      localStorage.removeItem("csrfToken");
+      
+      // Navigate to login page
+      navigate("/auth/login", { replace: true });
     }
   };
 

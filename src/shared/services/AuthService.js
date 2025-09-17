@@ -1,7 +1,7 @@
 class AuthService {
     constructor(baseURL = 'https://olaf-backend.onrender.com/api') {
         this.baseURL = baseURL;
-        this.csrfToken = localStorage.getItem('csrfToken') || null;
+        // this.csrfToken = localStorage.getItem('csrfToken') || null;
         
         // Cache mechanism
         this.cache = {
@@ -101,15 +101,12 @@ class AuthService {
                 return this.cache.userProfile;
             }
 
-            const accessToken = this.getAccessToken();
-            
             const response = await fetch(`${this.baseURL}/auth/user/`, {
                 method: 'GET',
                 headers: {
-                    'Authorization': `Bearer ${accessToken}`,
                     'X-CSRFToken': this.csrfToken
                 },
-                credentials: 'include'
+                credentials: 'include' // HTTP Only cookies จะถูกส่งอัตโนมัติ
             });
             
             if (!response.ok) {
@@ -156,25 +153,19 @@ class AuthService {
     // 6. Logout
     async logout() {
         try {
-            const accessToken = this.getAccessToken();
+            const response = await fetch(`${this.baseURL}/auth/logout/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.csrfToken,
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include',
+                body: JSON.stringify({})
+            });
             
-            // Only make API call if we have a token
-            if (accessToken) {
-                const response = await fetch(`${this.baseURL}/auth/logout/`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${accessToken}`,
-                        'X-CSRFToken': this.csrfToken,
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({})
-                });
-                
-                // Even if the API call fails, we should still clear local state
-                if (!response.ok) {
-                    console.warn('Logout API call failed, but clearing local state:', response.status);
-                }
+            // Even if the API call fails, we should still clear local state
+            if (!response.ok) {
+                console.warn('Logout API call failed, but clearing local state:', response.status);
             }
             
             // Clear all local state and cache
@@ -197,12 +188,10 @@ class AuthService {
         // Clear CSRF token
         this.csrfToken = null;
         
-        // Clear localStorage items
+        // Clear only CSRF token from localStorage
         localStorage.removeItem('csrfToken');
-        localStorage.removeItem('us');
         
-        // Note: We don't clear accessToken from localStorage because it's managed by HTTP-only cookies
-        // The server will handle clearing the HTTP-only cookies
+        // Note: HTTP-only cookies จะถูกจัดการโดย server
     }
 
     // Helper method to clear cookies before login
@@ -228,33 +217,17 @@ class AuthService {
         this.clearLocalState();
     }
 
-    // Helper: Get access token from cookie
-    getAccessToken() {
-        const cookies = document.cookie.split(';');
-        
-        // ลองหา access token จาก cookies
-        const accessCookie = cookies.find(cookie => 
-            cookie.trim().startsWith('access=')
-        );
-        
-        if (accessCookie) {
-            const token = accessCookie.split('=')[1];
-            return token;
+    // Helper: Check if user is authenticated by calling API
+    async isAuthenticated() {
+        try {
+            const response = await fetch(`${this.baseURL}/auth/user/`, {
+                method: 'GET',
+                credentials: 'include'
+            });
+            return response.ok;
+        } catch (error) {
+            return false;
         }
-        
-        // Fallback: ลองหา access token จาก localStorage
-        const localStorageToken = localStorage.getItem('accessToken');
-        if (localStorageToken) {
-            return localStorageToken;
-        }
-        
-        return null;
-    }
-
-    // Helper: Check if user is authenticated
-    isAuthenticated() {
-        const token = this.getAccessToken();
-        return token !== null;
     }
 
     // Cache management methods

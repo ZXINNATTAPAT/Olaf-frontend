@@ -153,7 +153,7 @@ export default function Feed() {
           user: post.user,
           header: post.header,
           short: post.short,
-          image: imageUrl ? getImageUrl(imageUrl, "DEFAULT") : null,
+          image: imageUrl ? getImageUrl(imageUrl, "FEED_SMALL") : null,
           post_datetime: calculateTimePassed(post.post_datetime),
           likesCount: post.like_count !== undefined ? post.like_count : 0,
           commentsCount:

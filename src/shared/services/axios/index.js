@@ -13,7 +13,7 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request interceptor - เพิ่ม CSRF token และ Authorization header
+// Request interceptor - เพิ่ม CSRF token เท่านั้น
 axiosInstance.interceptors.request.use(
   (config) => {
     // ดึง CSRF token จาก AuthService
@@ -21,12 +21,8 @@ axiosInstance.interceptors.request.use(
       config.headers['X-CSRFToken'] = authService.csrfToken;
     }
     
-    // ดึง access token จาก cookie และเพิ่ม Authorization header
-    const accessToken = authService.getAccessToken();
-    if (accessToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`;
-    }
-    
+    // ไม่ต้องเพิ่ม Authorization header เพราะใช้ HTTP-only cookies
+    // Server จะตรวจสอบ authentication ผ่าน cookies อัตโนมัติ
     
     return config;
   },
@@ -54,16 +50,9 @@ axiosInstance.interceptors.response.use(
     
     // จัดการ token errors
     if (error.response?.status === 401) {
-      // ตรวจสอบว่าเป็น token error หรือไม่
-      if (error.response?.data?.code === 'token_not_valid') {
-        localStorage.removeItem('us');
-        localStorage.removeItem('csrfToken');
-        localStorage.removeItem('accessToken');
-      } else {
-        localStorage.removeItem('us');
-        localStorage.removeItem('csrfToken');
-        localStorage.removeItem('accessToken');
-      }
+      // ลบเฉพาะ CSRF token
+      localStorage.removeItem('csrfToken');
+      authService.csrfToken = null;
     }
 
     return Promise.reject(error);

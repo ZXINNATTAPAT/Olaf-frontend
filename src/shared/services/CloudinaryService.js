@@ -10,18 +10,18 @@ const DEFAULT_IMAGE = "https://res.cloudinary.com/demo/image/upload/v1312461204/
 
 // Predefined image transformations for different use cases
 export const IMAGE_TRANSFORMATIONS = {
-  // Feed page - large cards
-  FEED_LARGE: "",
-  // Feed page - small cards  
-  FEED_SMALL: "",
-  // View page - main image
-  VIEW_MAIN: "",
-  // Edit page - preview
-  EDIT_PREVIEW: "",
-  // Profile page - thumbnails
-  PROFILE_THUMB: "",
-  // Default transformation
-  DEFAULT: ""
+  // Feed page - large cards (optimized for performance)
+  FEED_LARGE: "w_600,h_400,c_fill,f_auto,q_auto:low",
+  // Feed page - small cards (smaller size for faster loading)
+  FEED_SMALL: "w_400,h_250,c_fill,f_auto,q_auto:low",
+  // View page - main image (high quality but optimized)
+  VIEW_MAIN: "w_800,h_600,c_fill,f_auto,q_auto:good",
+  // Edit page - preview (medium size)
+  EDIT_PREVIEW: "w_500,h_350,c_fill,f_auto,q_auto:low",
+  // Profile page - thumbnails (very small for avatars)
+  PROFILE_THUMB: "w_150,h_150,c_fill,f_auto,q_auto:low",
+  // Default transformation (balanced size and quality)
+  DEFAULT: "w_500,h_400,c_fill,f_auto,q_auto:good"
 };
 
 /**
@@ -110,10 +110,46 @@ export const getMultipleImageUrls = (imageUrl, useCases = ['DEFAULT']) => {
   return result;
 };
 
+/**
+ * Get optimized image URL with custom parameters
+ * @param {string} imageUrl - The original image URL
+ * @param {Object} options - Custom transformation options
+ * @returns {string} - Processed Cloudinary URL
+ */
+export const getOptimizedImageUrl = (imageUrl, options = {}) => {
+  const {
+    width = 500,
+    height = 400,
+    quality = 'auto:good',
+    format = 'auto',
+    crop = 'fill',
+    gravity = 'auto'
+  } = options;
+
+  const transformation = `w_${width},h_${height},c_${crop},g_${gravity},f_${format},q_${quality}`;
+  return processImageUrl(imageUrl, transformation);
+};
+
+/**
+ * Get responsive image URLs for different screen sizes
+ * @param {string} imageUrl - The original image URL
+ * @returns {Object} - Object with responsive URLs
+ */
+export const getResponsiveImageUrls = (imageUrl) => {
+  return {
+    mobile: getOptimizedImageUrl(imageUrl, { width: 300, height: 200, quality: 'auto:low' }),
+    tablet: getOptimizedImageUrl(imageUrl, { width: 500, height: 350, quality: 'auto:good' }),
+    desktop: getOptimizedImageUrl(imageUrl, { width: 800, height: 600, quality: 'auto:good' }),
+    large: getOptimizedImageUrl(imageUrl, { width: 1200, height: 800, quality: 'auto:best' })
+  };
+};
+
 const CloudinaryService = {
   processImageUrl,
   getImageUrl,
   getMultipleImageUrls,
+  getOptimizedImageUrl,
+  getResponsiveImageUrls,
   IMAGE_TRANSFORMATIONS,
   DEFAULT_IMAGE
 };
