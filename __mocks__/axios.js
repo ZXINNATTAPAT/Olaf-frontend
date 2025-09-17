@@ -29,4 +29,5 @@ export const axiosInstance = mockAxiosInstance;
 export const axiosInstanceGet = mockAxiosInstance;
 export const axiosPrivateInstance = mockAxiosInstance;
 
+// Export both the instance and the main axios object
 export default mockAxios;
