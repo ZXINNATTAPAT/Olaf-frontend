@@ -44,7 +44,7 @@ export default function PersistLogin() {
     }
 
     checkUser();
-  }, []); // เรียกเพียงครั้งเดียวเมื่อ component mount
+  }, [setInitializing, setUser, user]); // เพิ่ม dependencies ตามที่ ESLint ต้องการ
 
   // แสดง loading spinner ถ้ายังโหลดอยู่
   if (loading) {
