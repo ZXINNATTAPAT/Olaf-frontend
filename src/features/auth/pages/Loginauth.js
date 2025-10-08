@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import authService from "../../../shared/services/AuthService";
 import useAuth from "../../../shared/hooks/useAuth";
 import useLoader from "../../../shared/hooks/useLoader";
@@ -8,6 +8,7 @@ export default function Loginauth() {
   const { setUser, setCSRFToken } = useAuth();
   const { showLoader, hideLoader } = useLoader();
   const navigate = useNavigate();
+  const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState(null);
@@ -65,9 +66,11 @@ export default function Loginauth() {
       setPassword("");
       hideLoader();
 
-      // รอสักครู่เพื่อให้ cookies ถูกตั้งค่า
+      // รอสักครู่เพื่อให้ cookies ถูกตั้งค่าและ state อัปเดต
       setTimeout(() => {
-        navigate("/feed", { replace: true });
+        // ตรวจสอบว่ามี location state จาก protected route หรือไม่
+        const from = location?.state?.from?.pathname || "/feed";
+        navigate(from, { replace: true });
       }, 100);
     } catch (error) {
       hideLoader();
