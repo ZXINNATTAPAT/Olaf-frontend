@@ -1,0 +1,209 @@
+// @ts-check
+const { test, expect } = require('@playwright/test');
+
+test.describe('Performance Tests', () => {
+  
+  test.beforeEach(async ({ page }) => {
+    test.setTimeout(180000); // Increase timeout to 3 minutes for OnRender server
+  });
+  
+  test('TC-PERF-001: Page Load Time - Home Page', async ({ page }) => {
+    const startTime = Date.now();
+    
+    // Navigate to home page
+    await page.goto('/');
+    
+    // Wait for page to be fully loaded with longer timeout for OnRender
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(5000); // Extra wait for OnRender server
+    
+    const loadTime = Date.now() - startTime;
+    
+    // Verify page loads within 15 seconds (increased for OnRender)
+    expect(loadTime).toBeLessThan(15000);
+    
+    // Verify page elements are visible
+    await expect(page.locator('text=Home')).toBeVisible({ timeout: 10000 });
+  });
+
+  test('TC-PERF-002: Page Load Time - Feed Page', async ({ page }) => {
+    // Login first with longer waits for OnRender
+    await page.goto('/auth/login');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
+    
+    await page.fill('input[id="email"]', 'testuser@example.com');
+    await page.fill('input[id="password"]', 'TestPass123!');
+    
+    // Wait for button to be enabled
+    await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 30000 });
+    await page.click('button[type="submit"]');
+    
+    // Wait for login to complete
+    await page.waitForTimeout(10000);
+    
+    const startTime = Date.now();
+    
+    // Navigate to feed page
+    await page.goto('/feed');
+    
+    // Wait for page to be fully loaded
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(5000);
+    
+    const loadTime = Date.now() - startTime;
+    
+    // Verify page loads within 20 seconds (increased for OnRender)
+    expect(loadTime).toBeLessThan(20000);
+    
+    // Verify feed elements are visible
+    await expect(page.locator('text=Feed')).toBeVisible({ timeout: 15000 });
+  });
+
+  test('TC-PERF-003: API Response Time - Login', async ({ page }) => {
+    await page.goto('/auth/login');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
+    
+    // Start measuring API response time
+    const startTime = Date.now();
+    
+    // Fill login form and submit
+    await page.fill('input[id="email"]', 'testuser@example.com');
+    await page.fill('input[id="password"]', 'TestPass123!');
+    
+    // Wait for button to be enabled
+    await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 30000 });
+    await page.click('button[type="submit"]');
+    
+    // Wait for API response and redirect with longer timeout
+    try {
+      await expect(page).toHaveURL('/feed', { timeout: 60000 });
+    } catch (error) {
+      // If redirect doesn't happen, wait for any response
+      await page.waitForTimeout(15000);
+    }
+    
+    const responseTime = Date.now() - startTime;
+    
+    // Verify API responds within 30 seconds (increased for OnRender)
+    expect(responseTime).toBeLessThan(30000);
+  });
+
+  test('TC-PERF-004: Concurrent Users - Registration', async ({ browser }) => {
+    const concurrentUsers = 5; // Reduced for OnRender server
+    const promises = [];
+    
+    // Create multiple browser contexts for concurrent users
+    for (let i = 0; i < concurrentUsers; i++) {
+      const context = await browser.newContext();
+      const page = await context.newPage();
+      
+      promises.push(
+        (async () => {
+          const startTime = Date.now();
+          
+          await page.goto('/auth/register');
+          await page.waitForLoadState('networkidle');
+          await page.waitForTimeout(2000);
+          
+          await page.fill('input[id="email"]', `testuser${i}@example.com`);
+          await page.fill('input[id="password"]', 'TestPass123!');
+          await page.fill('input[id="firstName"]', `testuser${i}`);
+          
+          // Wait for button to be enabled
+          await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 30000 });
+          await page.click('button[type="submit"]');
+          
+          // Wait for registration to complete with longer timeout
+          try {
+            await expect(page).toHaveURL('/auth/login', { timeout: 60000 });
+          } catch (error) {
+            // If redirect doesn't happen, wait for any response
+            await page.waitForTimeout(15000);
+          }
+          
+          const responseTime = Date.now() - startTime;
+          
+          // Verify each registration completes within 60 seconds (increased for OnRender)
+          expect(responseTime).toBeLessThan(60000);
+          
+          await context.close();
+        })()
+      );
+    }
+    
+    // Wait for all concurrent registrations to complete
+    await Promise.all(promises);
+  });
+
+  test('TC-PERF-005: Memory Usage - Long Session', async ({ page }) => {
+    // Login first with longer waits for OnRender
+    await page.goto('/auth/login');
+    await page.waitForLoadState('networkidle');
+    await page.waitForTimeout(3000);
+    
+    await page.fill('input[id="email"]', 'testuser@example.com');
+    await page.fill('input[id="password"]', 'TestPass123!');
+    
+    // Wait for button to be enabled
+    await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 30000 });
+    await page.click('button[type="submit"]');
+    
+    // Wait for login to complete
+    await page.waitForTimeout(10000);
+    
+    // Perform multiple actions to simulate long session
+    for (let i = 0; i < 3; i++) { // Reduced iterations for OnRender
+      // Navigate between pages with waits
+      await page.goto('/feed');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000);
+      
+      await page.goto('/profile');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000);
+      
+      await page.goto('/addcontent');
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(3000);
+      
+      // Create a post
+      await page.fill('textarea[name="content"]', `Test post ${i}`);
+      
+      // Wait for button to be enabled
+      await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 30000 });
+      await page.click('button[type="submit"]');
+      
+      // Wait for page load
+      await page.waitForLoadState('networkidle');
+      await page.waitForTimeout(5000);
+    }
+    
+    // Get memory usage metrics
+    const metrics = await page.evaluate(() => {
+      // @ts-ignore - performance.memory is Chrome-specific
+      if (performance.memory) {
+        return {
+          // @ts-ignore
+          usedJSHeapSize: performance.memory.usedJSHeapSize,
+          // @ts-ignore
+          totalJSHeapSize: performance.memory.totalJSHeapSize,
+          // @ts-ignore
+          jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+        };
+      }
+      return null;
+    });
+    
+    // Verify memory metrics are available and within limits
+    expect(metrics).not.toBeNull();
+    
+    // Convert bytes to MB
+    // @ts-ignore
+    const usedMemoryMB = metrics.usedJSHeapSize / (1024 * 1024);
+    
+    // Verify memory usage is within acceptable limits (200MB increased for OnRender)
+    expect(usedMemoryMB).toBeLessThan(200);
+  });
+});
