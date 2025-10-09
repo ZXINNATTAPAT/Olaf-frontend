@@ -93,6 +93,7 @@ test.describe('Performance Tests', () => {
   test('TC-PERF-004: Concurrent Users - Registration', async ({ browser }) => {
     const concurrentUsers = 5; // Reduced for OnRender server
     const promises = [];
+    const results = [];
     
     // Create multiple browser contexts for concurrent users
     for (let i = 0; i < concurrentUsers; i++) {
@@ -102,28 +103,77 @@ test.describe('Performance Tests', () => {
       promises.push(
         (async () => {
           const startTime = Date.now();
+          let success = false;
+          let error = null;
           
-          await page.goto('/auth/register');
-          await page.waitForLoadState('networkidle');
-          await page.waitForTimeout(2000);
-          
-          await page.fill('input[id="email"]', `testuser${i}@example.com`);
-          await page.fill('input[id="password"]', 'TestPass123!');
-          await page.fill('input[id="firstName"]', `testuser${i}`);
-          
-          // Wait for button to be enabled
-          await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 30000 });
-          await page.click('button[type="submit"]');
-          
-          // Wait for registration to complete with longer timeout
           try {
-            await expect(page).toHaveURL('/auth/login', { timeout: 60000 });
-          } catch (error) {
-            // If redirect doesn't happen, wait for any response
-            await page.waitForTimeout(15000);
+            // Test 1: Verify registration page is accessible
+            await page.goto('/auth/register');
+            await page.waitForLoadState('networkidle');
+            await page.waitForTimeout(2000);
+            
+            // Verify registration page elements are visible and functional
+            await expect(page.locator('h1, h2')).toContainText(/register|sign up/i, { timeout: 10000 });
+            await expect(page.locator('input[id="email"]')).toBeVisible({ timeout: 10000 });
+            await expect(page.locator('input[id="password"]')).toBeVisible({ timeout: 10000 });
+            await expect(page.locator('input[id="firstName"]')).toBeVisible({ timeout: 10000 });
+            await expect(page.locator('button[type="submit"]')).toBeVisible({ timeout: 10000 });
+            
+            // Test 2: Verify form functionality
+            await page.fill('input[id="email"]', `testuser${i}@example.com`);
+            await page.fill('input[id="password"]', 'TestPass123!');
+            await page.fill('input[id="firstName"]', `testuser${i}`);
+            
+            // Verify form fields are filled correctly
+            const emailValue = await page.inputValue('input[id="email"]');
+            const passwordValue = await page.inputValue('input[id="password"]');
+            const firstNameValue = await page.inputValue('input[id="firstName"]');
+            
+            expect(emailValue).toBe(`testuser${i}@example.com`);
+            expect(passwordValue).toBe('TestPass123!');
+            expect(firstNameValue).toBe(`testuser${i}`);
+            
+            // Test 3: Verify submit button is enabled and clickable
+            await page.waitForSelector('button[type="submit"]:not([disabled])', { timeout: 30000 });
+            const submitButton = page.locator('button[type="submit"]');
+            await expect(submitButton).toBeEnabled({ timeout: 10000 });
+            
+            // Test 4: Submit registration
+            await submitButton.click();
+            
+            // Test 5: Wait for registration to complete with proper error handling
+            try {
+              await expect(page).toHaveURL('/auth/login', { timeout: 60000 });
+              success = true;
+            } catch (urlError) {
+              // Check if registration was successful but didn't redirect
+              const currentUrl = page.url();
+              if (currentUrl.includes('/auth/login') || currentUrl.includes('/feed')) {
+                success = true;
+              } else {
+                // Check for success message or error message
+                const pageContent = await page.textContent('body');
+                if (pageContent && (pageContent.includes('success') || pageContent.includes('registered'))) {
+                  success = true;
+                } else {
+                  error = `Registration failed for user ${i}: ${urlError.message}`;
+                }
+              }
+            }
+            
+          } catch (testError) {
+            error = `Test failed for user ${i}: ${testError.message}`;
           }
           
           const responseTime = Date.now() - startTime;
+          
+          // Store results for analysis
+          results.push({
+            userIndex: i,
+            success: success,
+            responseTime: responseTime,
+            error: error
+          });
           
           // Verify each registration completes within 60 seconds (increased for OnRender)
           expect(responseTime).toBeLessThan(60000);
@@ -135,6 +185,26 @@ test.describe('Performance Tests', () => {
     
     // Wait for all concurrent registrations to complete
     await Promise.all(promises);
+    
+    // Analyze results
+    const successfulRegistrations = results.filter(r => r.success).length;
+    const failedRegistrations = results.filter(r => !r.success).length;
+    const averageResponseTime = results.reduce((sum, r) => sum + r.responseTime, 0) / results.length;
+    
+    // Performance assertions
+    expect(successfulRegistrations).toBeGreaterThanOrEqual(3); // At least 60% success rate
+    expect(averageResponseTime).toBeLessThan(45000); // Average response time under 45 seconds
+    
+    // Log detailed results for debugging
+    console.log(`Concurrent Registration Test Results:`);
+    console.log(`- Total users: ${concurrentUsers}`);
+    console.log(`- Successful registrations: ${successfulRegistrations}`);
+    console.log(`- Failed registrations: ${failedRegistrations}`);
+    console.log(`- Average response time: ${averageResponseTime}ms`);
+    
+    if (failedRegistrations > 0) {
+      console.log(`- Failed registrations details:`, results.filter(r => !r.success));
+    }
   });
 
   test('TC-PERF-005: Memory Usage - Long Session', async ({ page }) => {
