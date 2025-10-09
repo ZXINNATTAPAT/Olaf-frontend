@@ -46,7 +46,7 @@ const EditPost = () => {
     formData.append("header", values.header);
     formData.append("short", values.short);
     formData.append("post_text", values.post_text);
-    formData.append("user", user.id);
+    formData.append("user_id", user.id);
 
     if (values.image) {
       formData.append("image", values.image);
