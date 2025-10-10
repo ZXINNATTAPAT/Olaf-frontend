@@ -1,8 +1,43 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
+/**
+ * ========================================
+ * BASIC UI TESTS - NO BACKEND REQUIRED
+ * ========================================
+ * 
+ * ไฟล์นี้ทดสอบ UI Elements พื้นฐาน
+ * ไม่ต้องใช้ Backend สามารถรันได้เสมอ
+ * 
+ * คุณสมบัติพิเศษ:
+ * - ไม่ต้องใช้ Backend
+ * - UI element verification
+ * - Form validation testing
+ * - Navigation testing
+ * 
+ * Test Cases:
+ * - Check Login Page UI Elements
+ * - Check Register Page UI Elements
+ * - Test Form Validation - Login
+ * - Test Form Validation - Register
+ * - Test Navigation
+ * - Test Protected Route Access
+ */
+
 test.describe('Basic UI Tests - No Backend Required', () => {
   
+test.describe('Basic UI Tests - No Backend Required', () => {
+  
+  /**
+   * Check Login Page UI Elements
+   * 
+   * ทดสอบ UI Elements ของหน้า Login
+   * ตรวจสอบว่า:
+   * - หน้าโหลดถูกต้อง
+   * - Elements หลักปรากฏ
+   * - Form elements ทำงาน
+   * - Submit button เริ่มต้น disabled
+   */
   test('Check Login Page UI Elements', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -31,6 +66,16 @@ test.describe('Basic UI Tests - No Backend Required', () => {
     console.log('✅ Login page UI elements are working correctly');
   });
 
+  /**
+   * Check Register Page UI Elements
+   * 
+   * ทดสอบ UI Elements ของหน้า Register
+   * ตรวจสอบว่า:
+   * - หน้าโหลดถูกต้อง
+   * - Elements หลักปรากฏ
+   * - Form elements ครบถ้วน
+   * - Submit button เริ่มต้น disabled
+   */
   test('Check Register Page UI Elements', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -67,6 +112,14 @@ test.describe('Basic UI Tests - No Backend Required', () => {
     console.log('✅ Register page UI elements are working correctly');
   });
 
+  /**
+   * Test Form Validation - Login
+   * 
+   * ทดสอบ Form Validation ของหน้า Login
+   * ตรวจสอบว่า:
+   * - ปุ่ม disabled เมื่อฟิลด์ว่าง
+   * - ปุ่ม enabled เมื่อกรอกข้อมูลครบ
+   */
   test('Test Form Validation - Login', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -91,6 +144,14 @@ test.describe('Basic UI Tests - No Backend Required', () => {
     console.log('✅ Login form validation is working correctly');
   });
 
+  /**
+   * Test Form Validation - Register
+   * 
+   * ทดสอบ Form Validation ของหน้า Register
+   * ตรวจสอบว่า:
+   * - ปุ่ม disabled เมื่อฟิลด์ว่าง
+   * - ปุ่ม enabled เมื่อกรอกข้อมูลครบ
+   */
   test('Test Form Validation - Register', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -136,6 +197,15 @@ test.describe('Basic UI Tests - No Backend Required', () => {
     console.log('✅ Register form validation is working correctly');
   });
 
+  /**
+   * Test Navigation
+   * 
+   * ทดสอบการนำทางระหว่างหน้า
+   * ตรวจสอบว่า:
+   * - สามารถไปหน้า Home ได้
+   * - สามารถไปหน้า Login ได้
+   * - สามารถไปหน้า Register ได้
+   */
   test('Test Navigation', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -158,6 +228,14 @@ test.describe('Basic UI Tests - No Backend Required', () => {
     console.log('✅ Navigation is working correctly');
   });
 
+  /**
+   * Test Protected Route Access
+   * 
+   * ทดสอบการเข้าถึง Protected Route
+   * ตรวจสอบว่า:
+   * - ถูก redirect ไปหน้า login เมื่อเข้าถึง /feed
+   * - ไม่สามารถเข้าถึงได้โดยไม่ login
+   */
   test('Test Protected Route Access', async ({ page }) => {
     test.setTimeout(60000);
     
