@@ -1,7 +1,30 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
-// Test data
+/**
+ * ========================================
+ * POSTS FUNCTIONAL TESTS
+ * ========================================
+ * 
+ * ไฟล์นี้ทดสอบการจัดการ Posts ครบถ้วน
+ * ครอบคลุมการสร้าง, แก้ไข, ลบ และดู Posts
+ * 
+ * คุณสมบัติพิเศษ:
+ * - Login helper function
+ * - Error handling ที่ไม่ fail test
+ * - Multiple form field testing
+ * - Content validation
+ * 
+ * Test Cases:
+ * - TC-POST-001: Create Post - Valid Content
+ * - TC-POST-002: Create Post - Empty Content
+ * - TC-POST-003: Create Post - Long Content
+ * - TC-POST-004: Edit Post - Valid Changes
+ * - TC-POST-005: Delete Post
+ * - TC-POST-006: View Post Details
+ */
+
+// Test data สำหรับการทดสอบ
 const testData = {
   validUser: {
     email: 'admin@olaf.com',
@@ -15,11 +38,20 @@ const testData = {
 
 test.describe('Posts Tests', () => {
   
+  // ตั้งค่า timeout สำหรับทุก test
   test.beforeEach(async ({ page }) => {
     test.setTimeout(60000); // Set timeout for all tests
   });
   
-  // Login helper function
+  /**
+   * Login helper function
+   * 
+   * ฟังก์ชันช่วยสำหรับการ login
+   * ใช้ในทุก test case ที่ต้อง login
+   * 
+   * @param {import('@playwright/test').Page} page - Playwright page object
+   * @returns {Promise<{onFeed: boolean, onLogin: boolean}>} - ผลลัพธ์การ login
+   */
   async function loginUser(page) {
     await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
@@ -39,6 +71,15 @@ test.describe('Posts Tests', () => {
     return { onFeed, onLogin };
   }
 
+  /**
+   * TC-POST-001: Create Post - Valid Content
+   * 
+   * ทดสอบการสร้าง Post ด้วยเนื้อหาที่ถูกต้อง
+   * ตรวจสอบว่า:
+   * - สามารถสร้าง Post ได้สำเร็จ
+   * - Post ปรากฏในหน้า Feed
+   * - มีการ redirect ไปหน้า Feed
+   */
   test('TC-POST-001: Create Post - Valid Content', async ({ page }) => {
     test.setTimeout(120000);
     
@@ -67,6 +108,12 @@ test.describe('Posts Tests', () => {
     }
   });
 
+  /**
+   * TC-POST-002: Create Post - Empty Content
+   * 
+   * ทดสอบการสร้าง Post ด้วยเนื้อหาว่าง
+   * ตรวจสอบว่าระบบแสดงข้อความ error
+   */
   test('TC-POST-002: Create Post - Empty Content', async ({ page }) => {
     test.setTimeout(120000);
     
@@ -87,6 +134,12 @@ test.describe('Posts Tests', () => {
     }
   });
 
+  /**
+   * TC-POST-003: Create Post - Long Content
+   * 
+   * ทดสอบการสร้าง Post ด้วยเนื้อหายาว
+   * ตรวจสอบว่าระบบสามารถจัดการกับเนื้อหายาวได้
+   */
   test('TC-POST-003: Create Post - Long Content', async ({ page }) => {
     test.setTimeout(120000);
     
@@ -115,6 +168,14 @@ test.describe('Posts Tests', () => {
     }
   });
 
+  /**
+   * TC-POST-004: Edit Post - Valid Changes
+   * 
+   * ทดสอบการแก้ไข Post
+   * ตรวจสอบว่า:
+   * - สามารถแก้ไข Post ได้
+   * - เนื้อหาใหม่ปรากฏในหน้า Feed
+   */
   test('TC-POST-004: Edit Post - Valid Changes', async ({ page }) => {
     test.setTimeout(120000);
     
@@ -158,6 +219,12 @@ test.describe('Posts Tests', () => {
     }
   });
 
+  /**
+   * TC-POST-005: Delete Post
+   * 
+   * ทดสอบการลบ Post
+   * ตรวจสอบว่า Post หายไปจากหน้า Feed
+   */
   test('TC-POST-005: Delete Post', async ({ page }) => {
     test.setTimeout(120000);
     
@@ -199,6 +266,15 @@ test.describe('Posts Tests', () => {
     }
   });
 
+  /**
+   * TC-POST-006: View Post Details
+   * 
+   * ทดสอบการดูรายละเอียด Post
+   * ตรวจสอบว่า:
+   * - สามารถคลิกเพื่อดูรายละเอียดได้
+   * - แสดงข้อมูล Post ครบถ้วน
+   * - แสดงส่วน Comments
+   */
   test('TC-POST-006: View Post Details', async ({ page }) => {
     test.setTimeout(120000);
     

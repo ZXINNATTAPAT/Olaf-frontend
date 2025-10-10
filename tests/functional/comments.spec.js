@@ -1,7 +1,25 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
-// Test data
+/**
+ * ========================================
+ * COMMENTS FUNCTIONAL TESTS
+ * ========================================
+ * 
+ * ไฟล์นี้ทดสอบการจัดการ Comments ครบถ้วน
+ * ครอบคลุมการเพิ่ม Comments และการ validation
+ * 
+ * คุณสมบัติพิเศษ:
+ * - Post creation helper
+ * - Comment validation
+ * - Error handling
+ * 
+ * Test Cases:
+ * - TC-COMMENT-001: Add Comment - Valid Content
+ * - TC-COMMENT-002: Add Comment - Empty Content
+ */
+
+// Test data สำหรับการทดสอบ
 const testData = {
   validUser: {
     email: 'admin@olaf.com',
@@ -17,7 +35,14 @@ const testData = {
 
 test.describe('Comments Tests', () => {
   
-  // Login helper function
+  /**
+   * Login helper function
+   * 
+   * ฟังก์ชันช่วยสำหรับการ login
+   * ใช้ในทุก test case ที่ต้อง login
+   * 
+   * @param {import('@playwright/test').Page} page - Playwright page object
+   */
   async function loginUser(page) {
     await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
@@ -39,7 +64,14 @@ test.describe('Comments Tests', () => {
     }
   }
 
-  // Create post helper function
+  /**
+   * Create post helper function
+   * 
+   * ฟังก์ชันช่วยสำหรับการสร้าง Post
+   * ใช้เป็น prerequisite สำหรับการทดสอบ Comments
+   * 
+   * @param {import('@playwright/test').Page} page - Playwright page object
+   */
   async function createPost(page) {
     await page.goto('/addcontent');
     await page.fill('textarea[name="content"]', testData.validPost.content);
@@ -47,6 +79,14 @@ test.describe('Comments Tests', () => {
     await expect(page).toHaveURL('/feed');
   }
 
+  /**
+   * TC-COMMENT-001: Add Comment - Valid Content
+   * 
+   * ทดสอบการเพิ่ม Comment ด้วยเนื้อหาที่ถูกต้อง
+   * ตรวจสอบว่า:
+   * - สามารถเพิ่ม Comment ได้
+   * - Comment ปรากฏในหน้า Post details
+   */
   test('TC-COMMENT-001: Add Comment - Valid Content', async ({ page }) => {
     test.setTimeout(120000);
     
@@ -71,6 +111,12 @@ test.describe('Comments Tests', () => {
     }
   });
 
+  /**
+   * TC-COMMENT-002: Add Comment - Empty Content
+   * 
+   * ทดสอบการเพิ่ม Comment ด้วยเนื้อหาว่าง
+   * ตรวจสอบว่าระบบแสดงข้อความ error
+   */
   test('TC-COMMENT-002: Add Comment - Empty Content', async ({ page }) => {
     test.setTimeout(120000);
     
