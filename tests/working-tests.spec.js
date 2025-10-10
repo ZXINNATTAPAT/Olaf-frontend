@@ -1,8 +1,41 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
+/**
+ * ========================================
+ * WORKING TESTS - NO BACKEND REQUIRED
+ * ========================================
+ * 
+ * ไฟล์นี้ทดสอบพื้นฐานที่ทำงานได้เสมอ
+ * ไม่ต้องใช้ Backend สามารถรันได้ในทุกสถานการณ์
+ * 
+ * คุณสมบัติพิเศษ:
+ * - ไม่ต้องใช้ Backend
+ * - Basic functionality testing
+ * - Form element verification
+ * - Navigation testing
+ * 
+ * Test Cases:
+ * - Test 1: Page Navigation Works
+ * - Test 2: Form Elements Exist
+ * - Test 3: Form Validation Works
+ * - Test 4: Protected Route Redirect
+ * - Test 5: Form Submission Without Backend
+ */
+
 test.describe('Working Tests - No Backend Required', () => {
   
+test.describe('Working Tests - No Backend Required', () => {
+  
+  /**
+   * Test 1: Page Navigation Works
+   * 
+   * ทดสอบการนำทางระหว่างหน้า
+   * ตรวจสอบว่า:
+   * - หน้า Home โหลดได้
+   * - หน้า Login โหลดได้
+   * - หน้า Register โหลดได้
+   */
   test('Test 1: Page Navigation Works', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -25,6 +58,14 @@ test.describe('Working Tests - No Backend Required', () => {
     console.log('✅ Register page loads correctly');
   });
 
+  /**
+   * Test 2: Form Elements Exist
+   * 
+   * ทดสอบว่า Form Elements มีอยู่
+   * ตรวจสอบว่า:
+   * - Login form elements ครบถ้วน
+   * - Register form elements ครบถ้วน
+   */
   test('Test 2: Form Elements Exist', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -51,6 +92,14 @@ test.describe('Working Tests - No Backend Required', () => {
     console.log('✅ Register form elements exist');
   });
 
+  /**
+   * Test 3: Form Validation Works
+   * 
+   * ทดสอบ Form Validation
+   * ตรวจสอบว่า:
+   * - ปุ่ม disabled เมื่อฟิลด์ว่าง
+   * - ปุ่ม enabled เมื่อกรอกข้อมูลครบ
+   */
   test('Test 3: Form Validation Works', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -69,6 +118,14 @@ test.describe('Working Tests - No Backend Required', () => {
     console.log('✅ Login form validation works');
   });
 
+  /**
+   * Test 4: Protected Route Redirect
+   * 
+   * ทดสอบการ redirect ของ Protected Route
+   * ตรวจสอบว่า:
+   * - ถูก redirect ไปหน้า login เมื่อเข้าถึง /feed
+   * - ไม่สามารถเข้าถึงได้โดยไม่ login
+   */
   test('Test 4: Protected Route Redirect', async ({ page }) => {
     test.setTimeout(60000);
     
@@ -84,6 +141,14 @@ test.describe('Working Tests - No Backend Required', () => {
     console.log('✅ Protected route redirect works');
   });
 
+  /**
+   * Test 5: Form Submission Without Backend
+   * 
+   * ทดสอบการ submit form โดยไม่ใช้ Backend
+   * ตรวจสอบว่า:
+   * - Form ทำงานได้ (จะ fail แต่ไม่ error)
+   * - Validation ทำงาน
+   */
   test('Test 5: Form Submission Without Backend', async ({ page }) => {
     test.setTimeout(60000);
     

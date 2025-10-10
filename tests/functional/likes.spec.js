@@ -1,7 +1,25 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
-// Test data
+/**
+ * ========================================
+ * LIKES FUNCTIONAL TESTS
+ * ========================================
+ * 
+ * ไฟล์นี้ทดสอบระบบ Like/Unlike ครบถ้วน
+ * ครอบคลุมการ Like และ Unlike Posts
+ * 
+ * คุณสมบัติพิเศษ:
+ * - Like count verification
+ * - Button state checking
+ * - Visual feedback testing
+ * 
+ * Test Cases:
+ * - TC-LIKE-001: Like Post
+ * - TC-LIKE-002: Unlike Post
+ */
+
+// Test data สำหรับการทดสอบ
 const testData = {
   validUser: {
     email: 'admin@olaf.com',
@@ -14,7 +32,14 @@ const testData = {
 
 test.describe('Likes Tests', () => {
   
-  // Login helper function
+  /**
+   * Login helper function
+   * 
+   * ฟังก์ชันช่วยสำหรับการ login
+   * ใช้ในทุก test case ที่ต้อง login
+   * 
+   * @param {import('@playwright/test').Page} page - Playwright page object
+   */
   async function loginUser(page) {
     await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
@@ -36,7 +61,14 @@ test.describe('Likes Tests', () => {
     }
   }
 
-  // Create post helper function
+  /**
+   * Create post helper function
+   * 
+   * ฟังก์ชันช่วยสำหรับการสร้าง Post
+   * ใช้เป็น prerequisite สำหรับการทดสอบ Likes
+   * 
+   * @param {import('@playwright/test').Page} page - Playwright page object
+   */
   async function createPost(page) {
     await page.goto('/addcontent');
     await page.fill('textarea[name="content"]', testData.validPost.content);
@@ -44,6 +76,15 @@ test.describe('Likes Tests', () => {
     await expect(page).toHaveURL('/feed');
   }
 
+  /**
+   * TC-LIKE-001: Like Post
+   * 
+   * ทดสอบการ Like Post
+   * ตรวจสอบว่า:
+   * - Like count เพิ่มขึ้น
+   * - ปุ่มเปลี่ยนสถานะเป็น liked
+   * - มี visual feedback
+   */
   test('TC-LIKE-001: Like Post', async ({ page }) => {
     test.setTimeout(120000);
     
@@ -73,6 +114,15 @@ test.describe('Likes Tests', () => {
     }
   });
 
+  /**
+   * TC-LIKE-002: Unlike Post
+   * 
+   * ทดสอบการ Unlike Post
+   * ตรวจสอบว่า:
+   * - Like count ลดลง
+   * - ปุ่มเปลี่ยนสถานะกลับเป็นปกติ
+   * - มี visual feedback
+   */
   test('TC-LIKE-002: Unlike Post', async ({ page }) => {
     test.setTimeout(120000);
     

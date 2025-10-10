@@ -1,12 +1,44 @@
 // @ts-check
 const { test, expect } = require('@playwright/test');
 
+/**
+ * ========================================
+ * PERFORMANCE TESTS
+ * ========================================
+ * 
+ * ไฟล์นี้ทดสอบประสิทธิภาพของระบบ
+ * ครอบคลุมการวัดเวลา, memory usage และ concurrent users
+ * 
+ * คุณสมบัติพิเศษ:
+ * - Load time measurement
+ * - Memory usage monitoring
+ * - Concurrent user testing
+ * - Performance thresholds
+ * - Detailed result logging
+ * 
+ * Test Cases:
+ * - TC-PERF-001: Page Load Time - Home Page
+ * - TC-PERF-002: Page Load Time - Feed Page
+ * - TC-PERF-003: API Response Time - Login
+ * - TC-PERF-004: Concurrent Users - Registration
+ * - TC-PERF-005: Memory Usage - Long Session
+ */
+
 test.describe('Performance Tests', () => {
   
+  // ตั้งค่า timeout สำหรับทุก test เพื่อรองรับ OnRender server
   test.beforeEach(async ({ page }) => {
     test.setTimeout(180000); // Increase timeout to 3 minutes for OnRender server
   });
   
+  /**
+   * TC-PERF-001: Page Load Time - Home Page
+   * 
+   * ทดสอบเวลาการโหลดหน้า Home
+   * ตรวจสอบว่า:
+   * - หน้าโหลดภายใน 15 วินาที
+   * - Elements ปรากฏถูกต้อง
+   */
   test('TC-PERF-001: Page Load Time - Home Page', async ({ page }) => {
     const startTime = Date.now();
     
@@ -26,6 +58,14 @@ test.describe('Performance Tests', () => {
     await expect(page.locator('text=Home')).toBeVisible({ timeout: 10000 });
   });
 
+  /**
+   * TC-PERF-002: Page Load Time - Feed Page
+   * 
+   * ทดสอบเวลาการโหลดหน้า Feed
+   * ตรวจสอบว่า:
+   * - หน้าโหลดภายใน 20 วินาที
+   * - Elements ปรากฏถูกต้อง
+   */
   test('TC-PERF-002: Page Load Time - Feed Page', async ({ page }) => {
     // Login first with longer waits for OnRender
     await page.goto('/auth/login');
@@ -60,6 +100,12 @@ test.describe('Performance Tests', () => {
     await expect(page.locator('text=Feed')).toBeVisible({ timeout: 15000 });
   });
 
+  /**
+   * TC-PERF-003: API Response Time - Login
+   * 
+   * ทดสอบเวลาการตอบสนองของ API Login
+   * ตรวจสอบว่า API ตอบสนองภายใน 30 วินาที
+   */
   test('TC-PERF-003: API Response Time - Login', async ({ page }) => {
     await page.goto('/auth/login');
     await page.waitForLoadState('networkidle');
@@ -90,6 +136,15 @@ test.describe('Performance Tests', () => {
     expect(responseTime).toBeLessThan(30000);
   });
 
+  /**
+   * TC-PERF-004: Concurrent Users - Registration
+   * 
+   * ทดสอบการรองรับผู้ใช้หลายคนพร้อมกัน
+   * ตรวจสอบว่า:
+   * - รองรับผู้ใช้ 5 คนพร้อมกัน
+   * - อัตราความสำเร็จอย่างน้อย 60%
+   * - เวลาเฉลี่ยต่ำกว่า 45 วินาที
+   */
   test('TC-PERF-004: Concurrent Users - Registration', async ({ browser }) => {
     const concurrentUsers = 5; // Reduced for OnRender server
     const promises = [];
@@ -207,6 +262,12 @@ test.describe('Performance Tests', () => {
     }
   });
 
+  /**
+   * TC-PERF-005: Memory Usage - Long Session
+   * 
+   * ทดสอบการใช้ memory ใน session ยาว
+   * ตรวจสอบว่า memory usage ไม่เกิน 200MB
+   */
   test('TC-PERF-005: Memory Usage - Long Session', async ({ page }) => {
     // Login first with longer waits for OnRender
     await page.goto('/auth/login');

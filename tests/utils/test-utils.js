@@ -2,6 +2,36 @@
 const { test, expect } = require('@playwright/test');
 
 /**
+ * ========================================
+ * TEST UTILITY FUNCTIONS
+ * ========================================
+ * 
+ * ไฟล์นี้ประกอบด้วย Utility functions สำหรับการทดสอบ
+ * ช่วยให้การเขียน test cases ง่ายขึ้นและมีประสิทธิภาพมากขึ้น
+ * 
+ * คุณสมบัติ:
+ * - Login/Register helpers
+ * - Post/Comment/Like helpers
+ * - Screenshot และ debugging helpers
+ * - Test data generators
+ * - Performance measurement
+ * - Element existence checking
+ * 
+ * Functions:
+ * - loginUser() - Login helper
+ * - registerUser() - Registration helper
+ * - createPost() - Post creation helper
+ * - addComment() - Comment helper
+ * - likePost() - Like helper
+ * - logoutUser() - Logout helper
+ * - waitForElement() - Element waiting
+ * - takeScreenshot() - Screenshot helper
+ * - generateTestData() - Test data generator
+ * - measurePageLoadTime() - Performance measurement
+ * - elementExists() - Element existence check
+ */
+
+/**
  * Utility functions for test automation
  */
 class TestUtils {
