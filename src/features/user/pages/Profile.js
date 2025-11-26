@@ -19,7 +19,7 @@ export default function Profile() {
   const [hasMore, setHasMore] = useState(true);
   const [retryCount, setRetryCount] = useState(0);
   const { user } = useAuth();
-  
+
   // Cache refs
   const cacheRef = useRef({ data: null, timestamp: 0 });
   const isRetrying = useRef(false);
@@ -54,120 +54,125 @@ export default function Profile() {
 
       // Fetch profile data first to get user ID (only on initial load)
       if (!isLoadMore) {
-        const profileResult = await ApiController.getUserProfile();
+        if (user && user.id) {
+          console.log('✅ Using cached user profile from context');
+          setProfileData(user);
+        } else {
+          const profileResult = await ApiController.getUserProfile();
 
-        // Check if component is still mounted before updating state
-        if (!isMounted) return;
+          // Check if component is still mounted before updating state
+          if (!isMounted) return;
 
-        // Handle profile response
-        if (!profileResult.success)
-          throw new Error(profileResult.error || "Fetching profile failed");
-        setProfileData(profileResult.data);
+          // Handle profile response
+          if (!profileResult.success)
+            throw new Error(profileResult.error || "Fetching profile failed");
+          setProfileData(profileResult.data);
+        }
       }
 
       // Fetch posts filtered by user ID with pagination
-        const postsResult = await ApiController.getPosts({
+      const postsResult = await ApiController.getPosts({
         user: profileData?.id || user.id,
         page: page,
         limit: 10,
-        });
+      });
 
-        // Check if component is still mounted before processing posts
-        if (!isMounted) return;
+      // Check if component is still mounted before processing posts
+      if (!isMounted) return;
 
-        // Handle posts response
-        if (!postsResult.success)
-          throw new Error(postsResult.error || "Fetching posts failed");
-        const postData = postsResult.data;
+      // Handle posts response
+      if (!postsResult.success)
+        throw new Error(postsResult.error || "Fetching posts failed");
+      const postData = postsResult.data;
       const totalCount = postsResult.total || postData.length;
 
-        // อัปเดตโพสต์โดยใช้ข้อมูล user ที่มีอยู่ใน post object แล้ว
-        const updatedPosts = postData.map((post) => {
-          // ใช้ข้อมูล user ที่มีอยู่ใน post object โดยตรง
-          const userName =
-            post.user && typeof post.user === "object"
-              ? `${post.user.first_name} ${post.user.last_name}`
-              : "Unknown User";
+      // อัปเดตโพสต์โดยใช้ข้อมูล user ที่มีอยู่ใน post object แล้ว
+      const updatedPosts = postData.map((post) => {
+        // ใช้ข้อมูล user ที่มีอยู่ใน post object โดยตรง
+        const userName =
+          post.user && typeof post.user === "object"
+            ? `${post.user.first_name} ${post.user.last_name}`
+            : "Unknown User";
 
-          return {
-            ...post,
-            userFullName: userName,
-          };
-        });
-
-        // ไม่ต้องกรองแล้วเพราะ API ส่งมาเฉพาะโพสต์ของผู้ใช้แล้ว
-        const filteredPosts = updatedPosts;
-
-        // Calculate time passed since post creation
-        const calculateTimePassed = (postDate) => {
-          const postDateTime = new Date(postDate);
-          const now = new Date();
-
-          const timeDiff = now - postDateTime;
-          const diffHours = Math.floor(timeDiff / (1000 * 60 * 60)); // Hours
-          const diffMinutes = Math.floor(
-            (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-          ); // Minutes
-
-          if (diffHours < 24) {
-            if (diffHours === 0) return `${diffMinutes} minutes ago`;
-            return `${diffHours} hours and ${diffMinutes} minutes ago`;
-          } else {
-            const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Days
-            if (diffDays < 30) return `${diffDays} days ago`;
-            else if (diffDays < 365) {
-              const diffMonths = Math.floor(diffDays / 30);
-              return `${diffMonths} months ago`;
-            } else {
-              const diffYears = Math.floor(diffDays / 365);
-              return `${diffYears} years ago`;
-            }
-          }
+        return {
+          ...post,
+          userFullName: userName,
         };
+      });
 
-        // Map post data to include necessary fields and time passed
-        const processedPosts = filteredPosts.map((post) => {
-          // Handle image URL - check multiple possible sources
-          let imageUrl = null;
-          if (post.primary_image_url) {
-            imageUrl = post.primary_image_url;
-          } else if (
-            post.primary_image &&
-            post.primary_image.image_secure_url
-          ) {
-            imageUrl = post.primary_image.image_secure_url;
-          } else if (
-            post.images &&
-            post.images.length > 0 &&
-            post.images[0].image_secure_url
-          ) {
-            imageUrl = post.images[0].image_secure_url;
-          } else if (post.image_secure_url) {
-            imageUrl = post.image_secure_url;
-          } else if (post.image_url) {
-            imageUrl = post.image_url;
-          } else if (post.image) {
-            imageUrl = post.image;
+      // ไม่ต้องกรองแล้วเพราะ API ส่งมาเฉพาะโพสต์ของผู้ใช้แล้ว
+      const filteredPosts = updatedPosts;
+
+      // Calculate time passed since post creation
+      const calculateTimePassed = (postDate) => {
+        const postDateTime = new Date(postDate);
+        const now = new Date();
+
+        const timeDiff = now - postDateTime;
+        const diffHours = Math.floor(timeDiff / (1000 * 60 * 60)); // Hours
+        const diffMinutes = Math.floor(
+          (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+        ); // Minutes
+
+        if (diffHours < 24) {
+          if (diffHours === 0) return `${diffMinutes} minutes ago`;
+          return `${diffHours} hours and ${diffMinutes} minutes ago`;
+        } else {
+          const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Days
+          if (diffDays < 30) return `${diffDays} days ago`;
+          else if (diffDays < 365) {
+            const diffMonths = Math.floor(diffDays / 30);
+            return `${diffMonths} months ago`;
+          } else {
+            const diffYears = Math.floor(diffDays / 365);
+            return `${diffYears} years ago`;
           }
+        }
+      };
 
-          return {
-            post_id: post.post_id,
-            user: post.userFullName, // ใช้ userFullName ที่ได้จาก user object
-            header: post.header,
-            short: post.short,
-            image: imageUrl ? getImageUrl(imageUrl, "DEFAULT") : null,
-            post_datetime: calculateTimePassed(post.post_datetime),
-            likesCount: post.like_count !== undefined ? post.like_count : 0,
-            commentsCount:
-              post.comment_count !== undefined ? post.comment_count : 0,
-          };
-        });
+      // Map post data to include necessary fields and time passed
+      const processedPosts = filteredPosts.map((post) => {
+        // Handle image URL - check multiple possible sources
+        let imageUrl = null;
+        if (post.primary_image_url) {
+          imageUrl = post.primary_image_url;
+        } else if (
+          post.primary_image &&
+          post.primary_image.image_secure_url
+        ) {
+          imageUrl = post.primary_image.image_secure_url;
+        } else if (
+          post.images &&
+          post.images.length > 0 &&
+          post.images[0].image_secure_url
+        ) {
+          imageUrl = post.images[0].image_secure_url;
+        } else if (post.image_secure_url) {
+          imageUrl = post.image_secure_url;
+        } else if (post.image_url) {
+          imageUrl = post.image_url;
+        } else if (post.image) {
+          imageUrl = post.image;
+        }
+
+        return {
+          post_id: post.post_id,
+          user: post.userFullName, // ใช้ userFullName ที่ได้จาก user object
+          header: post.header,
+          short: post.short,
+          image: imageUrl ? getImageUrl(imageUrl, "DEFAULT") : null,
+          post_datetime: calculateTimePassed(post.post_datetime),
+          likesCount: post.like_count !== undefined ? post.like_count : 0,
+          commentsCount:
+            post.comment_count !== undefined ? post.comment_count : 0,
+        };
+      });
 
       if (isLoadMore) {
         setp_data(prevPosts => [...prevPosts, ...processedPosts]);
       } else {
         setp_data(processedPosts);
-        
+
         // Cache the data for initial load only
         cacheRef.current = {
           data: processedPosts,
@@ -175,75 +180,73 @@ export default function Profile() {
         };
         console.log('✅ Profile data loaded and cached successfully');
       }
-      
+
       setHasMore(processedPosts.length === 10 && p_data.length + processedPosts.length < totalCount);
       setCurrentPage(page);
       setRetryCount(0); // Reset retry count on success
       isRetrying.current = false; // Reset retry flag
-      
+
       if (isLoadMore) {
         setIsLoadingMore(false);
       } else {
         setIsLoading(false);
       }
-      } catch (error) {
-        console.error("Profile Error:", error);
-        
-        // Check if we should retry for network errors
-        const isNetworkError = (
-          error.message.includes("Network error") || 
-          error.message.includes("Backend server is not responding") ||
-          error.message.includes("Network Error") ||
-          error.message.includes("ECONNREFUSED") ||
-          error.message.includes("ETIMEDOUT") ||
-          error.message.includes("timeout")
-        );
-        
-        const shouldRetry = isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES && !isLoadMore;
-        
-        if (shouldRetry) {
-          isRetrying.current = true;
-          setRetryCount(prev => prev + 1);
-          
-          const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY : 
-                       FEED_CONFIG.RETRY_DELAY;
-          
-          console.log(`🔄 Profile retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES})`);
-          
-          setTimeout(() => {
-            isRetrying.current = false;
-            fetchProfileData(page, isLoadMore, true);
-          }, delay);
-          return;
-        }
-        
-        // Provide more specific error messages
-        let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
-        
-        if (isNetworkError) {
-          // Progressive error messages for Render free tier
-          if (retryCount >= 2) {
-            errorMessage = ERROR_MESSAGES.COLD_START; // Cold start after multiple retries
-          } else if (retryCount >= 1) {
-            errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER; // Free tier startup
-          } else {
-            errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING; // Initial network error
-          }
-        } else if (error.message.includes("timeout")) {
-          errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
-        } else if (error.message) {
-          errorMessage = error.message;
-        }
-        
-        console.log(`❌ Profile final error after ${retryCount} retries:`, errorMessage);
-        setError(errorMessage);
-        
-        if (isLoadMore) {
-          setIsLoadingMore(false);
-        } else {
-          setIsLoading(false);
-        }
+    } catch (error) {
+      console.error("Profile Error:", error);
+
+      // Check if we should retry for network errors
+      const isNetworkError = (
+        error.message.includes("Network error") ||
+        error.message.includes("Backend server is not responding") ||
+        error.message.includes("Network Error") ||
+        error.message.includes("ECONNREFUSED") ||
+        error.message.includes("ETIMEDOUT") ||
+        error.message.includes("timeout")
+      );
+
+      const shouldRetry = isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES && !isLoadMore;
+
+      if (shouldRetry) {
+        isRetrying.current = true;
+        setRetryCount(prev => prev + 1);
+
+        const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY :
+          FEED_CONFIG.RETRY_DELAY;
+
+        console.log(`🔄 Profile retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES})`);
+
+        isRetrying.current = false;
+        fetchProfileData(page, isLoadMore, true);
+        return;
       }
+
+      // Provide more specific error messages
+      let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
+
+      if (isNetworkError) {
+        // Progressive error messages for Render free tier
+        if (retryCount >= 2) {
+          errorMessage = ERROR_MESSAGES.COLD_START; // Cold start after multiple retries
+        } else if (retryCount >= 1) {
+          errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER; // Free tier startup
+        } else {
+          errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING; // Initial network error
+        }
+      } else if (error.message.includes("timeout")) {
+        errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      console.log(`❌ Profile final error after ${retryCount} retries:`, errorMessage);
+      setError(errorMessage);
+
+      if (isLoadMore) {
+        setIsLoadingMore(false);
+      } else {
+        setIsLoading(false);
+      }
+    }
   }, [profileData?.id, user.id, p_data.length, retryCount]);
 
   const loadMorePosts = async () => {
@@ -259,7 +262,7 @@ export default function Profile() {
     return (
       <div className="min-vh-100">
         <ThemeToggle />
-        
+
         {/* Profile Header Skeleton */}
         <div
           className="container-fluid py-4 py-md-5"
@@ -271,7 +274,7 @@ export default function Profile() {
           <div className="container">
             <div className="row align-items-center">
               <div className="col-12 col-lg-8 mb-3 mb-lg-0">
-                <div 
+                <div
                   className="skeleton-text mb-2"
                   style={{
                     width: "200px",
@@ -281,7 +284,7 @@ export default function Profile() {
                     animation: "skeleton-pulse 1.5s ease-in-out infinite alternate"
                   }}
                 />
-                <div 
+                <div
                   className="skeleton-text"
                   style={{
                     width: "300px",
@@ -294,7 +297,7 @@ export default function Profile() {
               </div>
               <div className="col-12 col-lg-4">
                 <div className="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-                  <div 
+                  <div
                     className="skeleton-text"
                     style={{
                       width: "140px",
@@ -304,7 +307,7 @@ export default function Profile() {
                       animation: "skeleton-pulse 1.5s ease-in-out infinite alternate"
                     }}
                   />
-                  <div 
+                  <div
                     className="skeleton-text"
                     style={{
                       width: "140px",
@@ -331,7 +334,7 @@ export default function Profile() {
               >
                 <div className="card-body text-center p-3 p-md-4">
                   <div className="mb-3 mb-md-4">
-                    <div 
+                    <div
                       className="skeleton-circle"
                       style={{
                         width: "clamp(80px, 15vw, 120px)",
@@ -343,7 +346,7 @@ export default function Profile() {
                       }}
                     />
                   </div>
-                  <div 
+                  <div
                     className="skeleton-text mb-2"
                     style={{
                       width: "150px",
@@ -354,7 +357,7 @@ export default function Profile() {
                       animation: "skeleton-pulse 1.5s ease-in-out infinite alternate"
                     }}
                   />
-                  <div 
+                  <div
                     className="skeleton-text mb-3"
                     style={{
                       width: "120px",
@@ -367,7 +370,7 @@ export default function Profile() {
                   />
                   <div className="d-flex justify-content-center gap-2 gap-md-3 mb-3">
                     <div className="text-center">
-                      <div 
+                      <div
                         className="skeleton-text mb-1"
                         style={{
                           width: "30px",
@@ -378,7 +381,7 @@ export default function Profile() {
                           animation: "skeleton-pulse 1.5s ease-in-out infinite alternate"
                         }}
                       />
-                      <div 
+                      <div
                         className="skeleton-text"
                         style={{
                           width: "40px",
@@ -391,7 +394,7 @@ export default function Profile() {
                       />
                     </div>
                     <div className="text-center">
-                      <div 
+                      <div
                         className="skeleton-text mb-1"
                         style={{
                           width: "30px",
@@ -402,7 +405,7 @@ export default function Profile() {
                           animation: "skeleton-pulse 1.5s ease-in-out infinite alternate"
                         }}
                       />
-                      <div 
+                      <div
                         className="skeleton-text"
                         style={{
                           width: "40px",
@@ -414,8 +417,8 @@ export default function Profile() {
                         }}
                       />
                     </div>
-        <div className="text-center">
-                      <div 
+                    <div className="text-center">
+                      <div
                         className="skeleton-text mb-1"
                         style={{
                           width: "30px",
@@ -426,7 +429,7 @@ export default function Profile() {
                           animation: "skeleton-pulse 1.5s ease-in-out infinite alternate"
                         }}
                       />
-                      <div 
+                      <div
                         className="skeleton-text"
                         style={{
                           width: "50px",
@@ -446,7 +449,7 @@ export default function Profile() {
             {/* Posts Grid Skeleton */}
             <div className="col-12 col-lg-8">
               <div className="mb-3 mb-md-4">
-                <div 
+                <div
                   className="skeleton-text mb-2"
                   style={{
                     width: "150px",
@@ -456,7 +459,7 @@ export default function Profile() {
                     animation: "skeleton-pulse 1.5s ease-in-out infinite alternate"
                   }}
                 />
-                <div 
+                <div
                   className="skeleton-text"
                   style={{
                     width: "200px",
@@ -515,14 +518,14 @@ export default function Profile() {
             <div className="col-12 col-lg-8 mb-3 mb-lg-0">
               <h1
                 className="display-6 fw-light mb-2"
-                style={{ 
+                style={{
                   color: "var(--text-primary)",
                   fontSize: "clamp(1.5rem, 4vw, 2.5rem)"
                 }}
               >
                 {profileData?.username || user.username}
               </h1>
-              <p 
+              <p
                 className="lead text-muted mb-0"
                 style={{ fontSize: "clamp(0.9rem, 2.5vw, 1.1rem)" }}
               >
@@ -532,43 +535,43 @@ export default function Profile() {
             </div>
             <div className="col-12 col-lg-4">
               <div className="d-flex flex-column flex-sm-row gap-2 justify-content-lg-end">
-              <NavLink
+                <NavLink
                   className="btn btn-outline-dark rounded-pill px-3 px-md-4 py-2 text-center"
-                to="/addcontent"
-                style={{
-                  borderColor: "var(--border-color)",
-                  color: "var(--text-primary)",
-                  textDecoration: "none",
-                  transition: "all 0.3s ease",
+                  to="/addcontent"
+                  style={{
+                    borderColor: "var(--border-color)",
+                    color: "var(--text-primary)",
+                    textDecoration: "none",
+                    transition: "all 0.3s ease",
                     fontSize: "0.9rem",
                     minWidth: "140px"
-                }}
-                onMouseOver={(e) => {
-                  e.target.style.backgroundColor = "var(--bg-tertiary)";
-                }}
-                onMouseOut={(e) => {
-                  e.target.style.backgroundColor = "transparent";
-                }}
-              >
-                <i className="bi bi-plus-circle me-2"></i>
+                  }}
+                  onMouseOver={(e) => {
+                    e.target.style.backgroundColor = "var(--bg-tertiary)";
+                  }}
+                  onMouseOut={(e) => {
+                    e.target.style.backgroundColor = "transparent";
+                  }}
+                >
+                  <i className="bi bi-plus-circle me-2"></i>
                   <span className="d-none d-sm-inline">Write Content</span>
                   <span className="d-sm-none">Write</span>
-              </NavLink>
-              <NavLink
+                </NavLink>
+                <NavLink
                   className="btn btn-dark rounded-pill px-3 px-md-4 py-2 text-center"
-                to={`/editProfile/${user.id}`}
-                style={{
-                  backgroundColor: "var(--accent-color)",
-                  borderColor: "var(--accent-color)",
-                  textDecoration: "none",
+                  to={`/editProfile/${user.id}`}
+                  style={{
+                    backgroundColor: "var(--accent-color)",
+                    borderColor: "var(--accent-color)",
+                    textDecoration: "none",
                     fontSize: "0.9rem",
                     minWidth: "140px"
-                }}
-              >
-                <i className="bi bi-gear me-2"></i>
+                  }}
+                >
+                  <i className="bi bi-gear me-2"></i>
                   <span className="d-none d-sm-inline">Edit Profile</span>
                   <span className="d-sm-none">Edit</span>
-              </NavLink>
+                </NavLink>
               </div>
             </div>
           </div>
@@ -607,14 +610,14 @@ export default function Profile() {
                 </div>
                 <h5
                   className="fw-bold mb-2"
-                  style={{ 
+                  style={{
                     color: "var(--text-primary)",
                     fontSize: "clamp(1rem, 3vw, 1.25rem)"
                   }}
                 >
                   {profileData?.username || user.username}
                 </h5>
-                <p 
+                <p
                   className="text-muted small mb-3"
                   style={{ fontSize: "clamp(0.8rem, 2vw, 0.9rem)" }}
                 >
@@ -625,7 +628,7 @@ export default function Profile() {
                 {profileData?.bio && (
                   <p
                     className="text-muted small mb-3"
-                    style={{ 
+                    style={{
                       fontSize: "clamp(0.75rem, 1.8vw, 0.8rem)",
                       lineHeight: "1.4"
                     }}
@@ -637,14 +640,14 @@ export default function Profile() {
                   <div className="text-center">
                     <div
                       className="fw-bold"
-                      style={{ 
+                      style={{
                         color: "var(--text-primary)",
                         fontSize: "clamp(1rem, 2.5vw, 1.1rem)"
                       }}
                     >
                       {p_data.length}
                     </div>
-                    <small 
+                    <small
                       className="text-muted"
                       style={{ fontSize: "clamp(0.7rem, 1.8vw, 0.8rem)" }}
                     >
@@ -654,7 +657,7 @@ export default function Profile() {
                   <div className="text-center">
                     <div
                       className="fw-bold"
-                      style={{ 
+                      style={{
                         color: "var(--text-primary)",
                         fontSize: "clamp(1rem, 2.5vw, 1.1rem)"
                       }}
@@ -664,7 +667,7 @@ export default function Profile() {
                         0
                       )}
                     </div>
-                    <small 
+                    <small
                       className="text-muted"
                       style={{ fontSize: "clamp(0.7rem, 1.8vw, 0.8rem)" }}
                     >
@@ -674,7 +677,7 @@ export default function Profile() {
                   <div className="text-center">
                     <div
                       className="fw-bold"
-                      style={{ 
+                      style={{
                         color: "var(--text-primary)",
                         fontSize: "clamp(1rem, 2.5vw, 1.1rem)"
                       }}
@@ -684,7 +687,7 @@ export default function Profile() {
                         0
                       )}
                     </div>
-                    <small 
+                    <small
                       className="text-muted"
                       style={{ fontSize: "clamp(0.7rem, 1.8vw, 0.8rem)" }}
                     >
@@ -701,14 +704,14 @@ export default function Profile() {
             <div className="mb-3 mb-md-4">
               <h2
                 className="h4 fw-light mb-2"
-                style={{ 
+                style={{
                   color: "var(--text-primary)",
                   fontSize: "clamp(1.25rem, 3.5vw, 1.5rem)"
                 }}
               >
                 Your Stories
               </h2>
-              <p 
+              <p
                 className="text-muted small mb-0"
                 style={{ fontSize: "clamp(0.8rem, 2vw, 0.9rem)" }}
               >
@@ -721,158 +724,158 @@ export default function Profile() {
               {p_data && p_data.length > 0 ? (
                 <>
                   {p_data.map((post, index) => (
-                  <div className="col-12 col-sm-6 col-lg-6 col-xl-4" key={post.post_id}>
-                    <NavLink
-                      to={`/vFeed/${post.post_id}`}
-                      style={{ textDecoration: "none" }}
-                    >
-                      <div
-                        className="card border-0 shadow-sm h-100"
-                        style={{
-                          borderRadius: "12px",
-                          overflow: "hidden",
-                          transition: "all 0.3s ease",
-                          cursor: "pointer",
-                        }}
-                        onMouseOver={(e) => {
-                          e.currentTarget.style.transform = "translateY(-2px)";
-                          e.currentTarget.style.boxShadow =
-                            "0 6px 20px rgba(0,0,0,0.12)";
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = "translateY(0)";
-                          e.currentTarget.style.boxShadow =
-                            "0 2px 8px rgba(0,0,0,0.08)";
-                        }}
+                    <div className="col-12 col-sm-6 col-lg-6 col-xl-4" key={post.post_id}>
+                      <NavLink
+                        to={`/vFeed/${post.post_id}`}
+                        style={{ textDecoration: "none" }}
                       >
-                        <div style={{ 
-                          height: "clamp(150px, 25vw, 200px)", 
-                          overflow: "hidden" 
-                        }}>
-                          {post.image ? (
-                            <LazyImage
-                              src={post.image}
-                              alt={post.header}
-                              className="img-fluid w-100 h-100"
-                              style={{ objectFit: "cover" }}
-                              imageType="PROFILE_THUMB"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                e.target.nextSibling.style.display = "flex";
-                              }}
-                            />
-                          ) : null}
-                          <div
-                            className="w-100 h-100 d-flex align-items-center justify-content-center"
-                            style={{
-                              backgroundColor: "var(--bg-tertiary)",
-                              color: "var(--text-muted)",
-                              fontSize: "clamp(2rem, 5vw, 3rem)",
-                              display: post.image ? "none" : "flex",
-                            }}
-                          >
-                            <i className="bi bi-image"></i>
-                          </div>
-                        </div>
-
-                        <div className="card-body p-2 p-md-3">
-                          <div className="d-flex align-items-center mb-2">
-                            <i
-                              className="bi bi-person-circle me-2"
+                        <div
+                          className="card border-0 shadow-sm h-100"
+                          style={{
+                            borderRadius: "12px",
+                            overflow: "hidden",
+                            transition: "all 0.3s ease",
+                            cursor: "pointer",
+                          }}
+                          onMouseOver={(e) => {
+                            e.currentTarget.style.transform = "translateY(-2px)";
+                            e.currentTarget.style.boxShadow =
+                              "0 6px 20px rgba(0,0,0,0.12)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.currentTarget.style.transform = "translateY(0)";
+                            e.currentTarget.style.boxShadow =
+                              "0 2px 8px rgba(0,0,0,0.08)";
+                          }}
+                        >
+                          <div style={{
+                            height: "clamp(150px, 25vw, 200px)",
+                            overflow: "hidden"
+                          }}>
+                            {post.image ? (
+                              <LazyImage
+                                src={post.image}
+                                alt={post.header}
+                                className="img-fluid w-100 h-100"
+                                style={{ objectFit: "cover" }}
+                                imageType="PROFILE_THUMB"
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                  e.target.nextSibling.style.display = "flex";
+                                }}
+                              />
+                            ) : null}
+                            <div
+                              className="w-100 h-100 d-flex align-items-center justify-content-center"
                               style={{
-                                fontSize: "clamp(0.8rem, 2vw, 1rem)",
+                                backgroundColor: "var(--bg-tertiary)",
                                 color: "var(--text-muted)",
+                                fontSize: "clamp(2rem, 5vw, 3rem)",
+                                display: post.image ? "none" : "flex",
                               }}
-                            ></i>
-                            <span 
-                              className="text-muted small"
-                              style={{ fontSize: "clamp(0.7rem, 1.8vw, 0.8rem)" }}
                             >
-                              {post.userFullName}
-                            </span>
+                              <i className="bi bi-image"></i>
+                            </div>
                           </div>
 
-                          <h6
-                            className="card-title fw-bold mb-2"
-                            style={{
-                              fontSize: "clamp(0.9rem, 2.2vw, 1.1rem)",
-                              lineHeight: "1.3",
-                              color: "var(--text-primary)",
-                            }}
-                          >
-                            {post.header}
-                          </h6>
-
-                          <p
-                            className="card-text text-muted small mb-3"
-                            style={{
-                              fontSize: "clamp(0.8rem, 1.8vw, 0.9rem)",
-                              lineHeight: "1.4",
-                              display: "-webkit-box",
-                              WebkitLineClamp: 2,
-                              WebkitBoxOrient: "vertical",
-                              overflow: "hidden",
-                            }}
-                          >
-                            {post.short}
-                          </p>
-
-                          <div className="d-flex justify-content-between align-items-center flex-wrap gap-1">
-                            <div className="d-flex gap-1 gap-md-2">
-                              <span 
+                          <div className="card-body p-2 p-md-3">
+                            <div className="d-flex align-items-center mb-2">
+                              <i
+                                className="bi bi-person-circle me-2"
+                                style={{
+                                  fontSize: "clamp(0.8rem, 2vw, 1rem)",
+                                  color: "var(--text-muted)",
+                                }}
+                              ></i>
+                              <span
                                 className="text-muted small"
-                                style={{ fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)" }}
+                                style={{ fontSize: "clamp(0.7rem, 1.8vw, 0.8rem)" }}
                               >
-                                <img
-                                  src={star}
-                                  alt="time"
-                                  className="me-1"
-                                  style={{ width: "clamp(10px, 2vw, 12px)" }}
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                  }}
-                                />
-                                {post.post_datetime}
+                                {post.userFullName}
                               </span>
                             </div>
 
-                            <div className="d-flex gap-1 gap-md-2">
-                              <span 
-                                className="text-muted small"
-                                style={{ fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)" }}
-                              >
-                                <FaHeart
-                                  className="me-1"
-                                  style={{
-                                    color: "#e74c3c",
-                                    fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)",
-                                  }}
-                                />
-                                {post.likesCount || 0}
-                              </span>
-                              <span 
-                                className="text-muted small"
-                                style={{ fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)" }}
-                              >
-                                <img
-                                  src={comment}
-                                  alt="comments"
-                                  className="me-1"
-                                  style={{ width: "clamp(10px, 2vw, 12px)" }}
-                                  onError={(e) => {
-                                    e.target.style.display = "none";
-                                  }}
-                                />
-                                {post.commentsCount || 0}
-                              </span>
+                            <h6
+                              className="card-title fw-bold mb-2"
+                              style={{
+                                fontSize: "clamp(0.9rem, 2.2vw, 1.1rem)",
+                                lineHeight: "1.3",
+                                color: "var(--text-primary)",
+                              }}
+                            >
+                              {post.header}
+                            </h6>
+
+                            <p
+                              className="card-text text-muted small mb-3"
+                              style={{
+                                fontSize: "clamp(0.8rem, 1.8vw, 0.9rem)",
+                                lineHeight: "1.4",
+                                display: "-webkit-box",
+                                WebkitLineClamp: 2,
+                                WebkitBoxOrient: "vertical",
+                                overflow: "hidden",
+                              }}
+                            >
+                              {post.short}
+                            </p>
+
+                            <div className="d-flex justify-content-between align-items-center flex-wrap gap-1">
+                              <div className="d-flex gap-1 gap-md-2">
+                                <span
+                                  className="text-muted small"
+                                  style={{ fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)" }}
+                                >
+                                  <img
+                                    src={star}
+                                    alt="time"
+                                    className="me-1"
+                                    style={{ width: "clamp(10px, 2vw, 12px)" }}
+                                    onError={(e) => {
+                                      e.target.style.display = "none";
+                                    }}
+                                  />
+                                  {post.post_datetime}
+                                </span>
+                              </div>
+
+                              <div className="d-flex gap-1 gap-md-2">
+                                <span
+                                  className="text-muted small"
+                                  style={{ fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)" }}
+                                >
+                                  <FaHeart
+                                    className="me-1"
+                                    style={{
+                                      color: "#e74c3c",
+                                      fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)",
+                                    }}
+                                  />
+                                  {post.likesCount || 0}
+                                </span>
+                                <span
+                                  className="text-muted small"
+                                  style={{ fontSize: "clamp(0.7rem, 1.6vw, 0.8rem)" }}
+                                >
+                                  <img
+                                    src={comment}
+                                    alt="comments"
+                                    className="me-1"
+                                    style={{ width: "clamp(10px, 2vw, 12px)" }}
+                                    onError={(e) => {
+                                      e.target.style.display = "none";
+                                    }}
+                                  />
+                                  {post.commentsCount || 0}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    </NavLink>
-                  </div>
+                      </NavLink>
+                    </div>
                   ))}
-                  
+
                   {/* Load More Button */}
                   {hasMore && (
                     <div className="col-12 text-center mt-4">
@@ -897,7 +900,7 @@ export default function Profile() {
                       </button>
                     </div>
                   )}
-                  
+
                   {/* Skeleton Loading for Load More */}
                   {isLoadingMore && (
                     <ProfileSkeleton count={6} />
@@ -908,22 +911,22 @@ export default function Profile() {
                   <div className="mb-3 mb-md-4">
                     <i
                       className="bi bi-journal-text"
-                      style={{ 
-                        fontSize: "clamp(3rem, 8vw, 4rem)", 
-                        color: "var(--text-muted)" 
+                      style={{
+                        fontSize: "clamp(3rem, 8vw, 4rem)",
+                        color: "var(--text-muted)"
                       }}
                     ></i>
                   </div>
                   <h5
                     className="fw-light mb-2"
-                    style={{ 
+                    style={{
                       color: "var(--text-primary)",
                       fontSize: "clamp(1.1rem, 3vw, 1.25rem)"
                     }}
                   >
                     No stories yet
                   </h5>
-                  <p 
+                  <p
                     className="text-muted mb-3 mb-md-4"
                     style={{ fontSize: "clamp(0.9rem, 2vw, 1rem)" }}
                   >

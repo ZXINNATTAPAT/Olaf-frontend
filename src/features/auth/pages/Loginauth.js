@@ -31,6 +31,16 @@ export default function Loginauth() {
     setShowPassword(!showPassword);
   };
 
+  // Pre-fetch CSRF token when component mounts
+  React.useEffect(() => {
+    const initAuth = async () => {
+      if (!authService.csrfToken) {
+        await authService.getCSRFToken();
+      }
+    };
+    initAuth();
+  }, []);
+
   async function handleSubmit(event) {
     event.preventDefault();
 
@@ -67,11 +77,9 @@ export default function Loginauth() {
       hideLoader();
 
       // รอสักครู่เพื่อให้ cookies ถูกตั้งค่าและ state อัปเดต
-      setTimeout(() => {
-        // ตรวจสอบว่ามี location state จาก protected route หรือไม่
-        const from = location?.state?.from?.pathname || "/feed";
-        navigate(from, { replace: true });
-      }, 100);
+      // ตรวจสอบว่ามี location state จาก protected route หรือไม่
+      const from = location?.state?.from?.pathname || "/feed";
+      navigate(from, { replace: true });
     } catch (error) {
       hideLoader();
 
@@ -139,7 +147,7 @@ export default function Loginauth() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="mb-4">
                     <label htmlFor="password" className="form-label fw-medium">
                       Password
@@ -173,8 +181,8 @@ export default function Loginauth() {
                     </div>
                   )}
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     className="btn btn-dark btn-lg w-100 mb-3"
                     disabled={!email || !password || !isValidEmail}
                   >

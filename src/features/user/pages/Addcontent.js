@@ -96,8 +96,7 @@ const Addcontent = () => {
           );
           formData.append("folder", "olaf/blog");
           const cloudinaryResponse = await fetch(
-            `https://api.cloudinary.com/v1_1/${
-              process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "your_cloud_name"
+            `https://api.cloudinary.com/v1_1/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || "your_cloud_name"
             }/image/upload`,
             {
               method: "POST",
@@ -131,7 +130,7 @@ const Addcontent = () => {
       // Step 2: Create post with image using single API call
       console.log("Starting post creation");
       showLoader("กำลังสร้างโพสต์...");
-      
+
       if (imageUrl) {
         // Use special endpoint for posts with images
         const formData = new FormData();
@@ -150,7 +149,7 @@ const Addcontent = () => {
             'Content-Type': 'multipart/form-data',
           },
         });
-        
+
         console.log("Post created successfully:", response.data);
         setMessage("Post created successfully with image!");
       } else {
@@ -164,11 +163,11 @@ const Addcontent = () => {
 
         console.log("Sending post data:", postData);
         const result = await ApiController.createPost(postData);
-        
+
         if (!result.success) {
           throw new Error(result.error || "Failed to create post");
         }
-        
+
         console.log("Post created successfully:", result.data);
         setMessage("Post created successfully!");
       }
@@ -178,20 +177,18 @@ const Addcontent = () => {
         URL.revokeObjectURL(localImagePreview);
         setLocalImagePreview(null);
       }
-      
+
       // Reset states before navigation
       hideLoader();
       isSubmittingRef.current = false;
       setSubmitting(false);
-      
+
       // Reset form after states are updated
       resetForm();
-      
-      // Navigate after a short delay to ensure state updates
-      setTimeout(() => {
-        navigate(fromLocation, { replace: true });
-      }, 100);
-      
+
+      // Navigate immediately
+      navigate(fromLocation, { replace: true });
+
     } catch (error) {
       console.error("Error creating post:", error);
       setMessage("Failed to create post. Please try again.");
@@ -455,11 +452,10 @@ const Addcontent = () => {
         </Formik>
         {message && (
           <div
-            className={`alert ${
-              message.includes("successfully")
+            className={`alert ${message.includes("successfully")
                 ? "alert-success"
                 : "alert-danger"
-            }`}
+              }`}
           >
             {message}
           </div>

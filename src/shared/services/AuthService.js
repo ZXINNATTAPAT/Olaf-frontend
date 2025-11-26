@@ -1,8 +1,8 @@
 class AuthService {
-    constructor(baseURL = 'https://olaf-backend.onrender.com/api') {
+    constructor(baseURL = 'https://web-production-ba20a.up.railway.app/api') {
         this.baseURL = baseURL;
-        // this.csrfToken = localStorage.getItem('csrfToken') || null;
-        
+        this.csrfToken = localStorage.getItem('csrfToken') || null;
+
         // Cache mechanism
         this.cache = {
             userProfile: null,
@@ -20,7 +20,7 @@ class AuthService {
                 method: 'GET',
                 credentials: 'include'
             });
-            
+
             this.csrfToken = response.headers.get('X-CSRFToken');
             if (this.csrfToken) {
                 localStorage.setItem('csrfToken', this.csrfToken);
@@ -42,12 +42,12 @@ class AuthService {
                 credentials: 'include',
                 body: JSON.stringify(userData)
             });
-            
+
             const data = await response.json();
-            
+
             // Update CSRF token from response
             this.csrfToken = response.headers.get('X-CSRFToken');
-            
+
             return data;
         } catch (error) {
             throw error;
@@ -57,15 +57,13 @@ class AuthService {
     // 3. Login
     async login(email, password) {
         try {
-            // Check if user is already authenticated and clear cookies if needed
-            if (this.isAuthenticated()) {
-                console.log('User already authenticated, clearing existing session...');
-                await this.clearCookiesBeforeLogin();
+            // Optimization: Skip pre-checks and logout. Trust the backend to handle session replacement.
+
+            // Ensure we have a CSRF token
+            if (!this.csrfToken) {
+                await this.getCSRFToken();
             }
-            
-            // Get CSRF token first
-            await this.getCSRFToken();
-            
+
             const response = await fetch(`${this.baseURL}/auth/login/`, {
                 method: 'POST',
                 headers: {
@@ -75,18 +73,23 @@ class AuthService {
                 credentials: 'include',
                 body: JSON.stringify({ email, password })
             });
-            
+
             const data = await response.json();
-            
+
             // Update CSRF token from response
             this.csrfToken = response.headers.get('X-CSRFToken');
             if (this.csrfToken) {
                 localStorage.setItem('csrfToken', this.csrfToken);
             }
-            
-            // Clear cache to ensure fresh data after login
-            this.clearCache();
-            
+
+            // Update cache with fresh user data
+            if (data.user) {
+                this.cache.userProfile = data.user;
+                this.cache.lastFetch = Date.now();
+            } else {
+                this.clearCache();
+            }
+
             return data;
         } catch (error) {
             throw error;
@@ -108,17 +111,17 @@ class AuthService {
                 },
                 credentials: 'include' // HTTP Only cookies จะถูกส่งอัตโนมัติ
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            
+
             const data = await response.json();
-            
+
             // Update cache
             this.cache.userProfile = data;
             this.cache.lastFetch = Date.now();
-            
+
             return data;
         } catch (error) {
             // If error and we have cached data, return cached data
@@ -141,7 +144,7 @@ class AuthService {
                 credentials: 'include',
                 body: JSON.stringify({})
             });
-            
+
             this.csrfToken = response.headers.get('X-CSRFToken');
             const data = await response.json();
             return data;
@@ -162,15 +165,15 @@ class AuthService {
                 credentials: 'include',
                 body: JSON.stringify({})
             });
-            
+
             // Even if the API call fails, we should still clear local state
             if (!response.ok) {
                 console.warn('Logout API call failed, but clearing local state:', response.status);
             }
-            
+
             // Clear all local state and cache
             this.clearLocalState();
-            
+
             return true;
         } catch (error) {
             console.error('Logout error:', error);
@@ -184,13 +187,13 @@ class AuthService {
     clearLocalState() {
         // Clear cache
         this.clearCache();
-        
+
         // Clear CSRF token
         this.csrfToken = null;
-        
+
         // Clear only CSRF token from localStorage
         localStorage.removeItem('csrfToken');
-        
+
         // Note: HTTP-only cookies จะถูกจัดการโดย server
     }
 
@@ -206,13 +209,13 @@ class AuthService {
                 credentials: 'include',
                 body: JSON.stringify({})
             });
-            
+
             console.log('Cleared existing cookies before login');
         } catch (error) {
             console.warn('Could not clear cookies before login:', error);
             // Continue with login even if clearing cookies fails
         }
-        
+
         // Clear local state as well
         this.clearLocalState();
     }

@@ -7,7 +7,7 @@ import useAuth from "../../../shared/hooks/useAuth";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { getImageUrl } from "../../../shared/services/CloudinaryService";
 const baseUrl =
-  process.env.REACT_APP_BASE_URL || "https://olaf-backend.onrender.com/api";
+  process.env.REACT_APP_BASE_URL || "https://web-production-ba20a.up.railway.app/api";
 
 // Validation Schema using Yup
 const form = Yup.object().shape({

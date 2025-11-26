@@ -86,20 +86,20 @@ export const HTTP_STATUS = {
 };
 
 export const API_CONFIG = {
-  TIMEOUT: 30000, // 10 seconds
-  MAX_RETRIES: 3,
-  RETRY_DELAY: 2000, // 2 seconds
+  TIMEOUT: 10000, // 10 seconds
+  MAX_RETRIES: 2,
+  RETRY_DELAY: 0, // No delay
   BATCH_SIZE: 10,
 };
 
 export const FEED_CONFIG = {
-  MAX_RETRIES: 3, // Increased retries for Render free tier cold starts
-  RETRY_DELAY: 2000, // 2 seconds - longer delay for cold starts
-  TIMEOUT: 20000, // 20 seconds - longer timeout for cold starts
-  BACKEND_CHECK_INTERVAL: 5000, // 5 seconds between backend checks
-  RENDER_FREE_TIER_DELAY: 3000, // 3 seconds delay for Render free tier cold starts
-  CACHE_DURATION: 60000, // 60 seconds cache for posts (longer for free tier)
-  COLD_START_TIMEOUT: 60000, // 60 seconds for cold start detection
+  MAX_RETRIES: 2,
+  RETRY_DELAY: 0, // No delay
+  TIMEOUT: 10000, // 10 seconds
+  BACKEND_CHECK_INTERVAL: 5000,
+  RENDER_FREE_TIER_DELAY: 0, // No delay
+  CACHE_DURATION: 60000,
+  COLD_START_TIMEOUT: 10000, // Standard timeout
 };
 
 export const ERROR_MESSAGES = {

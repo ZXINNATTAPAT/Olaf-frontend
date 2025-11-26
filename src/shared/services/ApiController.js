@@ -2,11 +2,11 @@
 import axiosInstance from './axios/index';
 import { API_ENDPOINTS, FEED_CONFIG } from '../constants/apiConstants';
 
-// const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+// const baseUrl = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
 
 class ApiController {
   // ==================== AUTHENTICATION APIs ====================
-  
+
   /**
    * User Authentication
    */
@@ -56,21 +56,21 @@ class ApiController {
   }
 
   // ==================== POSTS APIs ====================
-  
+
   /**
    * Posts Management
    */
   static async getPosts(params = {}) {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.POSTS.BASE, { 
+      const response = await axiosInstance.get(API_ENDPOINTS.POSTS.BASE, {
         params,
         timeout: FEED_CONFIG.TIMEOUT // Use FEED_CONFIG timeout
       });
       return { success: true, data: response.data };
     } catch (error) {
       console.error('ApiController.getPosts error:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.response?.data || error.message,
         status: error.response?.status,
         isNetworkError: !error.response
@@ -115,7 +115,7 @@ class ApiController {
   }
 
   // ==================== COMMENTS APIs ====================
-  
+
   /**
    * Comments Management
    */
@@ -166,7 +166,7 @@ class ApiController {
   }
 
   // ==================== LIKES APIs ====================
-  
+
   /**
    * Post Likes Management
    */
@@ -234,7 +234,7 @@ class ApiController {
   }
 
   // ==================== USER APIs ====================
-  
+
   /**
    * User Management
    */
@@ -275,7 +275,7 @@ class ApiController {
   }
 
   // ==================== CLOUDINARY APIs ====================
-  
+
   /**
    * Image Upload Management - Note: Use Cloudinary API directly for uploads
    * This method is for backend API calls only
@@ -285,7 +285,7 @@ class ApiController {
       const formData = new FormData();
       formData.append('file', imageFile);
       formData.append('folder', folder);
-      
+
       const response = await axiosInstance.post(API_ENDPOINTS.CLOUDINARY.UPLOAD, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -297,7 +297,7 @@ class ApiController {
     }
   }
 
-  
+
 
   static async deleteImage(publicId) {
     try {
@@ -309,7 +309,7 @@ class ApiController {
   }
 
   // ==================== UTILITY METHODS ====================
-  
+
   /**
    * Helper method to handle API responses consistently
    */
@@ -323,9 +323,9 @@ class ApiController {
   static _handleError(error) {
     const errorData = error.response?.data || error.message;
     const status = error.response?.status;
-    
-    return { 
-      success: false, 
+
+    return {
+      success: false,
       error: errorData,
       status: status
     };
@@ -367,7 +367,7 @@ class ApiController {
    */
   static async batchRequests(requests) {
     try {
-      const promises = requests.map(request => 
+      const promises = requests.map(request =>
         this.makeRequest(request.method, request.endpoint, request.data, request.config)
       );
       const results = await Promise.allSettled(promises);
@@ -385,7 +385,7 @@ class ApiController {
   /**
    * Retry mechanism for failed requests
    */
-  static async retryRequest(requestFn, maxRetries = 3, delay = 1000) {
+  static async retryRequest(requestFn, maxRetries = 3, delay = 0) {
     for (let i = 0; i < maxRetries; i++) {
       try {
         const result = await requestFn();
@@ -393,13 +393,13 @@ class ApiController {
           return result;
         }
         if (i < maxRetries - 1) {
-          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+          if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
         }
       } catch (error) {
         if (i === maxRetries - 1) {
           return this._handleError(error);
         }
-        await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+        if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
       }
     }
     return { success: false, error: 'Max retries exceeded' };
@@ -417,31 +417,31 @@ class ApiController {
   /**
    * Enhanced retry with exponential backoff
    */
-  static async retryWithBackoff(requestFn, maxRetries = 3, baseDelay = 1000) {
+  static async retryWithBackoff(requestFn, maxRetries = 3, baseDelay = 0) {
     for (let i = 0; i < maxRetries; i++) {
       try {
         const result = await requestFn();
         if (result.success) {
           return result;
         }
-        
+
         // Check if error is retryable
         if (result.error && !this._isRetryableError(result.error)) {
           return result;
         }
-        
+
         if (i < maxRetries - 1) {
-          const delay = baseDelay * Math.pow(2, i) + Math.random() * 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          const delay = baseDelay * Math.pow(2, i);
+          if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
         }
       } catch (error) {
         if (i === maxRetries - 1 || !this._isRetryableError(error)) {
           return this._handleError(error);
         }
-        
+
         if (i < maxRetries - 1) {
-          const delay = baseDelay * Math.pow(2, i) + Math.random() * 1000;
-          await new Promise(resolve => setTimeout(resolve, delay));
+          const delay = baseDelay * Math.pow(2, i);
+          if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
     }

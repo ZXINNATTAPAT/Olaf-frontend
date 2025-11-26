@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+const baseUrl = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
 
 const EditProfile = () => {
   const { user_id } = useParams();

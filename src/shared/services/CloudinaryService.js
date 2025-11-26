@@ -50,16 +50,16 @@ export const processImageUrl = (imageUrl, transformation = IMAGE_TRANSFORMATIONS
 
   // Extract image path based on different URL patterns
   let imagePath = "";
-  
-  if (cleanUrl.includes("olaf-backend.onrender.com")) {
-    // Handle olaf-backend.onrender.com URLs
+
+  if (cleanUrl.includes("web-production-ba20a.up.railway.app")) {
+    // Handle web-production-ba20a.up.railway.app URLs
     if (cleanUrl.includes("/media/posts/images/")) {
-      imagePath = cleanUrl.replace("https://olaf-backend.onrender.com/media/posts/images/", "posts/images/");
+      imagePath = cleanUrl.replace("https://web-production-ba20a.up.railway.app/media/posts/images/", "posts/images/");
     } else if (cleanUrl.includes("/media/")) {
-      imagePath = cleanUrl.replace("https://olaf-backend.onrender.com/media/", "");
+      imagePath = cleanUrl.replace("https://web-production-ba20a.up.railway.app/media/", "");
     } else {
       // Extract path after domain
-      const urlParts = cleanUrl.split("olaf-backend.onrender.com");
+      const urlParts = cleanUrl.split("web-production-ba20a.up.railway.app");
       imagePath = urlParts[1] ? urlParts[1].replace(/^\//, "") : "";
     }
   } else if (cleanUrl.startsWith("/")) {
@@ -76,7 +76,7 @@ export const processImageUrl = (imageUrl, transformation = IMAGE_TRANSFORMATIONS
   // Build Cloudinary URL
   const baseUrl = `https://res.cloudinary.com/${cloudinaryCloudName}`;
   const transformationParam = transformation ? `/${transformation}` : "";
-  
+
   // Ensure imagePath is not empty
   if (!imagePath) {
     return DEFAULT_IMAGE;

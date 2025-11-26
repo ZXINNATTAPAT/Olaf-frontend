@@ -1,13 +1,13 @@
 import axios from 'axios';
 import authService from '../AuthService';
 
-const baseURL = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+const baseURL = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
 
 // สร้าง axios instance สำหรับ httpOnly cookies
 const axiosInstance = axios.create({
   baseURL: baseURL,
   withCredentials: true, // สำคัญสำหรับ httpOnly cookies
-  timeout: 20000, // 20 seconds timeout - optimized for Render free tier
+  timeout: 10000, // 10 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
@@ -20,10 +20,10 @@ axiosInstance.interceptors.request.use(
     if (authService.csrfToken) {
       config.headers['X-CSRFToken'] = authService.csrfToken;
     }
-    
+
     // ไม่ต้องเพิ่ม Authorization header เพราะใช้ HTTP-only cookies
     // Server จะตรวจสอบ authentication ผ่าน cookies อัตโนมัติ
-    
+
     return config;
   },
   (error) => {
@@ -47,7 +47,7 @@ axiosInstance.interceptors.response.use(
     if (!error.response) {
       return Promise.reject(new Error('Network error: Backend server is not responding'));
     }
-    
+
     // จัดการ token errors
     if (error.response?.status === 401) {
       // ลบเฉพาะ CSRF token

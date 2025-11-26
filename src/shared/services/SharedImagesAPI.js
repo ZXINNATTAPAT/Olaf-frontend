@@ -1,4 +1,4 @@
-const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
 const CLOUDINARY_UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'OLAF';
 const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'your_cloud_name';
 
@@ -17,7 +17,7 @@ class SharedImagesAPI {
         formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
         formData.append('folder', options.folder || 'Olaf/blog');
         formData.append('public_id', options.publicId || `post_${Date.now()}`);
-        
+
         // Note: Transformation should be set in the upload preset, not here
         // Only these parameters are allowed for unsigned uploads:
         // upload_preset, callback, public_id, folder, asset_folder, tags, 

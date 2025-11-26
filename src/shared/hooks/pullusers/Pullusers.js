@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-const baseUrl = process.env.REACT_APP_BASE_URL || 'https://olaf-backend.onrender.com/api';
+const baseUrl = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
 
-export default function PullUsers( {ids} ) {
+export default function PullUsers({ ids }) {
   const [user, setUser] = useState(null); // state สำหรับเก็บข้อมูลผู้ใช้
   const [loading, setLoading] = useState(true); // state สำหรับสถานะการโหลด
   const [, setError] = useState(null); // state สำหรับจัดการข้อผิดพลาด

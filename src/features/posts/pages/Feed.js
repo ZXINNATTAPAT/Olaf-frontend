@@ -48,7 +48,7 @@ export default function Feed() {
     if (hasFetched.current && !isRetry) return; // Prevent duplicate calls
     if (isRetrying.current) return; // Prevent overlapping retries
     if (!isRetry) hasFetched.current = true;
-    
+
     // Check cache first
     const now = Date.now();
     if (cacheRef.current.data && (now - cacheRef.current.timestamp) < FEED_CONFIG.CACHE_DURATION) {
@@ -57,16 +57,16 @@ export default function Feed() {
       setIsLoading(false);
       return;
     }
-    
+
     console.log('❌ Cache MISS - Fetching from API');
-    
+
     try {
       // Only show loading for initial load, not retries
       if (!isRetry) {
         setIsLoading(true);
         setError(null); // Clear previous errors
       }
-      
+
       // Use ApiController to fetch posts
       console.log('Fetching posts with timeout:', FEED_CONFIG.TIMEOUT);
       const startTime = Date.now();
@@ -74,7 +74,7 @@ export default function Feed() {
       const endTime = Date.now();
       console.log(`Posts API took ${endTime - startTime}ms`);
       console.log('ApiController result:', result);
-      
+
       if (!result.success) {
         // Create error object with enhanced information from ApiController
         const error = new Error(result.error || 'Failed to fetch posts');
@@ -83,7 +83,7 @@ export default function Feed() {
         console.log('Error details:', { message: error.message, isNetworkError: error.isNetworkError, status: error.status });
         throw error;
       }
-      
+
       const postData = result.data;
 
       // Process posts - user data is now included in the response
@@ -170,13 +170,13 @@ export default function Feed() {
       //   .map((post) => post.image);
 
       // setImgSrcs(validImages);
-      
+
       // Cache the data
       cacheRef.current = {
         data: latestPosts,
         timestamp: Date.now()
       };
-      
+
       console.log('✅ Posts loaded and cached successfully');
       setIsLoading(false);
       setRetryCount(0); // Reset retry count on success
@@ -184,40 +184,38 @@ export default function Feed() {
       setError(null); // Clear any previous errors
     } catch (error) {
       console.error("Error fetching posts:", error);
-      
+
       // Check if we should retry for network errors (especially for Render free tier)
       const isNetworkError = (
         error.isNetworkError || // From ApiController
-        error.message.includes("Network error") || 
+        error.message.includes("Network error") ||
         error.message.includes("Backend server is not responding") ||
         error.message.includes("Network Error") ||
         error.message.includes("ECONNREFUSED") ||
         error.message.includes("ETIMEDOUT") ||
         error.message.includes("timeout")
       );
-      
+
       const shouldRetry = isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES;
-      
+
       if (shouldRetry) {
         isRetrying.current = true;
         setRetryCount(prev => prev + 1);
-        
+
         // Balanced retry delay for Render free tier
-        const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY : 
-                     FEED_CONFIG.RETRY_DELAY;
-        
+        const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY :
+          FEED_CONFIG.RETRY_DELAY;
+
         console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES})`);
-        
-        setTimeout(() => {
-          isRetrying.current = false;
-          fetchPosts(true);
-        }, delay);
+
+        isRetrying.current = false;
+        fetchPosts(true);
         return;
       }
-      
+
       // Provide more specific error messages based on error type
       let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
-      
+
       if (isNetworkError) {
         // Progressive error messages for Render free tier
         if (retryCount >= 2) {
@@ -232,12 +230,12 @@ export default function Feed() {
       } else if (error.message) {
         errorMessage = `Failed to load posts: ${error.message}`;
       }
-      
+
       console.log(`❌ Final error after ${retryCount} retries:`, errorMessage);
       setError(errorMessage);
       setIsLoading(false);
       isRetrying.current = false;
-      
+
       // Set empty data to show "No posts available" message
       setp_data([]);
       setFilteredData([]);
@@ -251,9 +249,7 @@ export default function Feed() {
   useEffect(() => {
     if (p_data) {
       // Delay the display of data to trigger the transition
-      setTimeout(() => {
-        setShowData(true);
-      }, 200); // Adjust the delay as necessary
+      setShowData(true);
     }
   }, [p_data]);
 
@@ -294,7 +290,7 @@ export default function Feed() {
                   onChange={(e) => {
                     setSearchKeyword(e.target.value);
                     setShowData(false);
-                    setTimeout(() => setShowData(true), 200);
+                    setShowData(true);
                   }}
                   style={{
                     border: "2px solid #e9ecef",
@@ -338,7 +334,7 @@ export default function Feed() {
                   onClick={() => {
                     setSearchKeyword(topic);
                     setShowData(false);
-                    setTimeout(() => setShowData(true), 200);
+                    setShowData(true);
                   }}
                   onMouseOver={(e) => {
                     e.target.style.backgroundColor = "#667eea";
@@ -386,9 +382,8 @@ export default function Feed() {
             filteredData.map((post) => (
               <div className="col-md-6 col-lg-4" key={post.post_id}>
                 <div
-                  className={`card border-0 shadow-sm h-100 ${
-                    showData ? "show" : ""
-                  }`}
+                  className={`card border-0 shadow-sm h-100 ${showData ? "show" : ""
+                    }`}
                   style={{
                     borderRadius: "12px",
                     overflow: "hidden",
@@ -516,7 +511,7 @@ export default function Feed() {
                       </span>
                     </div>
                   )}
-                  <button 
+                  <button
                     className="btn btn-outline-primary btn-sm"
                     onClick={() => {
                       setRetryCount(0);
