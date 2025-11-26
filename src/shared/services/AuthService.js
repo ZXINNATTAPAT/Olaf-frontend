@@ -1,5 +1,5 @@
 class AuthService {
-    constructor(baseURL = 'https://web-production-ba20a.up.railway.app/api') {
+    constructor(baseURL = process.env.REACT_APP_API_URL || 'https://web-production-ba20a.up.railway.app/api') {
         this.baseURL = baseURL;
         this.csrfToken = localStorage.getItem('csrfToken') || null;
 
@@ -223,7 +223,7 @@ class AuthService {
     // Helper: Check if user is authenticated by calling API
     async isAuthenticated() {
         try {
-            const response = await fetch(`${this.baseURL}/auth/user/`, {
+            const response = await fetch(`${this.baseURL}/auth/check/`, {
                 method: 'GET',
                 credentials: 'include'
             });

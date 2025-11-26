@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ApiController from "../../../shared/services/ApiController";
+import useAuth from "../../../shared/hooks/useAuth";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { setUser } = useAuth();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -140,8 +142,13 @@ export default function Register() {
       setPhone("");
       setLoading(false);
 
-      // Navigate to login page
-      navigate("/auth/login");
+      // Auto-login if user data is returned
+      if (result.data && result.data.user) {
+        setUser(result.data.user);
+        navigate("/feed");
+      } else {
+        navigate("/auth/login");
+      }
     } catch (error) {
       console.error("Registration error:", error);
       setLoading(false);
@@ -273,9 +280,8 @@ export default function Register() {
                       </span>
                       <input
                         type="email"
-                        className={`form-control form-control-lg ${
-                          !isValidEmail ? "is-invalid" : ""
-                        }`}
+                        className={`form-control form-control-lg ${!isValidEmail ? "is-invalid" : ""
+                          }`}
                         id="email"
                         placeholder="Enter your email"
                         value={email}
@@ -336,9 +342,8 @@ export default function Register() {
                           onClick={togglePasswordVisibility}
                         >
                           <i
-                            className={`bi ${
-                              showPassword ? "bi-eye-slash" : "bi-eye"
-                            }`}
+                            className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"
+                              }`}
                           ></i>
                         </button>
                       </div>
@@ -346,32 +351,30 @@ export default function Register() {
                         <div className="mt-2">
                           <div className="progress" style={{ height: "4px" }}>
                             <div
-                              className={`progress-bar ${
-                                passwordStrength <= 2
-                                  ? "bg-danger"
-                                  : passwordStrength <= 3
+                              className={`progress-bar ${passwordStrength <= 2
+                                ? "bg-danger"
+                                : passwordStrength <= 3
                                   ? "bg-warning"
                                   : "bg-success"
-                              }`}
+                                }`}
                               style={{
                                 width: `${(passwordStrength / 5) * 100}%`,
                               }}
                             ></div>
                           </div>
                           <small
-                            className={`text-${
-                              passwordStrength <= 2
-                                ? "danger"
-                                : passwordStrength <= 3
+                            className={`text-${passwordStrength <= 2
+                              ? "danger"
+                              : passwordStrength <= 3
                                 ? "warning"
                                 : "success"
-                            }`}
+                              }`}
                           >
                             {passwordStrength <= 2
                               ? "Weak"
                               : passwordStrength <= 3
-                              ? "Medium"
-                              : "Strong"}{" "}
+                                ? "Medium"
+                                : "Strong"}{" "}
                             Password
                           </small>
                         </div>
@@ -403,11 +406,10 @@ export default function Register() {
                           onClick={togglePasswordConfirmationVisibility}
                         >
                           <i
-                            className={`bi ${
-                              showPasswordConfirmation
-                                ? "bi-eye-slash"
-                                : "bi-eye"
-                            }`}
+                            className={`bi ${showPasswordConfirmation
+                              ? "bi-eye-slash"
+                              : "bi-eye"
+                              }`}
                           ></i>
                         </button>
                       </div>
