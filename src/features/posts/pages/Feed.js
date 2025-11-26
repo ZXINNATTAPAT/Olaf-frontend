@@ -17,10 +17,7 @@ import "../../../assets/styles/theme.css";
 export default function Feed() {
   const redirectx = useRedirect();
   const [p_data, setp_data] = useState([]);
-  // const [imgSrcs, setImgSrcs] = useState([]);
-  const [showData, setShowData] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  // คำค้นหาที่ผู้ใช้กรอก
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredData, setFilteredData] = useState([]);
   const [error, setError] = useState(null);
@@ -28,10 +25,6 @@ export default function Feed() {
   const hasFetched = useRef(false);
   const isRetrying = useRef(false);
   const cacheRef = useRef({ data: null, timestamp: 0 });
-  const Ic = IconPath();
-  const star = Ic[0];
-  // const Like = Ic[1];
-  const comment = Ic[2];
 
   useEffect(() => {
     // ทำการกรองข้อมูลเมื่อ searchKeyword เปลี่ยนแปลง
@@ -246,126 +239,54 @@ export default function Feed() {
     fetchPosts();
   }, [fetchPosts]); // เรียกเพียงครั้งเดียวเมื่อ component mount
 
-  useEffect(() => {
-    if (p_data) {
-      // Delay the display of data to trigger the transition
-      setShowData(true);
-    }
-  }, [p_data]);
 
   return (
-    <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
+    <div className="min-vh-100" style={{ backgroundColor: "#ffffff" }}>
       <ThemeToggle />
 
-      {/* Header Section */}
-      <div
-        className="container-fluid"
-        style={{
-          backgroundColor: "#ffffff",
-          borderBottom: "1px solid #e9ecef",
-        }}
-      >
-        <div className="container py-4 py-md-5">
-          <div className="text-center mb-4">
-            <h1
-              className="display-6 fw-light mb-2"
-              style={{ color: "#2c3e50" }}
-            >
-              Discover Stories
+      {/* Minimal Header */}
+      <div className="container-fluid border-bottom" style={{ borderColor: "#f0f0f0" }}>
+        <div className="container py-4">
+          <div className="d-flex align-items-center justify-content-between mb-4">
+            <h1 className="h3 fw-normal mb-0" style={{ color: "#1a1a1a", letterSpacing: "-0.02em" }}>
+              Feed
             </h1>
-            <p className="lead text-muted mb-0">
-              Find inspiration in the stories that matter to you
-            </p>
           </div>
 
-          {/* Search Bar */}
-          <div className="row justify-content-center mt-4">
-            <div className="col-12 col-md-10 col-lg-8">
+          {/* Minimal Search */}
+          <div className="row">
+            <div className="col-12 col-md-8 col-lg-6">
               <div className="position-relative">
-                <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style={{ color: "#999" }}></i>
                 <input
-                  className="form-control form-control-lg ps-5 py-3"
-                  placeholder="Search stories, topics, or authors..."
+                  className="form-control border-0 ps-5 py-2"
+                  placeholder="Search..."
                   value={searchKeyword}
                   onChange={(e) => {
                     setSearchKeyword(e.target.value);
-                    setShowData(false);
-                    setShowData(true);
                   }}
                   style={{
-                    border: "2px solid #e9ecef",
-                    borderRadius: "50px",
-                    fontSize: "1.1rem",
-                    transition: "all 0.3s ease",
+                    backgroundColor: "#f8f8f8",
+                    fontSize: "0.95rem",
+                    transition: "all 0.2s ease",
                   }}
                   onFocus={(e) => {
-                    e.target.style.borderColor = "#667eea";
-                    e.target.style.boxShadow =
-                      "0 0 0 0.2rem rgba(102, 126, 234, 0.25)";
+                    e.target.style.backgroundColor = "#f0f0f0";
+                    e.target.style.outline = "none";
                   }}
                   onBlur={(e) => {
-                    e.target.style.borderColor = "#e9ecef";
-                    e.target.style.boxShadow = "none";
+                    e.target.style.backgroundColor = "#f8f8f8";
                   }}
                 />
               </div>
-            </div>
-          </div>
-
-          {/* Topic Tags */}
-          <div className="text-center mt-3">
-            <div className="d-flex flex-wrap justify-content-center gap-2">
-              {[
-                "Life",
-                "Work",
-                "Society",
-                "Technology",
-                "Development",
-                "Culture",
-              ].map((topic) => (
-                <button
-                  key={topic}
-                  className="btn btn-outline-secondary rounded-pill px-3 py-2"
-                  style={{
-                    fontSize: "0.9rem",
-                    border: "1px solid #dee2e6",
-                    transition: "all 0.3s ease",
-                  }}
-                  onClick={() => {
-                    setSearchKeyword(topic);
-                    setShowData(false);
-                    setShowData(true);
-                  }}
-                  onMouseOver={(e) => {
-                    e.target.style.backgroundColor = "#667eea";
-                    e.target.style.borderColor = "#667eea";
-                    e.target.style.color = "white";
-                  }}
-                  onMouseOut={(e) => {
-                    e.target.style.backgroundColor = "transparent";
-                    e.target.style.borderColor = "#dee2e6";
-                    e.target.style.color = "#6c757d";
-                  }}
-                >
-                  {topic}
-                </button>
-              ))}
             </div>
           </div>
         </div>
       </div>
 
       {/* Stories Grid */}
-      <div className="container py-4 py-md-5">
-        <div className="row mb-3 mb-md-4">
-          <div className="col-12">
-            <h2 className="h5 fw-light mb-0" style={{ color: "#2c3e50" }}>
-              Stories
-            </h2>
-          </div>
-        </div>
-
-        <div className="row g-3 g-md-4">
+      <div className="container py-5">
+        <div className="row g-4 g-md-5">
           {isLoading ? (
             <>
               <div className="col-md-6 col-lg-4" key="skeleton-1">
@@ -381,28 +302,27 @@ export default function Feed() {
           ) : p_data ? (
             filteredData.map((post) => (
               <div className="col-md-6 col-lg-4" key={post.post_id}>
-                <div
-                  className={`card border-0 shadow-sm h-100 ${showData ? "show" : ""
-                    }`}
+                <article
+                  className="h-100"
                   style={{
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    transition: "all 0.3s ease",
                     cursor: "pointer",
+                    transition: "opacity 0.2s ease",
                   }}
                   onMouseOver={(e) => {
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow =
-                      "0 6px 20px rgba(0,0,0,0.12)";
+                    e.currentTarget.style.opacity = "0.85";
                   }}
                   onMouseOut={(e) => {
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow =
-                      "0 2px 8px rgba(0,0,0,0.08)";
+                    e.currentTarget.style.opacity = "1";
                   }}
                   onClick={() => redirectx(String(post.post_id))}
                 >
-                  <div style={{ height: "200px", overflow: "hidden" }}>
+                  {/* Image */}
+                  <div style={{ 
+                    height: "240px", 
+                    overflow: "hidden",
+                    backgroundColor: "#f5f5f5",
+                    marginBottom: "1.5rem"
+                  }}>
                     {post.image ? (
                       <LazyImage
                         src={post.image}
@@ -415,9 +335,8 @@ export default function Feed() {
                       <div
                         className="w-100 h-100 d-flex align-items-center justify-content-center"
                         style={{
-                          backgroundColor: "#f8f9fa",
-                          color: "#6c757d",
-                          fontSize: "3rem",
+                          color: "#ccc",
+                          fontSize: "2.5rem",
                         }}
                       >
                         <i className="bi bi-image"></i>
@@ -425,96 +344,84 @@ export default function Feed() {
                     )}
                   </div>
 
-                  <div className="card-body p-3 p-md-4">
-                    <div className="d-flex align-items-center mb-2">
-                      <i
-                        className="bi bi-person-circle me-2"
-                        style={{ fontSize: "1rem", color: "#6c757d" }}
-                      ></i>
-                      <span className="text-muted small">{post.user}</span>
+                  {/* Content */}
+                  <div>
+                    {/* Author */}
+                    <div className="mb-2">
+                      <span className="text-muted" style={{ fontSize: "0.875rem", color: "#888" }}>
+                        {post.user}
+                      </span>
                     </div>
 
-                    <h6
-                      className="card-title fw-bold mb-2"
+                    {/* Title */}
+                    <h3
+                      className="mb-2"
                       style={{
-                        fontSize: "1.1rem",
+                        fontSize: "1.25rem",
                         lineHeight: "1.4",
-                        color: "#2c3e50",
-                        minHeight: "2.8rem",
+                        color: "#1a1a1a",
+                        fontWeight: "500",
+                        letterSpacing: "-0.01em",
                       }}
                     >
                       {post.header}
-                    </h6>
+                    </h3>
 
+                    {/* Description */}
                     <p
-                      className="card-text text-muted small mb-3"
+                      className="mb-3"
                       style={{
-                        fontSize: "0.9rem",
-                        lineHeight: "1.5",
+                        fontSize: "0.9375rem",
+                        lineHeight: "1.6",
+                        color: "#666",
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
-                        minHeight: "2.7rem",
                       }}
                     >
                       {post.short}
                     </p>
 
-                    <div className="d-flex justify-content-between align-items-center pt-2 border-top">
-                      <div className="d-flex align-items-center">
-                        <span className="text-muted small">
-                          <img
-                            src={star}
-                            alt="time"
-                            className="me-1"
-                            style={{ width: "12px", height: "12px" }}
-                          />
-                          {post.post_datetime}
-                        </span>
-                      </div>
-
-                      <div className="d-flex gap-3">
-                        <span className="text-muted small d-flex align-items-center">
-                          <FaHeart
-                            className="me-1"
-                            style={{ color: "#e74c3c", fontSize: "0.8rem" }}
-                          />
-                          {post.likesCount || 0}
-                        </span>
-                        <span className="text-muted small d-flex align-items-center">
-                          <img
-                            src={comment}
-                            alt="comments"
-                            className="me-1"
-                            style={{ width: "12px", height: "12px" }}
-                          />
-                          {post.commentsCount || 0}
-                        </span>
-                      </div>
+                    {/* Meta */}
+                    <div className="d-flex align-items-center gap-4" style={{ fontSize: "0.8125rem", color: "#999" }}>
+                      <span>{post.post_datetime}</span>
+                      <span className="d-flex align-items-center gap-1">
+                        <FaHeart style={{ fontSize: "0.75rem" }} />
+                        {post.likesCount || 0}
+                      </span>
+                      <span className="d-flex align-items-center gap-1">
+                        <i className="bi bi-chat" style={{ fontSize: "0.75rem" }}></i>
+                        {post.commentsCount || 0}
+                      </span>
                     </div>
                   </div>
-                </div>
+                </article>
               </div>
             ))
           ) : (
-            <div className="col-12 text-center py-5 my-5">
-              <div className="mb-3">
-                <i className="bi bi-exclamation-triangle text-warning" style={{ fontSize: "2rem" }}></i>
-              </div>
-              <p className="text-muted mb-3">{error || "No posts available"}</p>
+            <div className="col-12 text-center py-5">
+              <p className="text-muted mb-4" style={{ color: "#999", fontSize: "0.9375rem" }}>
+                {error || "No posts available"}
+              </p>
               {error && (
-                <div className="d-flex flex-column align-items-center gap-2">
+                <div className="d-flex flex-column align-items-center gap-3">
                   {isRetrying.current && (
-                    <div className="d-flex align-items-center gap-2 mb-2">
-                      <span className="spinner-border spinner-border-sm text-primary" role="status" aria-hidden="true"></span>
-                      <span className="text-muted small">
+                    <div className="d-flex align-items-center gap-2">
+                      <span className="spinner-border spinner-border-sm" style={{ color: "#999" }} role="status" aria-hidden="true"></span>
+                      <span style={{ fontSize: "0.875rem", color: "#999" }}>
                         Retrying... ({retryCount}/{FEED_CONFIG.MAX_RETRIES})
                       </span>
                     </div>
                   )}
                   <button
-                    className="btn btn-outline-primary btn-sm"
+                    className="btn border-0 px-4 py-2"
+                    style={{
+                      backgroundColor: "#f5f5f5",
+                      color: "#1a1a1a",
+                      fontSize: "0.875rem",
+                      transition: "all 0.2s ease",
+                    }}
                     onClick={() => {
                       setRetryCount(0);
                       hasFetched.current = false;
@@ -522,8 +429,13 @@ export default function Feed() {
                       fetchPosts();
                     }}
                     disabled={isRetrying.current}
+                    onMouseOver={(e) => {
+                      e.target.style.backgroundColor = "#e8e8e8";
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.backgroundColor = "#f5f5f5";
+                    }}
                   >
-                    <i className="bi bi-arrow-clockwise me-2"></i>
                     Try Again
                   </button>
                 </div>
