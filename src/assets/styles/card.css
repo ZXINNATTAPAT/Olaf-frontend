@@ -32,8 +32,14 @@
 
 /* Card Body */
 .feed-card-body {
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   background: var(--bg-primary);
+}
+
+@media (max-width: 768px) {
+  .feed-card-body {
+    padding: 1rem;
+  }
 }
 
 /* User Info */
@@ -166,20 +172,22 @@
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .feed-card-body {
-    padding: 1rem;
-  }
-  
   .feed-card-title {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
   }
   
   .feed-card-description {
-    font-size: 0.875rem;
+    font-size: 0.85rem;
   }
   
   .feed-card img {
-    height: 150px;
+    height: 180px;
+  }
+}
+
+@media (max-width: 576px) {
+  .feed-card img {
+    height: 160px;
   }
 }
 

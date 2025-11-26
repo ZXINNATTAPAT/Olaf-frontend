@@ -285,26 +285,26 @@ export default function View() {
   return (
     <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
       {/* Main Content Container */}
-      <div className="container-fluid py-4">
+      <div className="container-fluid py-3 py-md-4">
         <div className="row justify-content-center">
-          <div className="col-12 col-lg-8">
+          <div className="col-12 col-lg-9 col-xl-8">
             
             {/* Article Card */}
-            <article className="card shadow-sm border-0 mb-4" style={{ borderRadius: "16px" }}>
-              <div className="card-body p-4 p-lg-5">
+            <article className="card shadow-sm border-0 mb-3 mb-md-4" style={{ borderRadius: "16px" }}>
+              <div className="card-body p-4 p-md-5">
                 
                 {/* Header Section */}
                 <header className="mb-4">
-                  <h1 className="display-4 fw-bold text-dark mb-3" style={{ lineHeight: "1.2" }}>
+                  <h1 className="display-5 fw-bold text-dark mb-3" style={{ lineHeight: "1.3", fontSize: "clamp(1.75rem, 4vw, 2.5rem)" }}>
                     {p_data.header}
                   </h1>
                   
-                  <p className="lead text-muted mb-4" style={{ fontSize: "1.25rem" }}>
+                  <p className="lead text-muted mb-4" style={{ fontSize: "1.1rem", lineHeight: "1.6" }}>
                     {p_data.short}
                   </p>
 
                   {/* Author & Meta Info */}
-                  <div className="d-flex flex-wrap align-items-center justify-content-between py-3 border-top border-bottom">
+                  <div className="d-flex flex-wrap align-items-center justify-content-between py-3 border-top border-bottom" style={{ gap: "1rem" }}>
                     <div className="d-flex align-items-center">
                       <div className="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" 
                            style={{ width: "40px", height: "40px" }}>
@@ -353,7 +353,7 @@ export default function View() {
                     className="img-fluid rounded-3 shadow-sm w-100"
                     src={p_data.primary_image_url || getImageUrl(p_data.image, "VIEW_MAIN")}
                     alt={p_data.primary_image?.caption || "Post image"}
-                    style={{ maxHeight: "500px", objectFit: "cover" }}
+                    style={{ maxHeight: "500px", objectFit: "cover", width: "100%" }}
                     onError={(e) => {
                       e.target.src = getImageUrl(null, "DEFAULT");
                     }}
@@ -397,13 +397,13 @@ export default function View() {
 
                 {/* Content */}
                 <div className="mb-4">
-                  <div className="prose" style={{ fontSize: "1.1rem", lineHeight: "1.7" }}>
+                  <div className="prose" style={{ fontSize: "1.05rem", lineHeight: "1.8", color: "#495057" }}>
                     {p_data.post_text}
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="d-flex flex-wrap align-items-center justify-content-between py-3 border-top">
+                <div className="d-flex flex-wrap align-items-center justify-content-between py-3 border-top" style={{ gap: "1rem" }}>
                   <div className="d-flex align-items-center">
                     <PostLikeButton
                       post_id={p_data.post_id}
@@ -442,7 +442,7 @@ export default function View() {
 
             {/* Comments Section */}
             <div className="card shadow-sm border-0" style={{ borderRadius: "16px" }}>
-              <div className="card-body p-4 p-lg-5">
+              <div className="card-body p-4 p-md-5">
                 <div className="d-flex align-items-center mb-4">
                   <div className="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" 
                        style={{ width: "40px", height: "40px" }}>

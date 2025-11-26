@@ -254,33 +254,33 @@ export default function Feed() {
   }, [p_data]);
 
   return (
-    <div className="min-vh-100">
+    <div className="min-vh-100" style={{ backgroundColor: "#f8f9fa" }}>
       <ThemeToggle />
 
       {/* Header Section */}
       <div
-        className="container-fluid py-5"
+        className="container-fluid"
         style={{
           backgroundColor: "#ffffff",
           borderBottom: "1px solid #e9ecef",
         }}
       >
-        <div className="container">
+        <div className="container py-4 py-md-5">
           <div className="text-center mb-4">
             <h1
-              className="display-6 fw-light mb-3"
+              className="display-6 fw-light mb-2"
               style={{ color: "#2c3e50" }}
             >
               Discover Stories
             </h1>
-            <p className="lead text-muted">
+            <p className="lead text-muted mb-0">
               Find inspiration in the stories that matter to you
             </p>
           </div>
 
           {/* Search Bar */}
-          <div className="row justify-content-center">
-            <div className="col-md-8 col-lg-6">
+          <div className="row justify-content-center mt-4">
+            <div className="col-12 col-md-10 col-lg-8">
               <div className="position-relative">
                 <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                 <input
@@ -313,7 +313,7 @@ export default function Feed() {
           </div>
 
           {/* Topic Tags */}
-          <div className="text-center mt-4">
+          <div className="text-center mt-3">
             <div className="d-flex flex-wrap justify-content-center gap-2">
               {[
                 "Life",
@@ -356,16 +356,16 @@ export default function Feed() {
       </div>
 
       {/* Stories Grid */}
-      <div className="container py-5">
-        <div className="row mb-4">
+      <div className="container py-4 py-md-5">
+        <div className="row mb-3 mb-md-4">
           <div className="col-12">
-            <h2 className="h4 fw-light" style={{ color: "#2c3e50" }}>
+            <h2 className="h5 fw-light mb-0" style={{ color: "#2c3e50" }}>
               Stories
             </h2>
           </div>
         </div>
 
-        <div className="row g-4">
+        <div className="row g-3 g-md-4">
           {isLoading ? (
             <>
               <div className="col-md-6 col-lg-4" key="skeleton-1">
@@ -425,7 +425,7 @@ export default function Feed() {
                     )}
                   </div>
 
-                  <div className="card-body p-3">
+                  <div className="card-body p-3 p-md-4">
                     <div className="d-flex align-items-center mb-2">
                       <i
                         className="bi bi-person-circle me-2"
@@ -438,8 +438,9 @@ export default function Feed() {
                       className="card-title fw-bold mb-2"
                       style={{
                         fontSize: "1.1rem",
-                        lineHeight: "1.3",
+                        lineHeight: "1.4",
                         color: "#2c3e50",
+                        minHeight: "2.8rem",
                       }}
                     >
                       {post.header}
@@ -449,43 +450,44 @@ export default function Feed() {
                       className="card-text text-muted small mb-3"
                       style={{
                         fontSize: "0.9rem",
-                        lineHeight: "1.4",
+                        lineHeight: "1.5",
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
                         overflow: "hidden",
+                        minHeight: "2.7rem",
                       }}
                     >
                       {post.short}
                     </p>
 
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div className="d-flex gap-2">
+                    <div className="d-flex justify-content-between align-items-center pt-2 border-top">
+                      <div className="d-flex align-items-center">
                         <span className="text-muted small">
                           <img
                             src={star}
                             alt="time"
                             className="me-1"
-                            style={{ width: "12px" }}
+                            style={{ width: "12px", height: "12px" }}
                           />
                           {post.post_datetime}
                         </span>
                       </div>
 
-                      <div className="d-flex gap-2">
-                        <span className="text-muted small">
+                      <div className="d-flex gap-3">
+                        <span className="text-muted small d-flex align-items-center">
                           <FaHeart
                             className="me-1"
                             style={{ color: "#e74c3c", fontSize: "0.8rem" }}
                           />
                           {post.likesCount || 0}
                         </span>
-                        <span className="text-muted small">
+                        <span className="text-muted small d-flex align-items-center">
                           <img
                             src={comment}
                             alt="comments"
                             className="me-1"
-                            style={{ width: "12px" }}
+                            style={{ width: "12px", height: "12px" }}
                           />
                           {post.commentsCount || 0}
                         </span>
@@ -496,7 +498,7 @@ export default function Feed() {
               </div>
             ))
           ) : (
-            <div className="col-12 text-center py-5">
+            <div className="col-12 text-center py-5 my-5">
               <div className="mb-3">
                 <i className="bi bi-exclamation-triangle text-warning" style={{ fontSize: "2rem" }}></i>
               </div>
