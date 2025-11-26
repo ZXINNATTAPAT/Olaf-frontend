@@ -1,28 +1,33 @@
 import axios from 'axios';
 import authService from '../AuthService';
 
-const baseURL = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
+const baseURL = process.env.REACT_APP_API_URL || process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
 
-// สร้าง axios instance สำหรับ httpOnly cookies
+// Create axios instance for HTTP-only cookies authentication
 const axiosInstance = axios.create({
   baseURL: baseURL,
-  withCredentials: true, // สำคัญสำหรับ httpOnly cookies
+  withCredentials: true, // Essential for HTTP-only cookies
   timeout: 10000, // 10 seconds timeout
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Request interceptor - เพิ่ม CSRF token เท่านั้น
+// Request interceptor - Add CSRF token
 axiosInstance.interceptors.request.use(
-  (config) => {
-    // ดึง CSRF token จาก AuthService
+  async (config) => {
+    // Ensure we have CSRF token
+    if (!authService.csrfToken) {
+      await authService.getCSRFToken();
+    }
+
+    // Add CSRF token to headers
     if (authService.csrfToken) {
       config.headers['X-CSRFToken'] = authService.csrfToken;
     }
 
-    // ไม่ต้องเพิ่ม Authorization header เพราะใช้ HTTP-only cookies
-    // Server จะตรวจสอบ authentication ผ่าน cookies อัตโนมัติ
+    // No Authorization header needed - using HTTP-only cookies
+    // Server authenticates via cookies automatically
 
     return config;
   },
@@ -31,11 +36,11 @@ axiosInstance.interceptors.request.use(
   }
 );
 
-// Response interceptor - จัดการ response และ error
+// Response interceptor - Handle responses and errors
 axiosInstance.interceptors.response.use(
   (response) => {
-    // บันทึก CSRF token ถ้ามีใน response headers
-    const csrfToken = response.headers['x-csrftoken'];
+    // Update CSRF token from response headers
+    const csrfToken = response.headers['x-csrftoken'] || response.headers['X-CSRFToken'];
     if (csrfToken) {
       authService.csrfToken = csrfToken;
       localStorage.setItem('csrfToken', csrfToken);
@@ -43,16 +48,36 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   async (error) => {
-    // จัดการ network errors
+    // Handle network errors
     if (!error.response) {
       return Promise.reject(new Error('Network error: Backend server is not responding'));
     }
 
-    // จัดการ token errors
+    // Handle 401 Unauthorized - try to refresh token
     if (error.response?.status === 401) {
-      // ลบเฉพาะ CSRF token
-      localStorage.removeItem('csrfToken');
-      authService.csrfToken = null;
+      const originalRequest = error.config;
+
+      // Avoid infinite loop
+      if (!originalRequest._retry) {
+        originalRequest._retry = true;
+
+        try {
+          // Try to refresh token
+          const refreshed = await authService.refreshToken();
+          
+          if (refreshed) {
+            // Retry original request with new CSRF token
+            if (authService.csrfToken) {
+              originalRequest.headers['X-CSRFToken'] = authService.csrfToken;
+            }
+            return axiosInstance(originalRequest);
+          }
+        } catch (refreshError) {
+          // Refresh failed - clear auth state
+          authService.clearLocalState();
+          return Promise.reject(error);
+        }
+      }
     }
 
     return Promise.reject(error);

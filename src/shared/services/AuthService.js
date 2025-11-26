@@ -1,19 +1,27 @@
-class AuthService {
-    constructor(baseURL = process.env.REACT_APP_API_URL || 'https://web-production-ba20a.up.railway.app/api') {
-        this.baseURL = baseURL;
-        this.csrfToken = localStorage.getItem('csrfToken') || null;
+/**
+ * Unified Authentication Service
+ * Handles all authentication operations with HTTP-only cookies
+ * Simple, secure, and easy to use
+ */
 
-        // Cache mechanism
+const API_BASE_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
+
+class AuthService {
+    constructor() {
+        this.baseURL = API_BASE_URL;
+        this.csrfToken = localStorage.getItem('csrfToken') || null;
+        
+        // Cache for user profile (5 minutes)
         this.cache = {
             userProfile: null,
             lastFetch: null,
-            cacheTimeout: 5 * 60 * 1000, // 5 minutes
-            isAuthenticated: null,
-            lastAuthCheck: null
+            cacheTimeout: 5 * 60 * 1000
         };
     }
 
-    // 1. Get CSRF Token
+    /**
+     * Get CSRF token from server
+     */
     async getCSRFToken() {
         try {
             const response = await fetch(`${this.baseURL}/auth/csrf/`, {
@@ -21,45 +29,29 @@ class AuthService {
                 credentials: 'include'
             });
 
-            this.csrfToken = response.headers.get('X-CSRFToken');
-            if (this.csrfToken) {
-                localStorage.setItem('csrfToken', this.csrfToken);
+            if (!response.ok) {
+                throw new Error('Failed to get CSRF token');
             }
+
+            const csrfToken = response.headers.get('X-CSRFToken');
+            if (csrfToken) {
+                this.csrfToken = csrfToken;
+                localStorage.setItem('csrfToken', csrfToken);
+            }
+            
             return this.csrfToken;
         } catch (error) {
+            console.error('CSRF token error:', error);
             return null;
         }
     }
 
-    // 2. Register
-    async register(userData) {
-        try {
-            const response = await fetch(`${this.baseURL}/auth/register/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify(userData)
-            });
-
-            const data = await response.json();
-
-            // Update CSRF token from response
-            this.csrfToken = response.headers.get('X-CSRFToken');
-
-            return data;
-        } catch (error) {
-            throw error;
-        }
-    }
-
-    // 3. Login
+    /**
+     * User Login
+     */
     async login(email, password) {
         try {
-            // Optimization: Skip pre-checks and logout. Trust the backend to handle session replacement.
-
-            // Ensure we have a CSRF token
+            // Ensure we have CSRF token
             if (!this.csrfToken) {
                 await this.getCSRFToken();
             }
@@ -68,7 +60,7 @@ class AuthService {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': this.csrfToken
+                    'X-CSRFToken': this.csrfToken || ''
                 },
                 credentials: 'include',
                 body: JSON.stringify({ email, password })
@@ -76,27 +68,83 @@ class AuthService {
 
             const data = await response.json();
 
-            // Update CSRF token from response
-            this.csrfToken = response.headers.get('X-CSRFToken');
-            if (this.csrfToken) {
-                localStorage.setItem('csrfToken', this.csrfToken);
+            if (!response.ok) {
+                // Extract error message
+                const errorMessage = data.error || data.detail || 'Login failed';
+                throw new Error(errorMessage);
             }
 
-            // Update cache with fresh user data
+            // Update CSRF token from response
+            const newCsrfToken = response.headers.get('X-CSRFToken');
+            if (newCsrfToken) {
+                this.csrfToken = newCsrfToken;
+                localStorage.setItem('csrfToken', newCsrfToken);
+            }
+
+            // Update cache with user data
             if (data.user) {
                 this.cache.userProfile = data.user;
                 this.cache.lastFetch = Date.now();
-            } else {
-                this.clearCache();
             }
 
             return data;
         } catch (error) {
+            // Clear cache on error
+            this.clearCache();
             throw error;
         }
     }
 
-    // 4. Get User Profile
+    /**
+     * User Registration
+     */
+    async register(userData) {
+        try {
+            // Ensure we have CSRF token
+            if (!this.csrfToken) {
+                await this.getCSRFToken();
+            }
+
+            const response = await fetch(`${this.baseURL}/auth/register/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.csrfToken || ''
+                },
+                credentials: 'include',
+                body: JSON.stringify(userData)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                const errorMessage = data.error || data.detail || 'Registration failed';
+                throw new Error(errorMessage);
+            }
+
+            // Update CSRF token
+            const newCsrfToken = response.headers.get('X-CSRFToken');
+            if (newCsrfToken) {
+                this.csrfToken = newCsrfToken;
+                localStorage.setItem('csrfToken', newCsrfToken);
+            }
+
+            // Update cache
+            if (data.user) {
+                this.cache.userProfile = data.user;
+                this.cache.lastFetch = Date.now();
+            }
+
+            return data;
+        } catch (error) {
+            this.clearCache();
+            throw error;
+        }
+    }
+
+    /**
+     * Get User Profile
+     */
     async getUserProfile(forceRefresh = false) {
         try {
             // Check cache first
@@ -107,12 +155,20 @@ class AuthService {
             const response = await fetch(`${this.baseURL}/auth/user/`, {
                 method: 'GET',
                 headers: {
-                    'X-CSRFToken': this.csrfToken
+                    'X-CSRFToken': this.csrfToken || ''
                 },
-                credentials: 'include' // HTTP Only cookies จะถูกส่งอัตโนมัติ
+                credentials: 'include'
             });
 
             if (!response.ok) {
+                if (response.status === 401) {
+                    // Try to refresh token
+                    const refreshed = await this.refreshToken();
+                    if (refreshed) {
+                        // Retry with new token
+                        return this.getUserProfile(true);
+                    }
+                }
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
@@ -124,7 +180,7 @@ class AuthService {
 
             return data;
         } catch (error) {
-            // If error and we have cached data, return cached data
+            // Return cached data if available
             if (this.cache.userProfile && this.isCacheValid()) {
                 console.warn('API error, returning cached user profile:', error);
                 return this.cache.userProfile;
@@ -133,7 +189,9 @@ class AuthService {
         }
     }
 
-    // 5. Refresh Token
+    /**
+     * Refresh Access Token
+     */
     async refreshToken() {
         try {
             const response = await fetch(`${this.baseURL}/auth/refresh-token/`, {
@@ -141,86 +199,56 @@ class AuthService {
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                credentials: 'include',
-                body: JSON.stringify({})
+                credentials: 'include'
             });
 
-            this.csrfToken = response.headers.get('X-CSRFToken');
-            const data = await response.json();
-            return data;
+            if (!response.ok) {
+                throw new Error('Token refresh failed');
+            }
+
+            // Update CSRF token
+            const csrfToken = response.headers.get('X-CSRFToken');
+            if (csrfToken) {
+                this.csrfToken = csrfToken;
+                localStorage.setItem('csrfToken', csrfToken);
+            }
+
+            return true;
         } catch (error) {
-            throw error;
+            console.error('Token refresh error:', error);
+            return false;
         }
     }
 
-    // 6. Logout
+    /**
+     * User Logout
+     */
     async logout() {
         try {
             const response = await fetch(`${this.baseURL}/auth/logout/`, {
                 method: 'POST',
                 headers: {
-                    'X-CSRFToken': this.csrfToken,
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.csrfToken || ''
                 },
-                credentials: 'include',
-                body: JSON.stringify({})
+                credentials: 'include'
             });
 
-            // Even if the API call fails, we should still clear local state
-            if (!response.ok) {
-                console.warn('Logout API call failed, but clearing local state:', response.status);
-            }
-
-            // Clear all local state and cache
+            // Clear local state regardless of response
             this.clearLocalState();
 
             return true;
         } catch (error) {
             console.error('Logout error:', error);
-            // Even if there's an error, clear local state
+            // Clear local state even on error
             this.clearLocalState();
-            return true; // Return true because we've cleared local state
+            return true;
         }
     }
 
-    // Helper method to clear all local state
-    clearLocalState() {
-        // Clear cache
-        this.clearCache();
-
-        // Clear CSRF token
-        this.csrfToken = null;
-
-        // Clear only CSRF token from localStorage
-        localStorage.removeItem('csrfToken');
-
-        // Note: HTTP-only cookies จะถูกจัดการโดย server
-    }
-
-    // Helper method to clear cookies before login
-    async clearCookiesBeforeLogin() {
-        try {
-            // Call logout endpoint to clear server-side cookies
-            await fetch(`${this.baseURL}/auth/logout/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                credentials: 'include',
-                body: JSON.stringify({})
-            });
-
-            console.log('Cleared existing cookies before login');
-        } catch (error) {
-            console.warn('Could not clear cookies before login:', error);
-            // Continue with login even if clearing cookies fails
-        }
-
-        // Clear local state as well
-        this.clearLocalState();
-    }
-
-    // Helper: Check if user is authenticated by calling API
+    /**
+     * Check if user is authenticated
+     */
     async isAuthenticated() {
         try {
             const response = await fetch(`${this.baseURL}/auth/check/`, {
@@ -233,39 +261,44 @@ class AuthService {
         }
     }
 
-    // Cache management methods
+    /**
+     * Clear all local state and cache
+     */
+    clearLocalState() {
+        this.clearCache();
+        this.csrfToken = null;
+        localStorage.removeItem('csrfToken');
+    }
+
+    /**
+     * Clear cache
+     */
     clearCache() {
         this.cache = {
             userProfile: null,
             lastFetch: null,
-            cacheTimeout: 5 * 60 * 1000,
-            isAuthenticated: null,
-            lastAuthCheck: null
+            cacheTimeout: 5 * 60 * 1000
         };
     }
 
-    invalidateUserProfile() {
-        this.cache.userProfile = null;
-        this.cache.lastFetch = null;
-    }
-
+    /**
+     * Check if cache is valid
+     */
     isCacheValid() {
         if (!this.cache.lastFetch) return false;
         return Date.now() - this.cache.lastFetch < this.cache.cacheTimeout;
     }
 
-    setCacheTimeout(timeout) {
-        this.cache.cacheTimeout = timeout;
-    }
-
-    // Force clear all authentication data (cookies and local state)
-    async forceClearAuth() {
-        console.log('Force clearing all authentication data...');
-        await this.clearCookiesBeforeLogin();
+    /**
+     * Invalidate user profile cache
+     */
+    invalidateUserProfile() {
+        this.cache.userProfile = null;
+        this.cache.lastFetch = null;
     }
 }
 
-// Create singleton instance
+// Create and export singleton instance
 const authService = new AuthService();
 
 export default authService;

@@ -10,48 +10,55 @@ class ApiController {
   /**
    * User Authentication
    */
+  // Note: Auth methods are now handled by AuthService
+  // These methods are kept for backward compatibility but delegate to AuthService
   static async login(credentials) {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGIN, credentials);
-      return { success: true, data: response.data };
+      const authService = (await import('./AuthService')).default;
+      const data = await authService.login(credentials.email, credentials.password);
+      return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      return { success: false, error: error.message || 'Login failed' };
     }
   }
 
   static async register(userData) {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REGISTER, userData);
-      return { success: true, data: response.data };
+      const authService = (await import('./AuthService')).default;
+      const data = await authService.register(userData);
+      return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      return { success: false, error: error.message || 'Registration failed' };
     }
   }
 
   static async logout() {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.LOGOUT);
-      return { success: true, data: response.data };
+      const authService = (await import('./AuthService')).default;
+      await authService.logout();
+      return { success: true, data: { message: 'Logged out successfully' } };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      return { success: false, error: error.message || 'Logout failed' };
     }
   }
 
   static async getUserProfile() {
     try {
-      const response = await axiosInstance.get(API_ENDPOINTS.AUTH.USER);
-      return { success: true, data: response.data };
+      const authService = (await import('./AuthService')).default;
+      const data = await authService.getUserProfile();
+      return { success: true, data };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      return { success: false, error: error.message || 'Failed to get user profile' };
     }
   }
 
   static async refreshToken() {
     try {
-      const response = await axiosInstance.post(API_ENDPOINTS.AUTH.REFRESH);
-      return { success: true, data: response.data };
+      const authService = (await import('./AuthService')).default;
+      const refreshed = await authService.refreshToken();
+      return { success: refreshed, data: { refreshed } };
     } catch (error) {
-      return { success: false, error: error.response?.data || error.message };
+      return { success: false, error: error.message || 'Token refresh failed' };
     }
   }
 

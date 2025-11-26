@@ -62,12 +62,12 @@ export default function Loginauth() {
     try {
       const response = await authService.login(email, password);
 
-      // ใช้ HttpOnly cookies เป็นหลัก - token จะถูกส่งอัตโนมัติ
+      // HTTP-only cookies are set automatically by the server
       if (response.user) {
         setUser(response.user);
       }
 
-      // บันทึก CSRF token สำหรับ form submissions
+      // Save CSRF token for form submissions
       if (authService.csrfToken) {
         setCSRFToken(authService.csrfToken);
       }
@@ -76,34 +76,23 @@ export default function Loginauth() {
       setPassword("");
       hideLoader();
 
-      // รอสักครู่เพื่อให้ cookies ถูกตั้งค่าและ state อัปเดต
-      // ตรวจสอบว่ามี location state จาก protected route หรือไม่
+      // Navigate to intended destination or feed
       const from = location?.state?.from?.pathname || "/feed";
       navigate(from, { replace: true });
     } catch (error) {
       hideLoader();
 
-      // แสดง error message ที่เข้าใจง่าย
-      if (error.message?.includes('Network error')) {
+      // Display user-friendly error messages
+      const errorMessage = error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ';
+      
+      if (errorMessage.includes('Network error') || errorMessage.includes('Failed to fetch')) {
         setError("ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต");
-      } else if (error.response?.data?.message) {
-        setError(error.response.data.message);
-      } else if (error.response?.data?.error) {
-        setError(error.response.data.error);
-      } else if (error.response?.data?.detail) {
-        setError(error.response.data.detail);
-      } else if (error.response?.status === 401) {
+      } else if (errorMessage.includes('Email or Password') || errorMessage.includes('incorrect')) {
         setError("อีเมลหรือรหัสผ่านไม่ถูกต้อง");
-      } else if (error.response?.status === 400) {
-        setError("กรุณากรอกข้อมูลให้ครบถ้วน");
-      } else if (error.response?.status === 500) {
-        setError("เกิดข้อผิดพลาดในเซิร์ฟเวอร์ กรุณาลองใหม่อีกครั้ง");
-      } else if (error.code === "NETWORK_ERROR" || error.code === "ERR_NETWORK") {
-        setError(
-          "ไม่สามารถเชื่อมต่อกับเซิร์ฟเวอร์ได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต"
-        );
+      } else if (errorMessage.includes('Invalid input') || errorMessage.includes('Validation')) {
+        setError("กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง");
       } else {
-        setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง");
+        setError(errorMessage);
       }
     }
   }
