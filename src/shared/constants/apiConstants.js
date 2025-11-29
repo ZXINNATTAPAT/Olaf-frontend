@@ -13,49 +13,59 @@ export const API_ENDPOINTS = {
 
   // Posts
   POSTS: {
-    BASE: '/posts',
-    FEED: '/posts/feed',
-    BY_ID: (id) => `/posts/${id}/`,
-    CREATE: '/posts',
-    UPDATE: (id) => `/posts/${id}/`,
-    DELETE: (id) => `/posts/${id}/`,
+    BASE: '/posts', // Bolt API - no trailing slash
+    FEED: '/posts/feed/', // DRF endpoint - has trailing slash
+    BY_ID: (id) => `/posts/${id}`, // Bolt API - no trailing slash
+    CREATE: '/posts', // Bolt API - no trailing slash
+    UPDATE: (id) => `/posts/${id}`, // Bolt API - no trailing slash
+    DELETE: (id) => `/posts/${id}`, // Bolt API - no trailing slash
   },
 
   // Comments
   COMMENTS: {
-    BASE: '/comments/',
-    BY_ID: (id) => `/comments/${id}/`,
-    BY_POST: (postId) => `/comments/?post=${postId}`,
-    CREATE: '/comments/',
-    UPDATE: (id) => `/comments/${id}/`,
-    DELETE: (id) => `/comments/${id}/`,
+    BASE: '/comments', // Bolt API - no trailing slash
+    BY_ID: (id) => `/comments/${id}`, // Bolt API - no trailing slash
+    BY_POST: (postId) => `/comments?post=${postId}`, // Bolt API - no trailing slash
+    CREATE: '/comments', // Bolt API - no trailing slash
+    UPDATE: (id) => `/comments/${id}`, // Bolt API - no trailing slash
+    DELETE: (id) => `/comments/${id}`, // Bolt API - no trailing slash
   },
 
   // Post Likes
   POST_LIKES: {
-    BASE: '/postlikes/',
-    BY_POST: (postId) => `/postlikes/?post=${postId}`,
-    LIKE: (postId, userId) => `/postlikes/${postId}/${userId}/`,
-    CREATE: '/postlikes/',
-    DELETE: (postId, userId) => `/postlikes/${postId}/${userId}/`,
+    BASE: '/postlikes', // Bolt API - no trailing slash
+    BY_POST: (postId) => `/postlikes?post=${postId}`, // Bolt API - no trailing slash
+    LIKE: (postId, userId) => `/postlikes/${postId}/${userId}`, // Bolt API - no trailing slash
+    CREATE: '/postlikes', // Bolt API - no trailing slash
+    DELETE: (postId, userId) => `/postlikes/${postId}/${userId}`, // Bolt API - no trailing slash
   },
 
   // Comment Likes
   COMMENT_LIKES: {
-    BASE: '/commentlikes/',
-    BY_COMMENT: (commentId) => `/commentlikes/?comment=${commentId}`,
-    LIKE: (commentId, userId) => `/commentlikes/${commentId}/${userId}/`,
-    CREATE: '/commentlikes/',
-    DELETE: (commentId, userId) => `/commentlikes/${commentId}/${userId}/`,
+    BASE: '/commentlikes', // Bolt API - no trailing slash
+    BY_COMMENT: (commentId) => `/commentlikes?comment=${commentId}`, // Bolt API - no trailing slash
+    LIKE: (commentId, userId) => `/commentlikes/${commentId}/${userId}`, // Bolt API - no trailing slash
+    CREATE: '/commentlikes', // Bolt API - no trailing slash
+    DELETE: (commentId, userId) => `/commentlikes/${commentId}/${userId}`, // Bolt API - no trailing slash
   },
 
   // Users
   USERS: {
-    BASE: '/users/',
-    BY_ID: (id) => `/users/${id}/`,
-    CREATE: '/users/',
-    UPDATE: (id) => `/users/${id}/`,
-    DELETE: (id) => `/users/${id}/`,
+    BASE: '/users', // Bolt API - no trailing slash
+    BY_ID: (id) => `/users/${id}`, // Bolt API - no trailing slash
+    CREATE: '/users', // Bolt API - no trailing slash
+    UPDATE: (id) => `/users/${id}`, // Bolt API - no trailing slash
+    DELETE: (id) => `/users/${id}`, // Bolt API - no trailing slash
+  },
+
+  // CloudDiary
+  CLOUDDIARY: {
+    BASE: '/clouddiary/', // Bolt API - has trailing slash (exception)
+    BY_ID: (id) => `/clouddiary/${id}`, // Bolt API - no trailing slash for specific resource
+    MY_DIARIES: '/clouddiary/my-diaries', // Bolt API - no trailing slash
+    CREATE: '/clouddiary/', // Bolt API - has trailing slash (exception)
+    UPDATE: (id) => `/clouddiary/${id}`, // Bolt API - no trailing slash
+    DELETE: (id) => `/clouddiary/${id}`, // Bolt API - no trailing slash
   },
 
   // Cloudinary

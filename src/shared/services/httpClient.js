@@ -38,7 +38,8 @@ axiosInstance.interceptors.request.use(
       config.headers['X-CSRFToken'] = authService.csrfToken;
     }
 
-    // Remove trailing slash from /posts endpoint (but keep for other endpoints)
+    // Remove trailing slash from Bolt API endpoints (except DRF endpoints like /posts/feed/)
+    // Bolt API doesn't use trailing slashes (except /clouddiary/)
     if (config.url === '/posts/') {
       config.url = '/posts';
     }
