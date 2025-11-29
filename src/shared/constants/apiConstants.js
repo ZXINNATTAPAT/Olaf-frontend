@@ -13,9 +13,9 @@ export const API_ENDPOINTS = {
 
   // Posts
   POSTS: {
-    BASE: '/posts/',
+    BASE: '/posts',
     BY_ID: (id) => `/posts/${id}/`,
-    CREATE: '/posts/',
+    CREATE: '/posts',
     UPDATE: (id) => `/posts/${id}/`,
     DELETE: (id) => `/posts/${id}/`,
   },
