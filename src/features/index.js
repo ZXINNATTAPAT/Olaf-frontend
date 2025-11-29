@@ -1,5 +1,2 @@
-// All Features Exports
-export * from './auth';
+// Features Exports - Only Posts Feature
 export * from './posts';
-export * from './user';
-export * from './home';

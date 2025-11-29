@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import './assets/styles/img.css';
+import './assets/styles/card.css';
 import { AuthContextProvider, LoaderContextProvider } from './shared/services';
 import { BrowserRouter } from 'react-router-dom';
 

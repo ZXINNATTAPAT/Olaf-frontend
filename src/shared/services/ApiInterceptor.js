@@ -206,10 +206,8 @@ class ApiInterceptor {
    * Clear CSRF token
    */
   clearCSRFToken() {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('csrfToken');
-      sessionStorage.removeItem('csrfToken');
-    }
+    // Don't need to clear from localStorage - we don't store csrfToken there
+    // CSRF token is stored in memory (authService.csrfToken) only
   }
 
   /**

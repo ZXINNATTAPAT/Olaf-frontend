@@ -287,6 +287,9 @@ export const CommentFilters = {
   // ordering: string | null
 };
 
+// Export DTOs
+export * from './dto';
+
 // UserFilters structure
 export const UserFilters = {
   // is_active: boolean | null

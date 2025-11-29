@@ -1,4 +1,4 @@
-import axiosInstance from "../services/axios/index";
+import axiosInstance from "../services/httpClient";
 import { useEffect } from 'react'
 import useAuth from "./useAuth";
 import useRefreshToken from "./useRefreshToken";

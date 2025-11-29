@@ -5,24 +5,28 @@ import {
   ViewPage as View, 
   EditPostPage as EditPost 
 } from './features/posts';
-import { 
-  LoginPage as Loginauth, 
-  RegisterPage as Registerauth, 
-  UserPage as User 
-} from './features/auth';
-import { HomePage as Home } from './features/home';
-import { 
-  ProfilePage as Profile, 
-  AddContentPage as Addcontent, 
-  EditProfilePage as EditProfile 
-} from './features/user';
-import { AuthMiddleware, PersistLogin, Navbar, Loader } from './shared';
+import {
+  LoginPage as Loginauth,
+  RegisterPage as Registerauth,
+  UserPage as User,
+  HomePage as Home,
+  ProfilePage as Profile,
+  AddContentPage as Addcontent,
+  EditProfilePage as EditProfile,
+  AdminDashboard,
+  PostsManagement,
+  UsersManagement,
+  CommentsManagement,
+  Analytics,
+  Settings
+} from './pages';
+import { AuthMiddleware, PersistLogin, NavbarWrapper, Loader, AdminMiddleware } from './shared';
 
 function App() {
   return (
-    <>
+    <div style={{ paddingTop: '76px' }}>
       <Loader />
-      <Navbar />
+      <NavbarWrapper />
       
       <Routes>
         {/* ---------- Public routes ---------- */}
@@ -45,10 +49,24 @@ function App() {
           </Route>
         </Route>
 
+        {/* ---------- Admin routes ---------- */}
+        <Route element={<PersistLogin />}>
+          <Route element={<AuthMiddleware />}>
+            <Route element={<AdminMiddleware />}>
+              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin/posts" element={<PostsManagement />} />
+              <Route path="/admin/users" element={<UsersManagement />} />
+              <Route path="/admin/comments" element={<CommentsManagement />} />
+              <Route path="/admin/analytics" element={<Analytics />} />
+              <Route path="/admin/settings" element={<Settings />} />
+            </Route>
+          </Route>
+        </Route>
+
         {/* ---------- Fallback ---------- */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </>
+    </div>
   );
 }
 

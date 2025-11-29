@@ -4,29 +4,7 @@ import '../../../assets/styles/footer.css';
 export default function Footer() {
   return (
     <footer className="footer">
-      <div className="footer-content">
-        {/* Navigation Links */}
-        <div className="footer-nav">
-          <a className="nav-link active" href="#for-you" aria-current="page">
-            For you
-          </a>
-          <a className="nav-link" href="#following">
-            Following
-          </a>
-          <a className="nav-link" href="#web-dev">
-            Web dev
-          </a>
-          <a className="nav-link" href="#technology">
-            Technology
-          </a>
-          <a className="nav-link" href="#design">
-            Design
-          </a>
-          <a className="nav-link" href="#business">
-            Business
-          </a>
-        </div>
-
+      <div className="footer-content container mx-auto px-4">
         {/* Main Footer Content */}
         <div className="footer-main">
           {/* Company Info */}

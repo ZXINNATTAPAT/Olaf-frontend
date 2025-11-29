@@ -1,5 +1,5 @@
 import useAuth from "./useAuth"
-import useAxiosPrivate from "../services/axios/index"
+import useAxiosPrivate from "../services/httpClient"
 
 export default function useUser() {
 

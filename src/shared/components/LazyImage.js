@@ -47,24 +47,50 @@ const LazyImage = ({
   }, [onError]);
 
   const shouldLoadImage = hasIntersected || isIntersecting;
+  const showSkeleton = !shouldLoadImage || (!isLoaded && !hasError);
+
+  // Get dimensions from style prop
+  const containerStyle = {
+    ...style,
+    position: 'relative',
+  };
+
+  const skeletonStyle = {
+    position: shouldLoadImage && !isLoaded ? 'absolute' : 'relative',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: style.height || '100%',
+    minHeight: style.height || style.minHeight || '200px',
+    zIndex: shouldLoadImage && !isLoaded ? 1 : 0,
+  };
+
+  const imageStyle = {
+    ...style,
+    position: shouldLoadImage && !isLoaded ? 'absolute' : 'relative',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    zIndex: 2,
+    transition: 'opacity 0.3s ease',
+  };
 
   return (
-    <div className="position-relative" ref={ref}>
-      {shouldLoadImage && showLoadingSpinner && !isLoaded && !hasError && (
-        <div className="position-absolute top-50 start-50 translate-middle">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
-          </div>
-        </div>
+    <div className="relative w-full" ref={ref} style={containerStyle}>
+      {/* Skeleton loading state */}
+      {showSkeleton && (
+        <div
+          className="card-skeleton skeleton-image"
+          style={skeletonStyle}
+        />
       )}
       
+      {/* Actual image */}
       {shouldLoadImage && (
         <img
           className={`${className} ${!isLoaded ? 'opacity-0' : 'opacity-100'}`}
-          style={{
-            ...style,
-            transition: 'opacity 0.3s ease',
-          }}
+          style={imageStyle}
           src={getImageUrl(src, imageType)}
           alt={alt}
           loading="lazy"
@@ -73,22 +99,6 @@ const LazyImage = ({
           onClick={onClick}
           {...props}
         />
-      )}
-      
-      {!shouldLoadImage && (
-        <div
-          className={`${className}`}
-          style={{
-            ...style,
-            backgroundColor: '#f8f9fa',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '200px',
-          }}
-        >
-          <div className="text-muted">Loading...</div>
-        </div>
       )}
     </div>
   );

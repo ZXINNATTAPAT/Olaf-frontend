@@ -4,10 +4,10 @@
   /* Minimal Theme - Pure Black and White */
   --bg-primary: #ffffff;
   --bg-secondary: #ffffff;
-  --bg-tertiary: #f8f8f8;
+  --bg-tertiary: #ffffff;
   --text-primary: #000000;
   --text-secondary: #000000;
-  --text-muted: #666666;
+  --text-muted: #000000;
   --border-color: #000000;
   --border-hover: #000000;
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -22,10 +22,10 @@
   /* Dark Theme - Pure Black and White */
   --bg-primary: #000000;
   --bg-secondary: #000000;
-  --bg-tertiary: #111111;
+  --bg-tertiary: #000000;
   --text-primary: #ffffff;
   --text-secondary: #ffffff;
-  --text-muted: #999999;
+  --text-muted: #ffffff;
   --border-color: #ffffff;
   --border-hover: #ffffff;
   --shadow-sm: 0 1px 2px 0 rgba(255, 255, 255, 0.05);

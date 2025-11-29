@@ -34,6 +34,124 @@ backdrop-filter: blur(20px);
 -webkit-backdrop-filter: blur(20px);
 border: 1px solid rgba(255, 255, 255, 0.3);
 }
+
+/* Smooth Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Smooth scroll behavior */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Image hover effects */
+.image-zoom {
+    transition: transform 0.3s ease-in-out;
+}
+
+.image-zoom:hover {
+    transform: scale(1.05);
+}
+
+/* Loading skeleton pulse */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+.animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Rich Text Content Styling */
+.rich-text-content {
+    word-break: break-word;
+}
+
+.rich-text-content h1,
+.rich-text-content h2,
+.rich-text-content h3 {
+    font-weight: bold;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
+    color: var(--text-primary);
+}
+
+.rich-text-content h1 {
+    font-size: 2em;
+}
+
+.rich-text-content h2 {
+    font-size: 1.5em;
+}
+
+.rich-text-content h3 {
+    font-size: 1.25em;
+}
+
+.rich-text-content p {
+    margin-bottom: 1em;
+    line-height: 1.6;
+}
+
+.rich-text-content ul,
+.rich-text-content ol {
+    margin-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+.rich-text-content li {
+    margin-bottom: 0.5em;
+}
+
+.rich-text-content a {
+    color: #3b82f6;
+    text-decoration: underline;
+}
+
+.rich-text-content a:hover {
+    color: #2563eb;
+}
+
+.rich-text-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin: 1em 0;
+}
+
+.rich-text-content strong {
+    font-weight: bold;
+}
+
+.rich-text-content em {
+    font-style: italic;
+}
+
+.rich-text-content u {
+    text-decoration: underline;
+}
+
+.rich-text-content s {
+    text-decoration: line-through;
+}
+
 /* เมื่อหน้าจอมีความกว้างน้อยกว่าหรือเท่ากับ 980px */
 @media (max-width: 425px) {
     .swx {

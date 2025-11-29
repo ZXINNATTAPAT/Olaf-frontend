@@ -1,8 +1,8 @@
 // Shared Components Exports
 export { default as About } from './About';
-export { default as AdviceContent } from './Advicecontent';
+export { default as AdviceContent } from './AdviceContent';
 export { default as Contact } from './Contact';
-export { Iconpath as IconPath } from './Iconpath';
+export { IconPath } from './IconPath';
 export { default as PersistLogin } from './PersistLogin';
 
 // Loader Components
@@ -18,6 +18,13 @@ export { default as ThemeToggle } from './ThemeToggle';
 
 // Layout Components
 export { default as Navbar } from './layout/Navbar';
-export { default as MiniNav } from './layout/Mininav';
-export { default as NavType } from './layout/Navtype';
+export { default as NavbarWrapper } from './NavbarWrapper';
 export { default as Footer } from './layout/Footer';
+
+// Admin Components
+export { default as AdminLayout } from './admin/AdminLayout';
+export { default as AdminSidebar } from './admin/AdminSidebar';
+export { default as AdminMiddleware } from './admin/AdminMiddleware';
+
+// UI Components (Atomic Design)
+export * from './ui';

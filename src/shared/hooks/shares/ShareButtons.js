@@ -10,16 +10,27 @@ import {
 
 const ShareButtons = ({ url, title }) => {
   return (
-    <div>
-      <FacebookShareButton url={url} quote={title}>
+    <div className="flex items-center gap-2">
+      <FacebookShareButton 
+        url={url} 
+        quote={title}
+        className="transition-transform duration-200 hover:scale-110"
+      >
         <FacebookIcon size={32} round />
       </FacebookShareButton>
 
-      <TwitterShareButton url={url} title={title}>
+      <TwitterShareButton 
+        url={url} 
+        title={title}
+        className="transition-transform duration-200 hover:scale-110"
+      >
         <TwitterIcon size={32} round />
       </TwitterShareButton>
 
-      <LinkedinShareButton url={url}>
+      <LinkedinShareButton 
+        url={url}
+        className="transition-transform duration-200 hover:scale-110"
+      >
         <LinkedinIcon size={32} round />
       </LinkedinShareButton>
     </div>

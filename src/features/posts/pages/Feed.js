@@ -1,18 +1,19 @@
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import { Link } from "react-router-dom";
 import {
   Footer,
-  IconPath,
-  LazyImage,
   CardSkeleton,
   ThemeToggle,
+  LazyImage,
 } from "../../../shared/components";
 import { useRedirect } from "../../../shared/hooks";
-import { FaHeart } from "react-icons/fa"; // ใช้ไอคอนหัวใจจาก react-icons
-import { getImageUrl } from "../../../shared/services/CloudinaryService";
 import ApiController from "../../../shared/services/ApiController";
-import { ERROR_MESSAGES, FEED_CONFIG } from "../../../shared/constants/apiConstants";
-import "../../../assets/styles/card.css";
-import "../../../assets/styles/theme.css";
+import {
+  ERROR_MESSAGES,
+  FEED_CONFIG,
+} from "../../../shared/constants/apiConstants";
+import { FeedHeader, PostCard, Button } from "../../../shared/components";
+// import FeedSidebar from "../../../shared/components/ui/organisms/FeedSidebar";
 
 export default function Feed() {
   const redirectx = useRedirect();
@@ -20,428 +21,556 @@ export default function Feed() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchKeyword, setSearchKeyword] = useState("");
   const [filteredData, setFilteredData] = useState([]);
+  const [activeFilter, setActiveFilter] = useState("all");
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const hasFetched = useRef(false);
   const isRetrying = useRef(false);
   const cacheRef = useRef({ data: null, timestamp: 0 });
 
-  useEffect(() => {
-    // ทำการกรองข้อมูลเมื่อ searchKeyword เปลี่ยนแปลง
-    const result = p_data.filter((post) => {
-      return (
-        post.header.toLowerCase().includes(searchKeyword.toLowerCase()) ||
-        post.short.toLowerCase().includes(searchKeyword.toLowerCase())
-      );
+  // Extract unique categories from posts, with mock data fallback
+  const categories = useMemo(() => {
+    const categorySet = new Set();
+    p_data.forEach(post => {
+      if (post.topic) {
+        categorySet.add(post.topic);
+      }
     });
-    setFilteredData(result);
-  }, [searchKeyword, p_data]); // กรองเมื่อ searchKeyword หรือ p_data เปลี่ยน
+    
+    // Mock categories if no data available
+    if (categorySet.size === 0) {
+      return ['Technology', 'Design', 'Business', 'Lifestyle', 'Culture'];
+    }
+    
+    return Array.from(categorySet).sort();
+  }, [p_data]);
 
-  const fetchPosts = useCallback(async (isRetry = false) => {
-    if (hasFetched.current && !isRetry) return; // Prevent duplicate calls
-    if (isRetrying.current) return; // Prevent overlapping retries
-    if (!isRetry) hasFetched.current = true;
+  // Load cache from localStorage on mount
+  const loadCacheFromStorage = () => {
+    try {
+      const cached = localStorage.getItem(FEED_CONFIG.CACHE_KEY);
+      if (cached) {
+        const parsedCache = JSON.parse(cached);
+        const now = Date.now();
+        if (
+          parsedCache.timestamp &&
+          now - parsedCache.timestamp < FEED_CONFIG.CACHE_DURATION
+        ) {
+          cacheRef.current = parsedCache;
+          return parsedCache.data;
+        } else {
+          // Cache expired, remove it
+          localStorage.removeItem(FEED_CONFIG.CACHE_KEY);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading cache from localStorage:", error);
+      localStorage.removeItem(FEED_CONFIG.CACHE_KEY);
+    }
+    return null;
+  };
 
-    // Check cache first
-    const now = Date.now();
-    if (cacheRef.current.data && (now - cacheRef.current.timestamp) < FEED_CONFIG.CACHE_DURATION) {
-      console.log('✅ Cache HIT - Using cached posts data');
-      setp_data(cacheRef.current.data);
-      setIsLoading(false);
-      return;
+  // Save cache to localStorage
+  const saveCacheToStorage = (data) => {
+    try {
+      const cacheData = {
+        data: data,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(FEED_CONFIG.CACHE_KEY, JSON.stringify(cacheData));
+      cacheRef.current = cacheData;
+    } catch (error) {
+      console.error("Error saving cache to localStorage:", error);
+    }
+  };
+
+  // Filter posts based on search keyword and active filter
+  useEffect(() => {
+    let result = [...p_data];
+
+    // Apply search filter
+    if (searchKeyword) {
+      result = result.filter(
+        (post) =>
+          post.header?.toLowerCase().includes(searchKeyword.toLowerCase()) ||
+          post.short?.toLowerCase().includes(searchKeyword.toLowerCase())
+      );
     }
 
-    console.log('❌ Cache MISS - Fetching from API');
-
-    try {
-      // Only show loading for initial load, not retries
-      if (!isRetry) {
-        setIsLoading(true);
-        setError(null); // Clear previous errors
-      }
-
-      // Use ApiController to fetch posts
-      console.log('Fetching posts with timeout:', FEED_CONFIG.TIMEOUT);
-      const startTime = Date.now();
-      const result = await ApiController.getPosts();
-      const endTime = Date.now();
-      console.log(`Posts API took ${endTime - startTime}ms`);
-      console.log('ApiController result:', result);
-
-      if (!result.success) {
-        // Create error object with enhanced information from ApiController
-        const error = new Error(result.error || 'Failed to fetch posts');
-        error.isNetworkError = result.isNetworkError;
-        error.status = result.status;
-        console.log('Error details:', { message: error.message, isNetworkError: error.isNetworkError, status: error.status });
-        throw error;
-      }
-
-      const postData = result.data;
-
-      // Process posts - user data is now included in the response
-      const updatedPosts = postData.map((post) => {
-        // User data is now directly available in the post object
-        const userName = post.user
-          ? `${post.user.first_name} ${post.user.last_name}`
-          : "Unknown User";
-
-        return {
+    // Apply active filter
+    if (activeFilter === "all") {
+      // Show all posts
+    } else if (activeFilter === "popular") {
+      // Sort by likes count
+      result = result.sort((a, b) => (b.likesCount || 0) - (a.likesCount || 0));
+    } else if (activeFilter === "recommended") {
+      // Sort by engagement (likes + comments)
+      result = result
+        .map((post) => ({
           ...post,
-          user: userName,
-        };
-      });
+          engagement: (post.likesCount || 0) + (post.commentsCount || 0) * 2,
+        }))
+        .sort((a, b) => b.engagement - a.engagement);
+    } else if (activeFilter === "featured") {
+      // Featured posts (posts with high engagement or specific criteria)
+      result = result
+        .filter(
+          (post) =>
+            (post.likesCount || 0) >= 5 || (post.commentsCount || 0) >= 3
+        )
+        .sort((a, b) => {
+          const aEngagement = (a.likesCount || 0) + (a.commentsCount || 0) * 2;
+          const bEngagement = (b.likesCount || 0) + (b.commentsCount || 0) * 2;
+          return bEngagement - aEngagement;
+        });
+    } else if (activeFilter.startsWith("category:")) {
+      // Filter by category
+      const category = activeFilter.replace("category:", "");
+      result = result.filter((post) => post.topic === category);
+    }
 
-      // Calculate time passed since post creation
-      const calculateTimePassed = (postDate) => {
-        const postDateTime = new Date(postDate);
-        const now = new Date();
+    setFilteredData(result);
+  }, [searchKeyword, p_data, activeFilter]);
 
-        const timeDiff = now - postDateTime;
-        const diffHours = Math.floor(timeDiff / (1000 * 60 * 60)); // Hours
-        const diffMinutes = Math.floor(
-          (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
-        ); // Minutes
+  const fetchPosts = useCallback(
+    async (isRetry = false) => {
+      if (hasFetched.current && !isRetry) return;
+      if (isRetrying.current) return;
+      if (!isRetry) hasFetched.current = true;
 
-        if (diffHours < 24) {
-          if (diffHours === 0) return `${diffMinutes} minutes ago`;
-          return `${diffHours} hr ${diffMinutes} min ago`;
-        } else {
-          const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24)); // Days
-          if (diffDays < 30) return `${diffDays} days ago`;
-          else if (diffDays < 365) {
-            const diffMonths = Math.floor(diffDays / 30);
-            return `${diffMonths} months ago`;
-          } else {
-            const diffYears = Math.floor(diffDays / 365);
-            return `${diffYears} years ago`;
-          }
-        }
-      };
-
-      // Map post data to include necessary fields and time passed
-      const processedPosts = updatedPosts.map((post) => {
-        // Handle image URL - check multiple possible sources
-        let imageUrl = null;
-        if (post.primary_image_url) {
-          imageUrl = post.primary_image_url;
-        } else if (post.primary_image && post.primary_image.image_secure_url) {
-          imageUrl = post.primary_image.image_secure_url;
-        } else if (
-          post.images &&
-          post.images.length > 0 &&
-          post.images[0].image_secure_url
-        ) {
-          imageUrl = post.images[0].image_secure_url;
-        } else if (post.image_secure_url) {
-          imageUrl = post.image_secure_url;
-        } else if (post.image_url) {
-          imageUrl = post.image_url;
-        } else if (post.image) {
-          imageUrl = post.image;
-        }
-
-        return {
-          post_id: post.post_id,
-          user: post.user,
-          header: post.header,
-          short: post.short,
-          image: imageUrl ? getImageUrl(imageUrl, "FEED_SMALL") : null,
-          post_datetime: calculateTimePassed(post.post_datetime),
-          likesCount: post.like_count !== undefined ? post.like_count : 0,
-          commentsCount:
-            post.comment_count !== undefined ? post.comment_count : 0,
-        };
-      });
-
-      const latestPosts = processedPosts.slice(-10);
-
-      setp_data(latestPosts); // Set post data
-
-      // const validImages = latestPosts
-      //   .filter((post) => post.image) // Only include posts with images
-      //   .map((post) => post.image);
-
-      // setImgSrcs(validImages);
-
-      // Cache the data
-      cacheRef.current = {
-        data: latestPosts,
-        timestamp: Date.now()
-      };
-
-      console.log('✅ Posts loaded and cached successfully');
-      setIsLoading(false);
-      setRetryCount(0); // Reset retry count on success
-      isRetrying.current = false; // Reset retry flag
-      setError(null); // Clear any previous errors
-    } catch (error) {
-      console.error("Error fetching posts:", error);
-
-      // Check if we should retry for network errors (especially for Render free tier)
-      const isNetworkError = (
-        error.isNetworkError || // From ApiController
-        error.message.includes("Network error") ||
-        error.message.includes("Backend server is not responding") ||
-        error.message.includes("Network Error") ||
-        error.message.includes("ECONNREFUSED") ||
-        error.message.includes("ETIMEDOUT") ||
-        error.message.includes("timeout")
-      );
-
-      const shouldRetry = isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES;
-
-      if (shouldRetry) {
-        isRetrying.current = true;
-        setRetryCount(prev => prev + 1);
-
-        // Balanced retry delay for Render free tier
-        const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY :
-          FEED_CONFIG.RETRY_DELAY;
-
-        console.log(`🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES})`);
-
-        isRetrying.current = false;
-        fetchPosts(true);
+      // Check cache from localStorage first
+      const cachedData = loadCacheFromStorage();
+      if (cachedData) {
+        console.log("✅ Cache HIT from localStorage - Using cached posts data");
+        setp_data(cachedData);
+        setIsLoading(false);
         return;
       }
 
-      // Provide more specific error messages based on error type
-      let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
-
-      if (isNetworkError) {
-        // Progressive error messages for Render free tier
-        if (retryCount >= 2) {
-          errorMessage = ERROR_MESSAGES.COLD_START; // Cold start after multiple retries
-        } else if (retryCount >= 1) {
-          errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER; // Free tier startup
-        } else {
-          errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING; // Initial network error
-        }
-      } else if (error.message.includes("timeout")) {
-        errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
-      } else if (error.message) {
-        errorMessage = `Failed to load posts: ${error.message}`;
+      // Check in-memory cache
+      const now = Date.now();
+      if (
+        cacheRef.current.data &&
+        cacheRef.current.timestamp &&
+        now - cacheRef.current.timestamp < FEED_CONFIG.CACHE_DURATION
+      ) {
+        console.log("✅ Cache HIT from memory - Using cached posts data");
+        setp_data(cacheRef.current.data);
+        setIsLoading(false);
+        return;
       }
 
-      console.log(`❌ Final error after ${retryCount} retries:`, errorMessage);
-      setError(errorMessage);
-      setIsLoading(false);
-      isRetrying.current = false;
+      console.log("❌ Cache MISS - Fetching from API");
 
-      // Set empty data to show "No posts available" message
-      setp_data([]);
-      setFilteredData([]);
-    }
-  }, [retryCount]);
+      try {
+        if (!isRetry) {
+          setIsLoading(true);
+          setError(null);
+        }
+
+        const startTime = Date.now();
+        const result = await ApiController.getPosts();
+        const endTime = Date.now();
+        console.log(`Posts API took ${endTime - startTime}ms`);
+
+        if (!result.success) {
+          const error = new Error(result.error || "Failed to fetch posts");
+          error.isNetworkError = result.isNetworkError;
+          error.status = result.status;
+          throw error;
+        }
+
+        const postData = result.data;
+        const updatedPosts = postData.map((post) => {
+          const userName = post.user
+            ? `${post.user.first_name} ${post.user.last_name}`
+            : "Unknown User";
+
+          return {
+            ...post,
+            user: userName,
+          };
+        });
+
+        const calculateTimePassed = (postDate) => {
+          const postDateTime = new Date(postDate);
+          const now = new Date();
+          const timeDiff = now - postDateTime;
+          const diffHours = Math.floor(timeDiff / (1000 * 60 * 60));
+          const diffMinutes = Math.floor(
+            (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+          );
+
+          if (diffHours < 24) {
+            if (diffHours === 0) return `${diffMinutes} minutes ago`;
+            return `${diffHours} hr ${diffMinutes} min ago`;
+          } else {
+            const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+            if (diffDays < 30) return `${diffDays} days ago`;
+            else if (diffDays < 365) {
+              const diffMonths = Math.floor(diffDays / 30);
+              return `${diffMonths} months ago`;
+            } else {
+              const diffYears = Math.floor(diffDays / 365);
+              return `${diffYears} years ago`;
+            }
+          }
+        };
+
+        const processedPosts = updatedPosts.map((post) => {
+          let imageUrl = null;
+          if (post.primary_image_url) {
+            imageUrl = post.primary_image_url;
+          } else if (
+            post.primary_image &&
+            post.primary_image.image_secure_url
+          ) {
+            imageUrl = post.primary_image.image_secure_url;
+          } else if (
+            post.images &&
+            post.images.length > 0 &&
+            post.images[0].image_secure_url
+          ) {
+            imageUrl = post.images[0].image_secure_url;
+          } else if (post.image_secure_url) {
+            imageUrl = post.image_secure_url;
+          } else if (post.image_url) {
+            imageUrl = post.image_url;
+          } else if (post.image) {
+            imageUrl = post.image;
+          }
+
+          return {
+            post_id: post.post_id,
+            user: post.user,
+            header: post.header,
+            short: post.short,
+            image: imageUrl,
+            post_datetime: calculateTimePassed(post.post_datetime),
+            post_datetime_original: post.post_datetime, // Keep original date for formatting
+            topic: post.topic || post.category || null,
+            likesCount: post.like_count !== undefined ? post.like_count : 0,
+            commentsCount:
+              post.comment_count !== undefined ? post.comment_count : 0,
+          };
+        });
+
+        // Show all posts (or limit if needed)
+        setp_data(processedPosts);
+
+        // Save to both in-memory cache and localStorage
+        saveCacheToStorage(processedPosts);
+
+        console.log("✅ Posts loaded and cached successfully (5 minutes)");
+        setIsLoading(false);
+        setRetryCount(0);
+        isRetrying.current = false;
+        setError(null);
+      } catch (error) {
+        console.error("Error fetching posts:", error);
+
+        const isNetworkError =
+          error.isNetworkError ||
+          error.message.includes("Network error") ||
+          error.message.includes("Backend server is not responding") ||
+          error.message.includes("Network Error") ||
+          error.message.includes("ECONNREFUSED") ||
+          error.message.includes("ETIMEDOUT") ||
+          error.message.includes("timeout");
+
+        const shouldRetry =
+          isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES;
+
+        if (shouldRetry) {
+          isRetrying.current = true;
+          setRetryCount((prev) => prev + 1);
+          const delay =
+            retryCount === 0
+              ? FEED_CONFIG.RENDER_FREE_TIER_DELAY
+              : FEED_CONFIG.RETRY_DELAY;
+          console.log(
+            `🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${
+              FEED_CONFIG.MAX_RETRIES
+            })`
+          );
+          isRetrying.current = false;
+          fetchPosts(true);
+          return;
+        }
+
+        let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
+        if (isNetworkError) {
+          if (retryCount >= 2) {
+            errorMessage = ERROR_MESSAGES.COLD_START;
+          } else if (retryCount >= 1) {
+            errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER;
+          } else {
+            errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING;
+          }
+        } else if (error.message.includes("timeout")) {
+          errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
+        } else if (error.message) {
+          errorMessage = `Failed to load posts: ${error.message}`;
+        }
+
+        console.log(
+          `❌ Final error after ${retryCount} retries:`,
+          errorMessage
+        );
+        setError(errorMessage);
+        setIsLoading(false);
+        isRetrying.current = false;
+        setp_data([]);
+        setFilteredData([]);
+      }
+    },
+    [retryCount]
+  );
 
   useEffect(() => {
     fetchPosts();
-  }, [fetchPosts]); // เรียกเพียงครั้งเดียวเมื่อ component mount
-
+  }, [fetchPosts]);
 
   return (
-    <div className="min-vh-100" style={{ backgroundColor: "#ffffff" }}>
+    <div className="min-h-screen bg-white">
       <ThemeToggle />
+      <div className="mt-4">
+        <FeedHeader
+          searchKeyword={searchKeyword}
+          onSearchChange={setSearchKeyword}
+          title="FEED"
+        />
+      </div>
 
-      {/* Minimal Header */}
-      <div className="container-fluid border-bottom" style={{ borderColor: "#f0f0f0" }}>
-        <div className="container py-4">
-          <div className="d-flex align-items-center justify-content-between mb-4">
-            <h1 className="h3 fw-normal mb-0" style={{ color: "#1a1a1a", letterSpacing: "-0.02em" }}>
-              Feed
-            </h1>
+      {/* Breadcrumb */}
+      <div className="w-full md:container md:mx-auto px-4 py-2">
+        <nav className="text-sm text-black">
+          <Link to="/" className="hover:opacity-70 transition-opacity">
+            Home
+          </Link>
+          <span className="mx-2">/</span>
+          <span className="text-black">Blog Grid</span>
+        </nav>
+      </div>
+
+      {/* Category Badges */}
+      {categories.length > 0 && (
+        <div className="w-full md:container md:mx-auto px-4 py-3 border-b border-black">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="text-sm font-medium text-black uppercase tracking-wider" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.1em' }}>
+              Categories:
+            </span>
+            <button
+              onClick={() => setActiveFilter('all')}
+              className={`
+                px-4 py-2 text-sm font-medium rounded-full transition-all duration-300
+                ${activeFilter === 'all' 
+                  ? 'bg-black text-white' 
+                  : 'bg-white text-black border border-black hover:opacity-70'
+                }
+              `}
+              style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.05em' }}
+            >
+              ALL
+            </button>
+            {categories.map((category) => {
+              const isActive = activeFilter === `category:${category}`;
+              return (
+                <button
+                  key={category}
+                  onClick={() => setActiveFilter(`category:${category}`)}
+                  className={`
+                    px-4 py-2 text-sm font-medium rounded-full transition-all duration-300
+                    ${isActive
+                      ? 'bg-black text-white'
+                      : 'bg-white text-black border border-black hover:opacity-70'
+                    }
+                  `}
+                  style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.05em' }}
+                >
+                  {category.toUpperCase()}
+                </button>
+              );
+            })}
           </div>
+        </div>
+      )}
 
-          {/* Minimal Search */}
-          <div className="row">
-            <div className="col-12 col-md-8 col-lg-6">
-              <div className="position-relative">
-                <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3" style={{ color: "#999" }}></i>
-                <input
-                  className="form-control border-0 ps-5 py-2"
-                  placeholder="Search..."
-                  value={searchKeyword}
-                  onChange={(e) => {
-                    setSearchKeyword(e.target.value);
-                  }}
-                  style={{
-                    backgroundColor: "#f8f8f8",
-                    fontSize: "0.95rem",
-                    transition: "all 0.2s ease",
-                  }}
-                  onFocus={(e) => {
-                    e.target.style.backgroundColor = "#f0f0f0";
-                    e.target.style.outline = "none";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.backgroundColor = "#f8f8f8";
-                  }}
-                />
+      {/* Main Content with Sidebar */}
+      <div className="w-full py-8 md:py-12">
+        <div className="w-full md:container md:mx-auto px-4">
+          <div className="flex flex-col lg:flex-row gap-12">
+            {/* Posts Grid */}
+            <div className="flex-1 w-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 border-t border-l border-black bg-white">
+              {isLoading ? (
+                <>
+                  <div className="col-span-1 border-r border-b border-black p-8 bg-white">
+                    <CardSkeleton type="medium" />
+                  </div>
+                  <div className="col-span-1 border-r border-b border-black p-8 bg-white">
+                    <CardSkeleton type="medium" />
+                  </div>
+                  <div className="col-span-1 border-r border-b border-black p-8 bg-white">
+                    <CardSkeleton type="medium" />
+                  </div>
+                </>
+              ) : filteredData.length > 0 ? (
+                filteredData.map((post) => (
+                  <div
+                    key={post.post_id}
+                    className="col-span-1 border-r border-b border-black p-8 bg-white"
+                  >
+                    <PostCard
+                      post={post}
+                      onClick={() => redirectx(String(post.post_id))}
+                    />
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full border-r border-b border-black text-center py-12">
+                  <p className="text-black mb-4 text-[0.9375rem]">
+                    {error || "No posts available"}
+                  </p>
+                  {error && (
+                    <div className="flex flex-col items-center gap-3">
+                      {isRetrying.current && (
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="spinner-border spinner-border-sm text-black"
+                            role="status"
+                          >
+                            <span className="visually-hidden">Loading...</span>
+                          </div>
+                          <span className="text-sm text-black">
+                            Retrying... ({retryCount}/{FEED_CONFIG.MAX_RETRIES})
+                          </span>
+                        </div>
+                      )}
+                      <Button
+                        variant="secondary"
+                        onClick={() => {
+                          setRetryCount(0);
+                          hasFetched.current = false;
+                          isRetrying.current = false;
+                          fetchPosts();
+                        }}
+                        disabled={isRetrying.current}
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
               </div>
             </div>
+
+            {/* Sidebar - Hidden */}
+            {/* <FeedSidebar
+              posts={p_data}
+              activeFilter={activeFilter}
+              onFilterChange={setActiveFilter}
+            /> */}
           </div>
         </div>
       </div>
 
-      {/* Stories Grid */}
-      <div className="container py-5">
-        <div className="row g-4 g-md-5">
-          {isLoading ? (
-            <>
-              <div className="col-md-6 col-lg-4" key="skeleton-1">
-                <CardSkeleton type="medium" />
-              </div>
-              <div className="col-md-6 col-lg-4" key="skeleton-2">
-                <CardSkeleton type="medium" />
-              </div>
-              <div className="col-md-6 col-lg-4" key="skeleton-3">
-                <CardSkeleton type="medium" />
-              </div>
-            </>
-          ) : p_data ? (
-            filteredData.map((post) => (
-              <div className="col-md-6 col-lg-4" key={post.post_id}>
-                <article
-                  className="h-100"
-                  style={{
-                    cursor: "pointer",
-                    transition: "opacity 0.2s ease",
-                  }}
-                  onMouseOver={(e) => {
-                    e.currentTarget.style.opacity = "0.85";
-                  }}
-                  onMouseOut={(e) => {
-                    e.currentTarget.style.opacity = "1";
-                  }}
-                  onClick={() => redirectx(String(post.post_id))}
-                >
-                  {/* Image */}
-                  <div style={{ 
-                    height: "240px", 
-                    overflow: "hidden",
-                    backgroundColor: "#f5f5f5",
-                    marginBottom: "1.5rem"
-                  }}>
-                    {post.image ? (
-                      <LazyImage
-                        src={post.image}
-                        alt={post.header}
-                        className="img-fluid w-100 h-100"
-                        style={{ objectFit: "cover" }}
-                        imageType="FEED_SMALL"
-                      />
-                    ) : (
-                      <div
-                        className="w-100 h-100 d-flex align-items-center justify-content-center"
-                        style={{
-                          color: "#ccc",
-                          fontSize: "2.5rem",
-                        }}
-                      >
-                        <i className="bi bi-image"></i>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div>
-                    {/* Author */}
-                    <div className="mb-2">
-                      <span className="text-muted" style={{ fontSize: "0.875rem", color: "#888" }}>
-                        {post.user}
-                      </span>
-                    </div>
-
-                    {/* Title */}
+      {/* Posts List Section */}
+      {filteredData.length > 0 && (
+        <div className="w-full py-12">
+          <div className="w-full md:container md:mx-auto px-4">
+          <div className="mb-6">
+            <h2
+              className="text-2xl font-semibold text-black mb-2"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Latest Posts
+            </h2>
+            <p className="text-black">Discover more stories</p>
+          </div>
+          <div>
+            {filteredData.slice(0, 5).map((post, index) => (
+              <div
+                key={post.post_id}
+                className="p-6 cursor-pointer group transition-all duration-200 hover:bg-white border-b border-black last:border-b-0"
+                onClick={() => redirectx(String(post.post_id))}
+              >
+                <div className="flex flex-col md:flex-row gap-6 items-start">
+                  {/* Text Content */}
+                  <div className="flex-1">
                     <h3
-                      className="mb-2"
-                      style={{
-                        fontSize: "1.25rem",
-                        lineHeight: "1.4",
-                        color: "#1a1a1a",
-                        fontWeight: "500",
-                        letterSpacing: "-0.01em",
-                      }}
+                      className="text-3xl md:text-4xl font-semibold text-black mb-4 group-hover:opacity-80 transition-opacity leading-tight"
+                      style={{ fontFamily: "'Playfair Display', serif" }}
                     >
                       {post.header}
                     </h3>
-
-                    {/* Description */}
                     <p
-                      className="mb-3"
-                      style={{
-                        fontSize: "0.9375rem",
-                        lineHeight: "1.6",
-                        color: "#666",
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
-                        overflow: "hidden",
-                      }}
+                      className="text-lg md:text-xl text-black mb-4 line-clamp-2 leading-relaxed"
+                      style={{ fontFamily: "'Lora', serif" }}
                     >
                       {post.short}
                     </p>
-
-                    {/* Meta */}
-                    <div className="d-flex align-items-center gap-4" style={{ fontSize: "0.8125rem", color: "#999" }}>
+                    <div className="flex items-center gap-4 text-base text-black">
                       <span>{post.post_datetime}</span>
-                      <span className="d-flex align-items-center gap-1">
-                        <FaHeart style={{ fontSize: "0.75rem" }} />
-                        {post.likesCount || 0}
-                      </span>
-                      <span className="d-flex align-items-center gap-1">
-                        <i className="bi bi-chat" style={{ fontSize: "0.75rem" }}></i>
-                        {post.commentsCount || 0}
-                      </span>
+                      {post.topic && (
+                        <span
+                          className="px-3 py-1 bg-white rounded-full text-sm text-black border border-black"
+                          style={{ fontFamily: "'Playfair Display', serif" }}
+                        >
+                          {post.topic.toUpperCase()}
+                        </span>
+                      )}
                     </div>
                   </div>
-                </article>
-              </div>
-            ))
-          ) : (
-            <div className="col-12 text-center py-5">
-              <p className="text-muted mb-4" style={{ color: "#999", fontSize: "0.9375rem" }}>
-                {error || "No posts available"}
-              </p>
-              {error && (
-                <div className="d-flex flex-column align-items-center gap-3">
-                  {isRetrying.current && (
-                    <div className="d-flex align-items-center gap-2">
-                      <span className="spinner-border spinner-border-sm" style={{ color: "#999" }} role="status" aria-hidden="true"></span>
-                      <span style={{ fontSize: "0.875rem", color: "#999" }}>
-                        Retrying... ({retryCount}/{FEED_CONFIG.MAX_RETRIES})
-                      </span>
+                  {/* Image */}
+                  {post.image && (
+                    <div className="w-full md:w-32 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+                      <LazyImage
+                        src={post.image}
+                        alt={post.header}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        imageType="FEED_SMALL"
+                      />
                     </div>
                   )}
-                  <button
-                    className="btn border-0 px-4 py-2"
-                    style={{
-                      backgroundColor: "#f5f5f5",
-                      color: "#1a1a1a",
-                      fontSize: "0.875rem",
-                      transition: "all 0.2s ease",
-                    }}
-                    onClick={() => {
-                      setRetryCount(0);
-                      hasFetched.current = false;
-                      isRetrying.current = false;
-                      fetchPosts();
-                    }}
-                    disabled={isRetrying.current}
-                    onMouseOver={(e) => {
-                      e.target.style.backgroundColor = "#e8e8e8";
-                    }}
-                    onMouseOut={(e) => {
-                      e.target.style.backgroundColor = "#f5f5f5";
-                    }}
-                  >
-                    Try Again
-                  </button>
                 </div>
-              )}
+              </div>
+            ))}
+          </div>
+          </div>
+        </div>
+      )}
+
+      {/* Additional Section */}
+      <div className="w-full py-12">
+        <div className="w-full md:container md:mx-auto px-4">
+          <div className="p-8 md:p-12">
+          <div className="max-w-2xl mx-auto text-center">
+            <h2
+              className="text-3xl md:text-4xl font-semibold text-black mb-4"
+              style={{ fontFamily: "'Playfair Display', serif" }}
+            >
+              Stay Updated
+            </h2>
+            <p
+              className="text-lg text-black mb-8"
+              style={{ fontFamily: "'Lora', serif" }}
+            >
+              Get the latest posts and updates delivered to your inbox
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+              <input
+                type="email"
+                placeholder="Enter your email"
+                className="flex-1 px-4 py-3 rounded-lg border border-black bg-white text-black focus:outline-none focus:ring-2 focus:ring-black"
+              />
+              <Button variant="primary" className="px-6">
+                Subscribe
+              </Button>
             </div>
-          )}
+          </div>
+          </div>
         </div>
       </div>
 

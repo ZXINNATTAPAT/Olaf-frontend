@@ -1,4 +1,10 @@
-const API_BASE_URL = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
+// Normalize baseURL to use localhost instead of 127.0.0.1 for cookie compatibility
+const getAPIBaseURL = () => {
+  const url = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
+  return url.replace('127.0.0.1', 'localhost');
+};
+
+const API_BASE_URL = getAPIBaseURL();
 const CLOUDINARY_UPLOAD_PRESET = process.env.REACT_APP_CLOUDINARY_UPLOAD_PRESET || 'OLAF';
 const CLOUDINARY_CLOUD_NAME = process.env.REACT_APP_CLOUDINARY_CLOUD_NAME || 'your_cloud_name';
 

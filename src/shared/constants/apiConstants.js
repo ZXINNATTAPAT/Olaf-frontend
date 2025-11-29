@@ -98,8 +98,9 @@ export const FEED_CONFIG = {
   TIMEOUT: 10000, // 10 seconds
   BACKEND_CHECK_INTERVAL: 5000,
   RENDER_FREE_TIER_DELAY: 0, // No delay
-  CACHE_DURATION: 60000,
+  CACHE_DURATION: 30 * 1000, // 30 seconds in milliseconds
   COLD_START_TIMEOUT: 10000, // Standard timeout
+  CACHE_KEY: 'feed_posts_cache', // localStorage key
 };
 
 export const ERROR_MESSAGES = {

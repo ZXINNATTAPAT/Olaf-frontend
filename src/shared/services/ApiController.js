@@ -1,5 +1,5 @@
 // API Controller - Centralized API management for the entire project
-import axiosInstance from './axios/index';
+import axiosInstance from './httpClient';
 import { API_ENDPOINTS, FEED_CONFIG } from '../constants/apiConstants';
 
 // const baseUrl = process.env.REACT_APP_BASE_URL || 'https://web-production-ba20a.up.railway.app/api';
