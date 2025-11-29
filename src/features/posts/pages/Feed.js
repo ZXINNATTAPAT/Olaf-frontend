@@ -169,7 +169,7 @@ export default function Feed() {
         }
 
         const startTime = Date.now();
-        const result = await ApiController.getPosts();
+        const result = await ApiController.getFeedPosts();
         const endTime = Date.now();
         console.log(`Posts API took ${endTime - startTime}ms`);
 
@@ -182,9 +182,15 @@ export default function Feed() {
 
         const postData = result.data;
         const updatedPosts = postData.map((post) => {
-          const userName = post.user
-            ? `${post.user.first_name} ${post.user.last_name}`
-            : "Unknown User";
+          // Handle user object or string
+          let userName = "Unknown User";
+          if (post.user) {
+            if (typeof post.user === 'object' && post.user.first_name) {
+              userName = `${post.user.first_name} ${post.user.last_name || ''}`.trim();
+            } else if (typeof post.user === 'string') {
+              userName = post.user;
+            }
+          }
 
           return {
             ...post,
@@ -343,7 +349,7 @@ export default function Feed() {
       </div>
 
       {/* Breadcrumb */}
-      <div className="w-full md:container md:mx-auto px-4 py-2">
+      <div className="w-full md:container md:mx-auto px-4 py-2 mt-4">
         <nav className="text-sm text-black">
           <Link to="/" className="hover:opacity-70 transition-opacity">
             Home
@@ -525,7 +531,7 @@ export default function Feed() {
                   </div>
                   {/* Image */}
                   {post.image && (
-                    <div className="w-full md:w-32 h-24 flex-shrink-0 rounded-lg overflow-hidden">
+                    <div className="w-full md:w-64 h-48 flex-shrink-0 rounded-lg overflow-hidden">
                       <LazyImage
                         src={post.image}
                         alt={post.header}

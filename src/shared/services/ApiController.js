@@ -65,7 +65,47 @@ class ApiController {
   // ==================== POSTS APIs ====================
 
   /**
-   * Posts Management
+   * Get Feed Posts (lightweight, no post_text and comments)
+   * Default to 9 posts for feed view
+   */
+  static async getFeedPosts(params = {}) {
+    try {
+      const feedParams = {
+        page_size: 9,
+        ...params
+      };
+      
+      const response = await axiosInstance.get(API_ENDPOINTS.POSTS.FEED, {
+        params: feedParams,
+        timeout: FEED_CONFIG.TIMEOUT // Use FEED_CONFIG timeout
+      });
+      
+      // Handle paginated response (Django REST framework format)
+      const responseData = response.data;
+      const posts = Array.isArray(responseData) 
+        ? responseData 
+        : (responseData.results || []);
+      
+      return { 
+        success: true, 
+        data: posts,
+        count: responseData.count,
+        next: responseData.next,
+        previous: responseData.previous
+      };
+    } catch (error) {
+      console.error('ApiController.getFeedPosts error:', error);
+      return {
+        success: false,
+        error: error.response?.data || error.message,
+        status: error.response?.status,
+        isNetworkError: !error.response
+      };
+    }
+  }
+
+  /**
+   * Posts Management (full data including post_text and comments)
    */
   static async getPosts(params = {}) {
     try {
@@ -73,7 +113,21 @@ class ApiController {
         params,
         timeout: FEED_CONFIG.TIMEOUT // Use FEED_CONFIG timeout
       });
-      return { success: true, data: response.data };
+      
+      // Handle paginated response (Django REST framework format)
+      // Response can be either: {results: [...], count, next, previous} or [...]
+      const responseData = response.data;
+      const posts = Array.isArray(responseData) 
+        ? responseData 
+        : (responseData.results || []);
+      
+      return { 
+        success: true, 
+        data: posts,
+        count: responseData.count,
+        next: responseData.next,
+        previous: responseData.previous
+      };
     } catch (error) {
       console.error('ApiController.getPosts error:', error);
       return {

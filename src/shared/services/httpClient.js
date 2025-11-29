@@ -38,6 +38,11 @@ axiosInstance.interceptors.request.use(
       config.headers['X-CSRFToken'] = authService.csrfToken;
     }
 
+    // Remove trailing slash from /posts endpoint (but keep for other endpoints)
+    if (config.url === '/posts/') {
+      config.url = '/posts';
+    }
+
     // Debug: Log request details
     if (process.env.NODE_ENV === 'development') {
       // Note: Cookies are sent automatically with withCredentials: true

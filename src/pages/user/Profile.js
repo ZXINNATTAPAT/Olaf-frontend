@@ -69,7 +69,7 @@ export default function Profile() {
       }
 
       const postData = postsResult.data;
-      const totalCount = postsResult.total || postData.length;
+      const totalCount = postsResult.count || postData.length;
 
       const updatedPosts = postData.map((post) => {
         const userName = post.user && typeof post.user === "object"
