@@ -26,6 +26,7 @@ const LazyImage = ({
   onError,
   imageType = 'DEFAULT',
   showLoadingSpinner = true,
+  useBlur = false,
   ...props
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
@@ -78,19 +79,35 @@ const LazyImage = ({
 
   return (
     <div className="relative w-full" ref={ref} style={containerStyle}>
-      {/* Skeleton loading state */}
-      {showSkeleton && (
+      {/* Skeleton loading state - show if not using blur or if explicitly showing spinner */}
+      {showSkeleton && !useBlur && (
         <div
           className="card-skeleton skeleton-image"
           style={skeletonStyle}
         />
       )}
-      
+
+      {/* Blur Placeholder */}
+      {shouldLoadImage && useBlur && (
+        <img
+          src={getImageUrl(src, 'PLACEHOLDER_BLUR')}
+          alt={alt}
+          className={`${className} absolute top-0 left-0 w-full h-full object-cover`}
+          style={{
+            ...imageStyle,
+            filter: 'blur(10px)',
+            zIndex: 1,
+            opacity: isLoaded ? 0 : 1, // Fade out when main image loads
+            transition: 'opacity 0.3s ease'
+          }}
+        />
+      )}
+
       {/* Actual image */}
       {shouldLoadImage && (
         <img
           className={`${className} ${!isLoaded ? 'opacity-0' : 'opacity-100'}`}
-          style={imageStyle}
+          style={{ ...imageStyle, zIndex: 2 }}
           src={getImageUrl(src, imageType)}
           alt={alt}
           loading="lazy"

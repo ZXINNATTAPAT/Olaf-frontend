@@ -13,9 +13,8 @@ export default function User() {
   async function handleLogout(e) {
     e.preventDefault();
     setLoading(true);
-    sessionStorage.clear('reloaded');
+    sessionStorage.removeItem('reloaded');
     await logout();
-    navigate('/');
   }
 
   return (

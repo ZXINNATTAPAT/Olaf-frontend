@@ -141,11 +141,29 @@ export const productionUsageExample = () => {
   return productionConfig;
 };
 
+// ตัวอย่างการใช้งาน Blur Placeholder ใน LazyImage Component
+export const blurPlaceholderExample = () => {
+  const originalImageUrl = "https://web-production-ba20a.up.railway.app/media/posts/images/sample.jpg";
+
+  // 7. การใช้งาน Blur Placeholder
+  // ให้ส่ง prop useBlur={true} ไปยัง LazyImage component
+  const componentUsage = {
+    // ใช้งานปกติ (แสดง Skeleton)
+    normal: `<LazyImage src="${originalImageUrl}" imageType="FEED_SMALL" />`,
+
+    // ใช้งานพร้อม Blur Placeholder (แสดงรูปเบลอขณะโหลด)
+    withBlur: `<LazyImage src="${originalImageUrl}" imageType="FEED_SMALL" useBlur={true} />`
+  };
+
+  return componentUsage;
+};
+
 export default {
   basicUsageExamples,
   customOptimizationExamples,
   responsiveImageExamples,
   ReactComponentExample,
   errorHandlingExample,
-  productionUsageExample
+  productionUsageExample,
+  blurPlaceholderExample
 };

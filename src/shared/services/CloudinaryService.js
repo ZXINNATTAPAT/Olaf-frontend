@@ -20,6 +20,8 @@ export const IMAGE_TRANSFORMATIONS = {
   EDIT_PREVIEW: "w_500,h_350,c_fill,f_auto,q_auto:low",
   // Profile page - thumbnails (very small for avatars)
   PROFILE_THUMB: "w_150,h_150,c_fill,f_auto,q_auto:low",
+  // Placeholder - blurred low quality (tiny size)
+  PLACEHOLDER_BLUR: "w_50,c_scale,e_blur:300,f_auto,q_auto:low",
   // Default transformation (balanced size and quality)
   DEFAULT: "w_500,h_400,c_fill,f_auto,q_auto:good"
 };

@@ -2,10 +2,12 @@ import React from "react";
 import "../../../App.css";
 import { NavLink } from "react-router-dom";
 import useAuth from "../../hooks/useAuth";
+import useLogout from "../../hooks/useLogout";
 
 export default function Navbar() {
   const { user } = useAuth(); // ใช้ user เป็นหลัก เพราะใช้ cookies
-  
+  const logout = useLogout();
+
   // Debug: Log user state
   React.useEffect(() => {
     if (process.env.NODE_ENV === 'development') {
@@ -17,7 +19,7 @@ export default function Navbar() {
     <>
       <nav
         className="navbar fixed-top"
-        style={{ 
+        style={{
           background: "rgba(255, 255, 255, 0.8)",
           backdropFilter: "blur(10px)",
           WebkitBackdropFilter: "blur(10px)",
@@ -58,85 +60,85 @@ export default function Navbar() {
             </span>
 
             <div className="d-flex align-items-center gap-3">
-            {/* Signup Button */}
-            {(!user || Object.keys(user).length === 0) && (
-              <NavLink 
-                className="nav-link" 
-                to="/auth/register"
-                style={{ 
-                  fontSize: "14px",
-                  padding: "0.5rem 1rem",
-                  borderRadius: "4px",
-                  backgroundColor: "rgba(0, 0, 0, 0.84)",
-                  color: "white !important"
-                }}
-              >
+              {/* Signup Button */}
+              {(!user || Object.keys(user).length === 0) && (
+                <NavLink
+                  className="nav-link"
+                  to="/auth/register"
+                  style={{
+                    fontSize: "14px",
+                    padding: "0.5rem 1rem",
+                    borderRadius: "4px",
+                    backgroundColor: "rgba(0, 0, 0, 0.84)",
+                    color: "white !important"
+                  }}
+                >
                   Sign up
                 </NavLink>
-            )}
+              )}
 
-            {/* Signin Button */}
-            {(!user || Object.keys(user).length === 0) && (
-              <NavLink 
-                className="nav-link" 
-                to="/auth/login"
-                style={{ 
-                  fontSize: "14px",
-                  padding: "0.5rem 1rem"
-                }}
-              >
+              {/* Signin Button */}
+              {(!user || Object.keys(user).length === 0) && (
+                <NavLink
+                  className="nav-link"
+                  to="/auth/login"
+                  style={{
+                    fontSize: "14px",
+                    padding: "0.5rem 1rem"
+                  }}
+                >
                   Sign in
                 </NavLink>
-            )}
+              )}
 
-            {user && Object.keys(user).length > 0 && (
-              <NavLink
-                to="/addcontent"
-                className="nav-link d-flex align-items-center gap-2"
-                style={{ 
-                  fontSize: "14px",
-                  padding: "0.5rem 1rem"
-                }}
-              >
-                <i className="bi bi-pencil-square" style={{ fontSize: "16px" }}></i>
-                Write
-                </NavLink>
-            )}
-
-            {/* User Profile Dropdown */}
-            {user && user.username && (
-              <div className="btn-group">
-                <button
-                  type="button"
-                  id="dropdownMenu2"
-                  data-bs-toggle="dropdown"
-                  aria-expanded="false"
-                  style={{ 
-                    fontSize: "32px",
-                    padding: "0",
-                    border: "none",
-                    background: "transparent",
-                    color: "rgba(0, 0, 0, 0.84)",
-                    cursor: "pointer",
-                    lineHeight: "1"
-                  }}
-                  aria-label={`${user.username} profile menu`}
-                >
-                  <i className="bi bi-person-circle"></i>
-                </button>
-                <ul
-                  className="dropdown-menu dropdown-menu-end"
-                  aria-labelledby="dropdownMenu2"
+              {user && Object.keys(user).length > 0 && (
+                <NavLink
+                  to="/addcontent"
+                  className="nav-link d-flex align-items-center gap-2"
                   style={{
-                    background: "white",
-                    border: "1px solid rgba(0, 0, 0, 0.08)",
-                    borderRadius: "4px",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
-                    padding: "0.5rem 0",
-                    minWidth: "200px"
+                    fontSize: "14px",
+                    padding: "0.5rem 1rem"
                   }}
                 >
-                  <style>{`
+                  <i className="bi bi-pencil-square" style={{ fontSize: "16px" }}></i>
+                  Write
+                </NavLink>
+              )}
+
+              {/* User Profile Dropdown */}
+              {user && user.username && (
+                <div className="btn-group">
+                  <button
+                    type="button"
+                    id="dropdownMenu2"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                    style={{
+                      fontSize: "32px",
+                      padding: "0",
+                      border: "none",
+                      background: "transparent",
+                      color: "rgba(0, 0, 0, 0.84)",
+                      cursor: "pointer",
+                      lineHeight: "1"
+                    }}
+                    aria-label={`${user.username} profile menu`}
+                  >
+                    <i className="bi bi-person-circle"></i>
+                  </button>
+                  <ul
+                    className="dropdown-menu dropdown-menu-end"
+                    aria-labelledby="dropdownMenu2"
+                    style={{
+                      background: "white",
+                      border: "1px solid rgba(0, 0, 0, 0.08)",
+                      borderRadius: "4px",
+                      boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                      padding: "0.5rem 0",
+                      minWidth: "200px"
+                    }}
+                  >
+                    <style>{`
                     [data-theme="dark"] .dropdown-menu {
                       background: rgba(0, 0, 0, 0.9) !important;
                       border-color: rgba(255, 255, 255, 0.1) !important;
@@ -157,28 +159,35 @@ export default function Navbar() {
                       background-color: rgba(255, 255, 255, 0.1);
                     }
                   `}</style>
-                  <li>
-                    <NavLink className="dropdown-item" to="/profile">
-                      Profile
-                    </NavLink>
-                  </li>
-                  {/* Admin Link - Only show if user is admin */}
-                  {(user?.is_staff || user?.is_admin || user?.role === 'admin') && (
                     <li>
-                      <NavLink className="dropdown-item" to="/admin">
-                        Admin Panel
-                                    </NavLink>
+                      <NavLink className="dropdown-item" to="/profile">
+                        Profile
+                      </NavLink>
                     </li>
-                  )}
-                  <li><hr className="dropdown-divider" style={{ margin: "0.5rem 0", borderColor: "rgba(0, 0, 0, 0.08)" }} /></li>
-                  <li>
-                    <NavLink className="dropdown-item" to="/auth/user">
-                      Logout
-                    </NavLink>
-                  </li>
-                </ul>
-              </div>
-            )}
+                    {/* Admin Link - Only show if user is admin */}
+                    {(user?.is_staff || user?.is_admin || user?.role === 'admin') && (
+                      <li>
+                        <NavLink className="dropdown-item" to="/admin">
+                          Admin Panel
+                        </NavLink>
+                      </li>
+                    )}
+                    <li><hr className="dropdown-divider" style={{ margin: "0.5rem 0", borderColor: "rgba(0, 0, 0, 0.08)" }} /></li>
+                    <li>
+                      <button
+                        className="dropdown-item w-100 text-start"
+                        onClick={async (e) => {
+                          e.preventDefault();
+                          await logout();
+                        }}
+                        style={{ border: "none", background: "transparent", cursor: "pointer" }}
+                      >
+                        Logout
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              )}
             </div>
           </div>
         </div>
