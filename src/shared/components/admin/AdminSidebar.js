@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import React from 'react';
+import { NavLink } from 'react-router-dom';
 import {
   LuLayoutDashboard,
   LuFileText,
@@ -9,14 +9,13 @@ import {
   LuSettings,
   LuLogOut,
   LuCommand,
-  LuChevronsUpDown,
   LuSearch
 } from 'react-icons/lu';
 import useLogout from '../../../shared/hooks/useLogout';
 import useAuth from '../../../shared/hooks/useAuth';
 
 export default function AdminSidebar() {
-  const location = useLocation();
+  // const location = useLocation();
   const logout = useLogout();
   const { user } = useAuth();
 
@@ -85,7 +84,7 @@ export default function AdminSidebar() {
             <div className="space-y-1">
               {group.items.map((item) => {
                 const Icon = item.icon;
-                const isActive = location.pathname === item.path;
+                // const isActive = location.pathname === item.path;
 
                 return (
                   <NavLink

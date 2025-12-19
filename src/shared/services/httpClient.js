@@ -9,45 +9,45 @@ const getBaseURL = () => {
 };
 
 // Check if current route is a public route
-const isPublicRoute = () => {
-  if (typeof window === 'undefined') return false;
-  
-  const publicRoutes = [
-    '/',
-    '/auth/login',
-    '/auth/register',
-  ];
-  
-  const currentPath = window.location.pathname;
-  
-  // Check exact matches
-  if (publicRoutes.includes(currentPath)) {
-    return true;
-  }
-  
-  // Check if it's a View post route (/vFeed/:id)
-  if (currentPath.startsWith('/vFeed/')) {
-    return true;
-  }
-  
-  return false;
-};
+// const isPublicRoute = () => {
+//   if (typeof window === 'undefined') return false;
+
+//   const publicRoutes = [
+//     '/',
+//     '/auth/login',
+//     '/auth/register',
+//   ];
+
+//   const currentPath = window.location.pathname;
+
+//   // Check exact matches
+//   if (publicRoutes.includes(currentPath)) {
+//     return true;
+//   }
+
+//   // Check if it's a View post route (/vFeed/:id)
+//   if (currentPath.startsWith('/vFeed/')) {
+//     return true;
+//   }
+
+//   return false;
+// };
 
 // Check if API endpoint is public (doesn't require CSRF token)
 const isPublicAPIEndpoint = (url) => {
   if (!url) return false;
-  
+
   // Public API endpoints that don't require CSRF token
   const publicEndpoints = [
     '/posts/feed/',  // Public feed endpoint
     '/posts/feed',   // Without trailing slash
   ];
-  
+
   // Check exact matches
   if (publicEndpoints.includes(url)) {
     return true;
   }
-  
+
   // Check if URL starts with public endpoint pattern
   return publicEndpoints.some(endpoint => url.startsWith(endpoint));
 };
@@ -71,10 +71,10 @@ axiosInstance.interceptors.request.use(
     // This must be set BEFORE any other config modifications
     // Force withCredentials to be true even if it was set to false
     config.withCredentials = true;
-    
+
     // Check if this is a public API endpoint that doesn't require CSRF token
     const isPublicEndpoint = isPublicAPIEndpoint(config.url);
-    
+
     // Only add CSRF token for protected endpoints
     if (!isPublicEndpoint) {
       // Ensure we have CSRF token
@@ -162,7 +162,7 @@ axiosInstance.interceptors.response.use(
         try {
           // Try to refresh token silently
           const refreshed = await authService.refreshToken();
-          
+
           if (refreshed) {
             // Retry original request with new CSRF token
             if (authService.csrfToken) {
@@ -175,7 +175,7 @@ axiosInstance.interceptors.response.use(
           // Don't redirect here - let the route protection handle it
         }
       }
-      
+
       // If refresh failed or already retried, just reject the error
       // AuthMiddleware will handle redirect if needed
       // Don't redirect here for public routes
