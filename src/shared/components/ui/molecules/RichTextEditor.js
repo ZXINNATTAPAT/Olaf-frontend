@@ -1,13 +1,13 @@
 import React, { useMemo } from 'react';
 import ReactQuill from 'react-quill';
-import 'react-quill/dist/quill.snow.css';
+// import 'react-quill/dist/quill.snow.css';
 
 export default function RichTextEditor({ value, onChange, placeholder, disabled }) {
   const modules = useMemo(() => ({
     toolbar: [
       [{ 'header': [1, 2, 3, false] }],
       ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       [{ 'color': [] }, { 'background': [] }],
       ['link', 'image'],
       ['clean']
