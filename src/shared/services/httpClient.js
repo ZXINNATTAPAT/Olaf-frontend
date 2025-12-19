@@ -8,6 +8,50 @@ const getBaseURL = () => {
   return url.replace('127.0.0.1', 'localhost');
 };
 
+// Check if current route is a public route
+const isPublicRoute = () => {
+  if (typeof window === 'undefined') return false;
+  
+  const publicRoutes = [
+    '/',
+    '/auth/login',
+    '/auth/register',
+  ];
+  
+  const currentPath = window.location.pathname;
+  
+  // Check exact matches
+  if (publicRoutes.includes(currentPath)) {
+    return true;
+  }
+  
+  // Check if it's a View post route (/vFeed/:id)
+  if (currentPath.startsWith('/vFeed/')) {
+    return true;
+  }
+  
+  return false;
+};
+
+// Check if API endpoint is public (doesn't require CSRF token)
+const isPublicAPIEndpoint = (url) => {
+  if (!url) return false;
+  
+  // Public API endpoints that don't require CSRF token
+  const publicEndpoints = [
+    '/posts/feed/',  // Public feed endpoint
+    '/posts/feed',   // Without trailing slash
+  ];
+  
+  // Check exact matches
+  if (publicEndpoints.includes(url)) {
+    return true;
+  }
+  
+  // Check if URL starts with public endpoint pattern
+  return publicEndpoints.some(endpoint => url.startsWith(endpoint));
+};
+
 const baseURL = getBaseURL();
 
 // Create axios instance for HTTP-only cookies authentication
@@ -28,14 +72,20 @@ axiosInstance.interceptors.request.use(
     // Force withCredentials to be true even if it was set to false
     config.withCredentials = true;
     
-    // Ensure we have CSRF token
-    if (!authService.csrfToken) {
-      await authService.getCSRFToken();
-    }
+    // Check if this is a public API endpoint that doesn't require CSRF token
+    const isPublicEndpoint = isPublicAPIEndpoint(config.url);
+    
+    // Only add CSRF token for protected endpoints
+    if (!isPublicEndpoint) {
+      // Ensure we have CSRF token
+      if (!authService.csrfToken) {
+        await authService.getCSRFToken();
+      }
 
-    // Add CSRF token to headers
-    if (authService.csrfToken) {
-      config.headers['X-CSRFToken'] = authService.csrfToken;
+      // Add CSRF token to headers
+      if (authService.csrfToken) {
+        config.headers['X-CSRFToken'] = authService.csrfToken;
+      }
     }
 
     // Remove trailing slash from Bolt API endpoints (except DRF endpoints like /posts/feed/)
@@ -101,63 +151,34 @@ axiosInstance.interceptors.response.use(
       });
     }
 
-    // Handle 401 Unauthorized - try to refresh token
+    // Handle 401 Unauthorized - try to refresh token once
     if (error.response?.status === 401) {
       const originalRequest = error.config;
 
-      // Avoid infinite loop
+      // Only retry once to avoid infinite loops
       if (!originalRequest._retry) {
         originalRequest._retry = true;
 
-        if (process.env.NODE_ENV === 'development') {
-          console.log('🔄 Attempting to refresh token...');
-        }
-
         try {
-          // Try to refresh token
+          // Try to refresh token silently
           const refreshed = await authService.refreshToken();
           
           if (refreshed) {
-            if (process.env.NODE_ENV === 'development') {
-              console.log('✅ Token refreshed successfully, retrying request...');
-            }
             // Retry original request with new CSRF token
             if (authService.csrfToken) {
               originalRequest.headers['X-CSRFToken'] = authService.csrfToken;
             }
             return axiosInstance(originalRequest);
-          } else {
-            if (process.env.NODE_ENV === 'development') {
-              console.error('❌ Token refresh failed - no valid refresh token');
-            }
           }
         } catch (refreshError) {
-          if (process.env.NODE_ENV === 'development') {
-            console.error('❌ Token refresh error:', refreshError);
-          }
-          // Refresh failed - clear auth state and redirect to login
-          authService.clearLocalState();
-          
-          // Redirect to login page if we're not already there
-          if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/login')) {
-            // Store the current location to redirect back after login
-            const currentPath = window.location.pathname + window.location.search;
-            window.location.href = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
-          }
-          
-          return Promise.reject(error);
-        }
-      } else {
-        if (process.env.NODE_ENV === 'development') {
-          console.error('❌ Already retried, redirecting to login...');
-        }
-        // Already retried, redirect to login
-        authService.clearLocalState();
-        if (typeof window !== 'undefined' && !window.location.pathname.includes('/auth/login')) {
-          const currentPath = window.location.pathname + window.location.search;
-          window.location.href = `/auth/login?redirect=${encodeURIComponent(currentPath)}`;
+          // Refresh failed - silently fail, let AuthMiddleware handle redirect
+          // Don't redirect here - let the route protection handle it
         }
       }
+      
+      // If refresh failed or already retried, just reject the error
+      // AuthMiddleware will handle redirect if needed
+      // Don't redirect here for public routes
     }
 
     return Promise.reject(error);

@@ -301,14 +301,20 @@ class AuthService {
                 return data; // Return original data (not sanitized) for API compatibility
             } catch (error) {
                 // Return cached data if available and not a 401 error
-                if (this.cache.userProfile && this.isCacheValid() && !error.message.includes('Unauthorized')) {
-                    console.warn('API error, returning cached user profile:', error);
+                const isUnauthorized = error.message?.includes('Unauthorized') || 
+                                      error.message?.includes('401') ||
+                                      (error.response?.status === 401);
+                
+                if (this.cache.userProfile && this.isCacheValid() && !isUnauthorized) {
+                    if (process.env.NODE_ENV === 'development') {
+                        console.warn('API error, returning cached user profile:', error.message);
+                    }
                     return this.cache.userProfile;
                 }
                 throw error;
             } finally {
                 // Clear pending request
-                this.pendingRequests.getUserProfile = null;
+                this.pendingRequests.getUserProfile = null; 
             }
         })();
 

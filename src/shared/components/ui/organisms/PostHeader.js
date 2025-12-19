@@ -1,10 +1,13 @@
 import React from 'react';
 import { FaHeart } from "react-icons/fa";
 import { FiCalendar, FiMessageCircle } from 'react-icons/fi';
+import PostMenuDropdown from '../molecules/PostMenuDropdown';
 
-export default function PostHeader({ post, likesCount, commentsCount }) {
+export default function PostHeader({ post, likesCount, commentsCount, user, onDeleteSuccess }) {
   return (
     <header className="mb-6">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <div className="flex-1">
       <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary mb-4 leading-tight">
         {post.header}
       </h1>
@@ -12,6 +15,15 @@ export default function PostHeader({ post, likesCount, commentsCount }) {
       <p className="text-lg md:text-xl text-text-muted mb-6 leading-relaxed">
         {post.short}
       </p>
+        </div>
+        
+        {/* Post Menu Dropdown - Top Right */}
+        <PostMenuDropdown
+          post={post}
+          onDeleteSuccess={onDeleteSuccess}
+          className="flex-shrink-0"
+        />
+      </div>
 
       <div className="flex flex-wrap items-center justify-between py-4 border-t border-b border-border-color gap-4">
         <div className="flex items-center gap-3">

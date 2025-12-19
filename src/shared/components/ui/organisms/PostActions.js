@@ -1,10 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import LikeButton from '../atoms/LikeButton';
-import DeleteButton from '../atoms/DeleteButton';
 import ShareButtons from '../../../hooks/shares/ShareButtons';
-import Button from '../atoms/Button';
-import { FiEdit } from 'react-icons/fi';
+import PostMenuDropdown from '../molecules/PostMenuDropdown';
 
 export default function PostActions({ 
   post, 
@@ -12,14 +9,6 @@ export default function PostActions({
   onLikesCountChange, 
   onDeleteSuccess 
 }) {
-  const navigate = useNavigate();
-
-  const handleEdit = () => {
-    navigate(`/editContent/${post.post_id}`);
-  };
-
-  const isOwner = user?.id === post.user?.id;
-
   return (
     <div className="flex flex-wrap items-center justify-between py-4 gap-4 border-t border-border-color">
       <div className="flex items-center gap-4">
@@ -35,23 +24,10 @@ export default function PostActions({
         />
       </div>
       
-      {isOwner && (
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            onClick={handleEdit}
-            className="flex items-center gap-2 transition-all duration-200 hover:scale-105"
-          >
-            <FiEdit />
-            Edit
-          </Button>
-          <DeleteButton
-            post_id={post.post_id}
-            postUserId={post.user?.id}
+      <PostMenuDropdown
+        post={post}
             onDeleteSuccess={onDeleteSuccess}
           />
-        </div>
-      )}
     </div>
   );
 }

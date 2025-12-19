@@ -34,10 +34,15 @@ class ApiInterceptor {
         // ไม่ต้องเพิ่ม Authorization header เพราะใช้ HTTP-only cookies
         // Server จะตรวจสอบ authentication ผ่าน cookies อัตโนมัติ
 
-        // Add CSRF token if available
-        const csrfToken = this.getCSRFToken();
-        if (csrfToken) {
-          config.headers['X-CSRFToken'] = csrfToken;
+        // Check if this is a public API endpoint that doesn't require CSRF token
+        const isPublicEndpoint = this.isPublicAPIEndpoint(config.url);
+        
+        // Only add CSRF token for protected endpoints
+        if (!isPublicEndpoint) {
+          const csrfToken = this.getCSRFToken();
+          if (csrfToken) {
+            config.headers['X-CSRFToken'] = csrfToken;
+          }
         }
 
         // Log request in development
@@ -145,6 +150,54 @@ class ApiInterceptor {
   }
 
   /**
+   * Check if current route is a public route
+   */
+  isPublicRoute() {
+    if (typeof window === 'undefined') return false;
+    
+    const publicRoutes = [
+      '/',
+      '/auth/login',
+      '/auth/register',
+    ];
+    
+    const currentPath = window.location.pathname;
+    
+    // Check exact matches
+    if (publicRoutes.includes(currentPath)) {
+      return true;
+    }
+    
+    // Check if it's a View post route (/vFeed/:id)
+    if (currentPath.startsWith('/vFeed/')) {
+      return true;
+    }
+    
+    return false;
+  }
+
+  /**
+   * Check if API endpoint is public (doesn't require CSRF token)
+   */
+  isPublicAPIEndpoint(url) {
+    if (!url) return false;
+    
+    // Public API endpoints that don't require CSRF token
+    const publicEndpoints = [
+      '/posts/feed/',  // Public feed endpoint
+      '/posts/feed',   // Without trailing slash
+    ];
+    
+    // Check exact matches
+    if (publicEndpoints.includes(url)) {
+      return true;
+    }
+    
+    // Check if URL starts with public endpoint pattern
+    return publicEndpoints.some(endpoint => url.startsWith(endpoint));
+  }
+
+  /**
    * Handle unauthorized responses (401)
    */
   handleUnauthorized() {
@@ -152,9 +205,14 @@ class ApiInterceptor {
     this.clearAuthToken();
     this.clearCSRFToken();
     
-    // Redirect to login page
-    if (typeof window !== 'undefined') {
-      window.location.href = '/login';
+    // Only redirect to login if we're NOT on a public route
+    // Public routes should be accessible without authentication
+    if (typeof window !== 'undefined' && !this.isPublicRoute()) {
+      // Check if we're already on login page to avoid redirect loop
+      const currentPath = window.location.pathname;
+      if (!currentPath.startsWith('/auth/login')) {
+        window.location.href = '/auth/login';
+      }
     }
   }
 

@@ -5,8 +5,10 @@ export default function AuthMiddleware() {
     const { user, initializing } = useAuth()
     const location = useLocation()
 
-    // รอให้ PersistLogin ทำงานเสร็จก่อน (initializing = false)
-    if (initializing) {
+    // Show loading only if we're still initializing and have no cached user
+    const hasUser = user && Object.keys(user).length > 0 && (user.username || user.email || user.id)
+    
+    if (initializing && !hasUser) {
         return (
             <div className="flex justify-center items-center min-h-[50vh]">
                 <div className="spinner-border text-primary" role="status">
@@ -16,17 +18,14 @@ export default function AuthMiddleware() {
         )
     }
 
-    // ตรวจสอบ user data หลังจากที่ PersistLogin ทำงานเสร็จแล้ว
-    const hasUser = user && Object.keys(user).length > 0 && (user.username || user.email || user.id)
-
-    // ตรวจสอบว่ามี user data หรือไม่
+    // Check if user is authenticated
     if (hasUser) {
         return <Outlet />
     } else {
-        // ลบ localStorage flags เมื่อ redirect
+        // Clean up localStorage
         localStorage.removeItem('us')
-        // Don't need to remove csrfToken - we don't store it in localStorage
         localStorage.removeItem('accessToken')
+        // Redirect to login with return path
         return <Navigate to="/auth/login" state={{ from: location }} replace />
     }
 }

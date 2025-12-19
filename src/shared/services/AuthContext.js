@@ -15,13 +15,29 @@ export const AuthContext = createContext({
 })
 
 export function AuthContextProvider(props) {
-    // Don't load user from localStorage on mount - let PersistLogin handle it
-    // This prevents showing stale user data after logout
-    const [user, setUser] = useState({})
+    // Load user from localStorage immediately for better UX
+    // PersistLogin will verify and update if needed
+    const loadInitialUser = () => {
+        try {
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                const parsedUser = JSON.parse(storedUser);
+                if (parsedUser && (parsedUser.username || parsedUser.email || parsedUser.id)) {
+                    return parsedUser;
+                }
+            }
+        } catch (error) {
+            console.error('Error loading user from localStorage:', error);
+            localStorage.removeItem('user');
+        }
+        return {};
+    };
+
+    const [user, setUser] = useState(loadInitialUser)
     const [accessToken, setAccessToken] = useState()
     const [refreshToken, setRefreshToken] = useState()
     const [csrftoken, setCSRFToken] = useState()
-    const [initializing, setInitializing] = useState(true)
+    const [initializing, setInitializing] = useState(false) // Start as false since we have cached user
 
     // Save user to localStorage whenever it changes
     React.useEffect(() => {

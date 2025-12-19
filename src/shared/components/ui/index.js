@@ -15,6 +15,7 @@ export { default as PasswordField } from './molecules/PasswordField';
 export { default as SearchBar } from './molecules/SearchBar';
 export { default as CommentCard } from './molecules/CommentCard';
 export { default as HeroSection } from './molecules/HeroSection';
+export { default as PostMenuDropdown } from './molecules/PostMenuDropdown';
 
 // UI Components - Organisms
 export { default as AuthCard } from './organisms/AuthCard';

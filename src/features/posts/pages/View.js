@@ -2,9 +2,18 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import ApiController from "../../../shared/services/ApiController";
 import { getImageUrl } from "../../../shared/services/CloudinaryService";
-import { LazyImage, CardSkeleton, Button, PostCard } from "../../../shared/components";
+import {
+  LazyImage,
+  CardSkeleton,
+  Button,
+  PostCard,
+} from "../../../shared/components";
 import useAuth from "../../../shared/hooks/useAuth";
-import { PostHeader, PostActions, CommentSection } from "../../../shared/components";
+import {
+  PostHeader,
+  PostActions,
+  CommentSection,
+} from "../../../shared/components";
 import { FiArrowLeft, FiArrowUp, FiRefreshCw } from "react-icons/fi";
 import { useRedirect } from "../../../shared/hooks";
 
@@ -35,7 +44,7 @@ export default function View() {
   };
 
   const handleDeletePost = () => {
-    navigate('/feed');
+    navigate("/feed");
   };
 
   // Calculate reading time (average reading speed: 200 words per minute)
@@ -48,7 +57,7 @@ export default function View() {
 
   // Scroll to top
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   // Handle scroll events
@@ -63,7 +72,7 @@ export default function View() {
         const articleHeight = articleRef.current.offsetHeight;
         const windowHeight = window.innerHeight;
         const scrollTop = window.scrollY;
-        
+
         const progress = Math.min(
           100,
           Math.max(
@@ -75,13 +84,13 @@ export default function View() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [p_data]);
 
   // Scroll to top on mount
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [id]);
 
   const fetchComments = async (postId) => {
@@ -102,7 +111,7 @@ export default function View() {
       if (result.success && result.data) {
         // Filter out current post and get up to 3 related posts
         const filtered = result.data
-          .filter(post => post.post_id !== currentPostId)
+          .filter((post) => post.post_id !== currentPostId)
           .slice(0, 3);
         setRelatedPosts(filtered);
       }
@@ -164,20 +173,24 @@ export default function View() {
     return (
       <div className="min-h-screen bg-bg-primary py-8">
         <div className="container mx-auto px-4 max-w-4xl">
-          <div 
+          <div
             className="rounded-2xl overflow-hidden p-8 text-center"
             style={{
-              background: 'rgba(255, 255, 255, 0.7)',
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.1)'
+              background: "rgba(255, 255, 255, 0.7)",
+              backdropFilter: "blur(20px) saturate(180%)",
+              WebkitBackdropFilter: "blur(20px) saturate(180%)",
+              border: "1px solid rgba(255, 255, 255, 0.3)",
+              boxShadow: "0 8px 32px 0 rgba(0, 0, 0, 0.1)",
             }}
           >
             <div className="mb-4">
               <div className="text-6xl mb-4">😕</div>
-              <h3 className="text-2xl font-semibold text-text-primary mb-2">{error}</h3>
-              <p className="text-text-muted mb-6">Something went wrong while loading this post.</p>
+              <h3 className="text-2xl font-semibold text-text-primary mb-2">
+                {error}
+              </h3>
+              <p className="text-text-muted mb-6">
+                Something went wrong while loading this post.
+              </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <Button
@@ -195,7 +208,7 @@ export default function View() {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate('/feed')}
+                onClick={() => navigate("/feed")}
                 className="flex items-center gap-2"
               >
                 <FiArrowLeft />
@@ -220,19 +233,21 @@ export default function View() {
     );
   }
 
-  const mainImageUrl = p_data.primary_image_url || getImageUrl(p_data.image, "VIEW_MAIN");
+  const mainImageUrl =
+    p_data.primary_image_url || getImageUrl(p_data.image, "VIEW_MAIN");
   const readingTime = calculateReadingTime(p_data.post_text);
 
   return (
     <div className="min-h-screen bg-bg-primary py-6 md:py-8">
       {/* Reading Progress Bar */}
-      <div 
+      <div
         className="fixed top-0 left-0 right-0 h-1 z-50 transition-all duration-300"
         style={{
-          background: 'linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8))',
+          background:
+            "linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8))",
           transform: `scaleX(${readingProgress / 100})`,
-          transformOrigin: 'left',
-          opacity: readingProgress > 0 && readingProgress < 100 ? 1 : 0
+          transformOrigin: "left",
+          opacity: readingProgress > 0 && readingProgress < 100 ? 1 : 0,
         }}
       />
 
@@ -253,18 +268,20 @@ export default function View() {
         </div>
 
         {/* Article with Grid Borders */}
-        <article 
+        <article
           ref={articleRef}
           className="mb-6 border-t border-l border-r border-border-color animate-fadeIn"
           style={{
-            animation: 'fadeIn 0.5s ease-in-out'
+            animation: "fadeIn 0.5s ease-in-out",
           }}
         >
           <div className="p-6 md:p-8 border-b border-border-color">
-            <PostHeader 
-              post={p_data} 
-              likesCount={likesCount} 
-              commentsCount={commentsCount} 
+            <PostHeader
+              post={p_data}
+              likesCount={likesCount}
+              commentsCount={commentsCount}
+              user={user}
+              onDeleteSuccess={handleDeletePost}
             />
 
             {/* Main Image */}
@@ -276,7 +293,7 @@ export default function View() {
                   className="w-full rounded-xl shadow-lg object-cover transition-transform duration-500 group-hover:scale-105"
                   style={{ maxHeight: "500px" }}
                   imageType="VIEW_MAIN"
-                  onClick={() => window.open(mainImageUrl, '_blank')}
+                  onClick={() => window.open(mainImageUrl, "_blank")}
                 />
               </div>
             )}
@@ -288,7 +305,10 @@ export default function View() {
                   {p_data.images
                     .filter((img) => !img.is_primary)
                     .map((img, index) => (
-                      <div key={img.id} className="relative rounded-xl overflow-hidden">
+                      <div
+                        key={img.id}
+                        className="relative rounded-xl overflow-hidden"
+                      >
                         <LazyImage
                           src={img.image_secure_url}
                           alt={img.caption || `Post image ${index + 2}`}
@@ -296,15 +316,18 @@ export default function View() {
                           imageType="VIEW_MAIN"
                         />
                         {img.caption && (
-                          <div 
+                          <div
                             className="absolute bottom-0 left-0 right-0 p-4 rounded-b-xl"
                             style={{
-                              background: 'linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent)',
-                              backdropFilter: 'blur(10px)',
-                              WebkitBackdropFilter: 'blur(10px)'
+                              background:
+                                "linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent)",
+                              backdropFilter: "blur(10px)",
+                              WebkitBackdropFilter: "blur(10px)",
                             }}
                           >
-                            <p className="text-white text-sm mb-0">{img.caption}</p>
+                            <p className="text-white text-sm mb-0">
+                              {img.caption}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -321,9 +344,9 @@ export default function View() {
                   <span>{readingTime} min read</span>
                 </div>
               )}
-              <div 
+              <div
                 className="text-lg leading-relaxed text-text-primary prose prose-lg max-w-none rich-text-content"
-                dangerouslySetInnerHTML={{ __html: p_data.post_text || '' }}
+                dangerouslySetInnerHTML={{ __html: p_data.post_text || "" }}
               />
             </div>
 
@@ -339,20 +362,22 @@ export default function View() {
 
         {/* Related Posts Section */}
         {relatedPosts.length > 0 && (
-          <div 
+          <div
             className="mt-12 mb-6 animate-fadeIn"
             style={{
-              animation: 'fadeIn 0.5s ease-in-out 0.3s both'
+              animation: "fadeIn 0.5s ease-in-out 0.3s both",
             }}
           >
             <div className="mb-6">
-              <h2 className="text-2xl font-semibold text-text-primary mb-2">Related Posts</h2>
+              <h2 className="text-2xl font-semibold text-text-primary mb-2">
+                Related Posts
+              </h2>
               <p className="text-text-muted">You might also like</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedPosts.map((post) => (
-                <div 
-                  key={post.post_id} 
+                <div
+                  key={post.post_id}
                   className="border-t border-l border-r border-b border-border-color p-4 cursor-pointer group transition-all duration-300 hover:opacity-90"
                   onClick={() => redirectx(String(post.post_id))}
                 >
@@ -367,11 +392,11 @@ export default function View() {
         )}
 
         {/* Comments Section with Grid Borders */}
-        <div 
+        <div
           id="comments-section"
           className="border-t border-l border-r border-b border-border-color animate-fadeIn"
           style={{
-            animation: 'fadeIn 0.5s ease-in-out 0.2s both'
+            animation: "fadeIn 0.5s ease-in-out 0.2s both",
           }}
         >
           <div className="p-6 md:p-8">
@@ -391,11 +416,11 @@ export default function View() {
           onClick={scrollToTop}
           className="fixed bottom-8 right-8 z-40 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
           style={{
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(20px) saturate(180%)',
-            WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            animation: 'fadeIn 0.3s ease-in-out'
+            background: "rgba(255, 255, 255, 0.9)",
+            backdropFilter: "blur(20px) saturate(180%)",
+            WebkitBackdropFilter: "blur(20px) saturate(180%)",
+            border: "1px solid rgba(255, 255, 255, 0.3)",
+            animation: "fadeIn 0.3s ease-in-out",
           }}
           aria-label="Scroll to top"
         >
@@ -405,4 +430,3 @@ export default function View() {
     </div>
   );
 }
-
