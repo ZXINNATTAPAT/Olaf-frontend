@@ -12,7 +12,7 @@ import {
   ERROR_MESSAGES,
   FEED_CONFIG,
 } from "../../../shared/constants/apiConstants";
-import { FeedHeader, PostCard, Button } from "../../../shared/components";
+import { PostCard, Button } from "../../../shared/components";
 // import FeedSidebar from "../../../shared/components/ui/organisms/FeedSidebar";
 
 export default function Feed() {
@@ -24,6 +24,7 @@ export default function Feed() {
   const [activeFilter, setActiveFilter] = useState("all");
   const [error, setError] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [visiblePosts, setVisiblePosts] = useState(5); // New state for pagination
   const hasFetched = useRef(false);
   const isRetrying = useRef(false);
   const cacheRef = useRef({ data: null, timestamp: 0 });
@@ -36,12 +37,12 @@ export default function Feed() {
         categorySet.add(post.topic);
       }
     });
-    
+
     // Mock categories if no data available
     if (categorySet.size === 0) {
       return ['Technology', 'Design', 'Business', 'Lifestyle', 'Culture'];
     }
-    
+
     return Array.from(categorySet).sort();
   }, [p_data]);
 
@@ -295,8 +296,7 @@ export default function Feed() {
               ? FEED_CONFIG.RENDER_FREE_TIER_DELAY
               : FEED_CONFIG.RETRY_DELAY;
           console.log(
-            `🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${
-              FEED_CONFIG.MAX_RETRIES
+            `🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES
             })`
           );
           isRetrying.current = false;
@@ -340,135 +340,162 @@ export default function Feed() {
   return (
     <div className="min-h-screen bg-white">
       <ThemeToggle />
-      <div className="mt-4">
-        <FeedHeader
-          searchKeyword={searchKeyword}
-          onSearchChange={setSearchKeyword}
-          title="FEED"
-        />
-      </div>
-
-      {/* Breadcrumb */}
-      <div className="w-full md:container md:mx-auto px-4 py-2 mt-4">
-        <nav className="text-sm text-black">
+      <div className="w-full md:container md:mx-auto px-4 mt-8 mb-6">
+        {/* Breadcrumb - No Border */}
+        <nav className="text-sm text-black flex items-center mb-10">
           <Link to="/" className="hover:opacity-70 transition-opacity">
             Home
           </Link>
-          <span className="mx-2">/</span>
-          <span className="text-black">Blog Grid</span>
+          <span className="mx-3 text-gray-400">/</span>
+          <span className="text-black">Feeds</span>
         </nav>
+
+        {/* Search Bar - Above Categories */}
+        <div className="flex justify-start mb-8">
+          <div className="relative group w-full md:w-72">
+            <i className="bi bi-search absolute left-0 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-red-600 transition-colors"></i>
+            <input
+              type="text"
+              placeholder="Search posts..."
+              value={searchKeyword}
+              onChange={(e) => setSearchKeyword(e.target.value)}
+              className="w-full pl-8 pr-4 py-2 bg-transparent border-b border-gray-200 focus:border-red-600 outline-none text-sm placeholder-gray-400 transition-all font-sans"
+            />
+          </div>
+        </div>
       </div>
 
       {/* Category Badges */}
       {categories.length > 0 && (
-        <div className="w-full md:container md:mx-auto px-4 py-3 border-b border-black">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="text-sm font-medium text-black uppercase tracking-wider" style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.1em' }}>
-              Categories:
-            </span>
-            <button
-              onClick={() => setActiveFilter('all')}
-              className={`
-                px-4 py-2 text-sm font-medium rounded-full transition-all duration-300
-                ${activeFilter === 'all' 
-                  ? 'bg-black text-white' 
-                  : 'bg-white text-black border border-black hover:opacity-70'
-                }
-              `}
-              style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.05em' }}
-            >
-              ALL
-            </button>
-            {categories.map((category) => {
-              const isActive = activeFilter === `category:${category}`;
-              return (
+        <div className="w-full mb-4">
+          <div className="w-full md:container md:mx-auto px-4 py-2">
+            <div className="flex flex-col sm:flex-row items-center gap-6">
+              <span className="text-sm font-bold text-gray-400 uppercase tracking-[0.15em] shrink-0" style={{ fontFamily: "'Playfair Display', serif" }}>
+                Categories:
+              </span>
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
                 <button
-                  key={category}
-                  onClick={() => setActiveFilter(`category:${category}`)}
+                  onClick={() => setActiveFilter('all')}
                   className={`
-                    px-4 py-2 text-sm font-medium rounded-full transition-all duration-300
-                    ${isActive
-                      ? 'bg-black text-white'
-                      : 'bg-white text-black border border-black hover:opacity-70'
+                    px-6 py-2 text-xs font-bold rounded-full transition-all duration-300 uppercase tracking-widest border
+                    ${activeFilter === 'all'
+                      ? 'bg-red-600 text-white border-red-600'
+                      : 'bg-white text-gray-400 border-gray-200 hover:border-red-600 hover:text-red-600'
                     }
                   `}
-                  style={{ fontFamily: "'Playfair Display', serif", letterSpacing: '0.05em' }}
+                  style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  {category.toUpperCase()}
+                  ALL
                 </button>
-              );
-            })}
+                {categories.map((category) => {
+                  const isActive = activeFilter === `category:${category}`;
+                  return (
+                    <button
+                      key={category}
+                      onClick={() => setActiveFilter(`category:${category}`)}
+                      className={`
+                        px-6 py-2 text-xs font-bold rounded-full transition-all duration-300 uppercase tracking-widest border
+                        ${isActive
+                          ? 'bg-red-600 text-white border-red-600'
+                          : 'bg-white text-gray-400 border-gray-200 hover:border-red-600 hover:text-red-600'
+                        }
+                      `}
+                      style={{ fontFamily: "'Playfair Display', serif" }}
+                    >
+                      {category}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       )}
 
       {/* Main Content with Sidebar */}
-      <div className="w-full py-8 md:py-12">
+      <div className="w-full py-4 md:py-6">
         <div className="w-full md:container md:mx-auto px-4">
           <div className="flex flex-col lg:flex-row gap-12">
             {/* Posts Grid */}
             <div className="flex-1 w-full">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 border-t border-l border-black bg-white">
-              {isLoading ? (
-                <>
-                  <div className="col-span-1 border-r border-b border-black p-8 bg-white">
-                    <CardSkeleton type="medium" />
-                  </div>
-                  <div className="col-span-1 border-r border-b border-black p-8 bg-white">
-                    <CardSkeleton type="medium" />
-                  </div>
-                  <div className="col-span-1 border-r border-b border-black p-8 bg-white">
-                    <CardSkeleton type="medium" />
-                  </div>
-                </>
-              ) : filteredData.length > 0 ? (
-                filteredData.map((post) => (
-                  <div
-                    key={post.post_id}
-                    className="col-span-1 border-r border-b border-black p-8 bg-white"
-                  >
-                    <PostCard
-                      post={post}
-                      onClick={() => redirectx(String(post.post_id))}
-                    />
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-full border-r border-b border-black text-center py-12">
-                  <p className="text-black mb-4 text-[0.9375rem]">
-                    {error || "No posts available"}
-                  </p>
-                  {error && (
-                    <div className="flex flex-col items-center gap-3">
-                      {isRetrying.current && (
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="spinner-border spinner-border-sm text-black"
-                            role="status"
-                          >
-                            <span className="visually-hidden">Loading...</span>
-                          </div>
-                          <span className="text-sm text-black">
-                            Retrying... ({retryCount}/{FEED_CONFIG.MAX_RETRIES})
-                          </span>
-                        </div>
-                      )}
-                      <Button
-                        variant="secondary"
-                        onClick={() => {
-                          setRetryCount(0);
-                          hasFetched.current = false;
-                          isRetrying.current = false;
-                          fetchPosts();
-                        }}
-                        disabled={isRetrying.current}
-                      >
-                        Try Again
-                      </Button>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
+                {isLoading ? (
+                  <>
+                    {[...Array(8)].map((_, i) => (
+                      <div key={i} className="col-span-1">
+                        <CardSkeleton type="medium" />
+                      </div>
+                    ))}
+                  </>
+                ) : filteredData.length > 0 ? (
+                  filteredData.map((post) => (
+                    <div
+                      key={post.post_id}
+                      className="col-span-1"
+                    >
+                      <PostCard
+                        post={post}
+                        onClick={() => redirectx(String(post.post_id))}
+                      />
                     </div>
-                  )}
-                </div>
-              )}
+                  ))
+                ) : (
+                  <>
+                    {error ? (
+                      <div className="col-span-full text-center py-12">
+                        <p className="text-red-600 mb-4 text-[0.9375rem]">
+                          {error}
+                        </p>
+                        <div className="flex flex-col items-center gap-3">
+                          {isRetrying.current && (
+                            <div className="flex items-center gap-2">
+                              <div
+                                className="spinner-border spinner-border-sm text-red-600"
+                                role="status"
+                              >
+                                <span className="visually-hidden">Loading...</span>
+                              </div>
+                              <span className="text-sm text-gray-500">
+                                Retrying... ({retryCount}/{FEED_CONFIG.MAX_RETRIES})
+                              </span>
+                            </div>
+                          )}
+                          <Button
+                            variant="secondary"
+                            onClick={() => {
+                              setRetryCount(0);
+                              hasFetched.current = false;
+                              isRetrying.current = false;
+                              fetchPosts();
+                            }}
+                            disabled={isRetrying.current}
+                          >
+                            Try Again
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Empty state with faded background and centered text
+                      <div className="col-span-full relative min-h-[400px]">
+                        {/* Faded Background Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12 opacity-10 blur-[1px] select-none pointer-events-none grayscale">
+                          {[...Array(8)].map((_, i) => (
+                            <div key={i}>
+                              <CardSkeleton type="medium" />
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Centered Overlay Text */}
+                        <div className="absolute inset-0 flex items-center justify-center z-10">
+                          <div className="px-8 py-4 bg-white/80 backdrop-blur-[2px] border border-gray-100 rounded-lg shadow-sm text-center">
+                            <span className="text-lg font-medium text-gray-500 uppercase tracking-widest">No posts found</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             </div>
 
@@ -486,64 +513,163 @@ export default function Feed() {
       {filteredData.length > 0 && (
         <div className="w-full py-12">
           <div className="w-full md:container md:mx-auto px-4">
-          <div className="mb-6">
-            <h2
-              className="text-2xl font-semibold text-black mb-2"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Latest Posts
-            </h2>
-            <p className="text-black">Discover more stories</p>
-          </div>
-          <div>
-            {filteredData.slice(0, 5).map((post, index) => (
-              <div
-                key={post.post_id}
-                className="p-6 cursor-pointer group transition-all duration-200 hover:bg-white border-b border-black last:border-b-0"
-                onClick={() => redirectx(String(post.post_id))}
-              >
-                <div className="flex flex-col md:flex-row gap-6 items-start">
-                  {/* Text Content */}
-                  <div className="flex-1">
-                    <h3
-                      className="text-3xl md:text-4xl font-semibold text-black mb-4 group-hover:opacity-80 transition-opacity leading-tight"
-                      style={{ fontFamily: "'Playfair Display', serif" }}
+            <div className="flex flex-col lg:flex-row gap-16">
+              {/* Left Column: Latest Posts */}
+              <div className="w-full lg:w-2/3">
+                <div className="mb-8 border-b border-gray-200 pb-4">
+                  <h2
+                    className="text-2xl font-bold text-black"
+                    style={{ fontFamily: "'Playfair Display', serif" }}
+                  >
+                    Latest Posts
+                  </h2>
+                </div>
+                <div>
+                  {filteredData.slice(0, visiblePosts).map((post, index) => (
+                    <div
+                      key={post.post_id}
+                      className="cursor-pointer group py-8 first:pt-0"
+                      onClick={() => redirectx(String(post.post_id))}
                     >
-                      {post.header}
-                    </h3>
-                    <p
-                      className="text-lg md:text-xl text-black mb-4 line-clamp-2 leading-relaxed"
-                      style={{ fontFamily: "'Lora', serif" }}
-                    >
-                      {post.short}
-                    </p>
-                    <div className="flex items-center gap-4 text-base text-black">
-                      <span>{post.post_datetime}</span>
-                      {post.topic && (
-                        <span
-                          className="px-3 py-1 bg-white rounded-full text-sm text-black border border-black"
-                          style={{ fontFamily: "'Playfair Display', serif" }}
-                        >
-                          {post.topic.toUpperCase()}
-                        </span>
-                      )}
+                      <div className="flex flex-col md:flex-row gap-8 items-start">
+                        {/* Text Content */}
+                        <div className="flex-1 order-2 md:order-1">
+                          <div className="flex items-center gap-2 text-xs text-gray-500 mb-2 font-medium tracking-wide">
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden">
+                                {post.user_image ? (
+                                  <img src={post.user_image} alt={post.user} className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 text-[10px]">
+                                    {post.user ? post.user.charAt(0) : 'U'}
+                                  </div>
+                                )}
+                              </div>
+                              <span className="text-gray-900 font-semibold">{post.user || 'Author'}</span>
+                            </div>
+                            <span className="text-gray-300">•</span>
+                            <span>{post.post_datetime}</span>
+                          </div>
+
+                          <h3
+                            className="text-xl md:text-2xl font-bold text-gray-900 mb-2 group-hover:text-red-600 transition-colors leading-tight"
+                            style={{ fontFamily: "'Playfair Display', serif" }}
+                          >
+                            {post.header}
+                          </h3>
+
+                          <p
+                            className="text-gray-600 text-sm md:text-base mb-4 line-clamp-2 leading-relaxed"
+                            style={{ fontFamily: "'Lora', serif" }}
+                          >
+                            {post.short}
+                          </p>
+
+                          <div className="flex items-center gap-4 text-xs text-gray-500">
+                            <div className="px-2 py-1 bg-gray-100 rounded-full text-gray-700 font-medium">
+                              {post.topic || 'General'}
+                            </div>
+                            <span>{Math.ceil((post.short?.length || 0) / 200)} min read</span>
+                          </div>
+                        </div>
+
+                        {/* Image */}
+                        {post.image && (
+                          <div className="w-full md:w-48 aspect-[4/3] md:order-2 flex-shrink-0 rounded-md overflow-hidden bg-gray-100">
+                            <LazyImage
+                              src={post.image}
+                              alt={post.header}
+                              className="w-full h-full transition-transform duration-500 group-hover:scale-105"
+                              style={{ objectFit: "cover" }}
+                              imageType="FEED_SMALL"
+                            />
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                  {/* Image */}
-                  {post.image && (
-                    <div className="w-full md:w-64 h-48 flex-shrink-0 rounded-lg overflow-hidden">
-                      <LazyImage
-                        src={post.image}
-                        alt={post.header}
-                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        imageType="FEED_SMALL"
-                      />
+                  ))}
+
+                  {visiblePosts < filteredData.length && (
+                    <div className="mt-8 text-center border-t border-gray-100 pt-8">
+                      <button
+                        onClick={() => setVisiblePosts(prev => prev + 5)}
+                        className="px-6 py-2 border border-red-600 text-red-600 text-sm font-medium rounded-full hover:bg-red-600 hover:text-white transition-all duration-300"
+                      >
+                        Show more
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Right Column: Sidebar (Staff Picks & More) */}
+              <div className="w-full lg:w-1/3 space-y-12">
+                {/* Staff Picks Section */}
+                <div>
+                  <h3 className="text-base font-bold text-black mb-6 uppercase tracking-wider">Staff Picks</h3>
+                  <div className="space-y-6">
+                    {/* MOCK DATA: Limit to 3 items similar to provided design */}
+                    {[1, 2, 3].map((_, idx) => (
+                      <div key={idx} className="cursor-pointer group">
+                        <div className="flex items-center gap-2 mb-2 text-xs">
+                          <div className="w-5 h-5 rounded-full bg-gray-900 overflow-hidden">
+                            {/* Mock Avatar */}
+                            <img src={`https://i.pravatar.cc/150?u=${idx}`} alt="avatar" className="w-full h-full object-cover" />
+                          </div>
+                          <span className="font-semibold text-gray-900">Staff Writer {idx + 1}</span>
+                          {idx === 0 && <i className="bi bi-patch-check-fill text-red-500 text-[10px]"></i>}
+                        </div>
+                        <h4 className="text-base font-bold text-gray-900 mb-1 leading-snug group-hover:text-red-600 transition-colors">
+                          {idx === 0
+                            ? "Here Are My Favorite Books, Movies, and Music of 2024"
+                            : idx === 1
+                              ? "I'm a Psychologist and I Let My Kids Have Screen Time"
+                              : "You Can't Save the Web With Biz Dev Deals"
+                          }
+                        </h4>
+                        {idx === 1 && (
+                          <p className="text-xs text-gray-500 line-clamp-2 mt-1 mb-1">
+                            Current research suggests that screen time isn't the enemy we think it is.
+                          </p>
+                        )}
+                        <div className="text-xs text-gray-500 mt-1">
+                          {idx === 0 ? "1d ago" : idx === 1 ? "6d ago" : "Dec 13"}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <button className="text-sm text-red-600 mt-6 hover:text-red-700 font-medium">
+                    See the full list
+                  </button>
+                </div>
+
+                {/* Promo Box */}
+                <div className="bg-red-50 p-6 rounded-lg relative overflow-hidden">
+                  <div className="relative z-10">
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">Writing on Olaf</h3>
+                    <p className="text-sm text-gray-700 mb-4">New to writing? Output your stories here.</p>
+                    <button className="px-4 py-2 bg-red-600 text-white rounded-full text-sm font-medium hover:bg-red-700 transition-colors">
+                      Start writing
+                    </button>
+                  </div>
+                  <div className="absolute -right-4 -bottom-4 opacity-10 text-9xl text-red-900">
+                    <i className="bi bi-pen"></i>
+                  </div>
+                </div>
+
+                {/* Recommended Topics */}
+                <div>
+                  <h3 className="text-base font-bold text-black mb-4">Recommended topics</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {['Technology', 'Psychology', 'Writing', 'Business', 'Design', 'Life', 'Politics'].map(tag => (
+                      <span key={tag} className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 hover:text-red-600 cursor-pointer transition-colors no-underline">
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -552,30 +678,30 @@ export default function Feed() {
       <div className="w-full py-12">
         <div className="w-full md:container md:mx-auto px-4">
           <div className="p-8 md:p-12">
-          <div className="max-w-2xl mx-auto text-center">
-            <h2
-              className="text-3xl md:text-4xl font-semibold text-black mb-4"
-              style={{ fontFamily: "'Playfair Display', serif" }}
-            >
-              Stay Updated
-            </h2>
-            <p
-              className="text-lg text-black mb-8"
-              style={{ fontFamily: "'Lora', serif" }}
-            >
-              Get the latest posts and updates delivered to your inbox
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="flex-1 px-4 py-3 rounded-lg border border-black bg-white text-black focus:outline-none focus:ring-2 focus:ring-black"
-              />
-              <Button variant="primary" className="px-6">
-                Subscribe
-              </Button>
+            <div className="max-w-2xl mx-auto text-center">
+              <h2
+                className="text-3xl md:text-4xl font-semibold text-gray-900 mb-4"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                Stay Updated
+              </h2>
+              <p
+                className="text-lg text-gray-600 mb-8"
+                style={{ fontFamily: "'Lora', serif" }}
+              >
+                Get the latest posts and updates delivered to your inbox
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="flex-1 px-4 py-3 rounded-lg border border-gray-300 bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-red-600 focus:border-transparent"
+                />
+                <Button className="px-6 bg-red-600 hover:bg-red-700 text-white border-0">
+                  Subscribe
+                </Button>
+              </div>
             </div>
-          </div>
           </div>
         </div>
       </div>

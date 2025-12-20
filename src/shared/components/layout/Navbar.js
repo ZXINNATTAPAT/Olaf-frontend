@@ -49,6 +49,14 @@ export default function Navbar() {
           [data-theme="dark"] nav.navbar .nav-link:hover {
             color: rgba(255, 255, 255, 0.6) !important;
           }
+          /* Fix for Signup button text color */
+          nav.navbar .nav-link.signup-btn {
+            color: #ffffff !important;
+          }
+          nav.navbar .nav-link.signup-btn:hover {
+            color: #ffffff !important;
+            opacity: 0.9;
+          }
         `}</style>
         <div className="container-fluid d-flex justify-content-between align-items-center px-0">
           <div className="container mx-auto d-flex justify-content-between align-items-center w-100" style={{ maxWidth: "1192px", background: "transparent", paddingLeft: "1rem", paddingRight: "1rem" }}>
@@ -63,14 +71,13 @@ export default function Navbar() {
               {/* Signup Button */}
               {(!user || Object.keys(user).length === 0) && (
                 <NavLink
-                  className="nav-link"
+                  className="nav-link signup-btn"
                   to="/auth/register"
                   style={{
                     fontSize: "14px",
                     padding: "0.5rem 1rem",
                     borderRadius: "4px",
-                    backgroundColor: "rgba(0, 0, 0, 0.84)",
-                    color: "white !important"
+                    backgroundColor: "rgba(0, 0, 0, 0.84)"
                   }}
                 >
                   Sign up
