@@ -4,7 +4,7 @@ import ApiController from "../../../shared/services/ApiController";
 import { getImageUrl } from "../../../shared/services/CloudinaryService";
 import {
   LazyImage,
-  CardSkeleton,
+  ArticleSkeleton,
   Button,
   PostCard,
 } from "../../../shared/components";
@@ -161,10 +161,8 @@ export default function View() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-bg-primary py-8">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <CardSkeleton type="large" />
-        </div>
+      <div className="min-h-screen bg-white">
+        <ArticleSkeleton />
       </div>
     );
   }
@@ -238,13 +236,12 @@ export default function View() {
   const readingTime = calculateReadingTime(p_data.post_text);
 
   return (
-    <div className="min-h-screen bg-bg-primary py-6 md:py-8">
+    <div className="min-h-screen bg-white py-6 md:py-12">
       {/* Reading Progress Bar */}
       <div
         className="fixed top-0 left-0 right-0 h-1 z-50 transition-all duration-300"
         style={{
-          background:
-            "linear-gradient(to right, rgba(59, 130, 246, 0.8), rgba(147, 51, 234, 0.8))",
+          background: "linear-gradient(to right, #dc2626, #fca5a5)",
           transform: `scaleX(${readingProgress / 100})`,
           transformOrigin: "left",
           opacity: readingProgress > 0 && readingProgress < 100 ? 1 : 0,
@@ -253,29 +250,27 @@ export default function View() {
 
       <div className="container mx-auto px-4 max-w-4xl">
         {/* Breadcrumb */}
-        <div className="mb-4">
-          <nav className="text-sm text-black">
-            <Link to="/" className="hover:opacity-70 transition-opacity">
+        <div className="mb-8 md:mb-12">
+          <nav className="text-sm text-black flex items-center">
+            <Link to="/" className="hover:text-red-600 transition-colors">
               Home
             </Link>
-            <span className="mx-2">/</span>
-            <Link to="/feed" className="hover:opacity-70 transition-opacity">
-              Blog Grid
+            <span className="mx-3 text-gray-400">/</span>
+            <Link to="/feed" className="hover:text-red-600 transition-colors">
+              Feeds
             </Link>
-            <span className="mx-2">/</span>
-            <span className="text-black">Post</span>
+            <span className="mx-3 text-gray-400">/</span>
+            <span className="text-gray-900 font-medium truncate max-w-[200px]">{p_data.header}</span>
           </nav>
         </div>
 
-        {/* Article with Grid Borders */}
+        {/* Article */}
         <article
           ref={articleRef}
-          className="mb-6 border-t border-l border-r border-border-color animate-fadeIn"
-          style={{
-            animation: "fadeIn 0.5s ease-in-out",
-          }}
+          className="mb-16 animate-fadeIn"
+          style={{ animation: "fadeIn 0.5s ease-in-out" }}
         >
-          <div className="p-6 md:p-8 border-b border-border-color">
+          <div className="md:px-4">
             <PostHeader
               post={p_data}
               likesCount={likesCount}
@@ -286,12 +281,11 @@ export default function View() {
 
             {/* Main Image */}
             {mainImageUrl && (
-              <div className="mb-6 rounded-xl overflow-hidden group cursor-pointer transition-transform duration-300 hover:scale-[1.02]">
+              <div className="my-8 md:my-10 rounded-xl overflow-hidden shadow-sm">
                 <LazyImage
                   src={mainImageUrl}
                   alt={p_data.primary_image?.caption || p_data.header}
-                  className="w-full rounded-xl shadow-lg object-cover transition-transform duration-500 group-hover:scale-105"
-                  style={{ maxHeight: "500px" }}
+                  className="w-full object-cover max-h-[600px]"
                   imageType="VIEW_MAIN"
                   onClick={() => window.open(mainImageUrl, "_blank")}
                 />
@@ -300,8 +294,8 @@ export default function View() {
 
             {/* Additional Images Gallery */}
             {p_data.images && p_data.images.length > 1 && (
-              <div className="mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {p_data.images
                     .filter((img) => !img.is_primary)
                     .map((img, index) => (
@@ -312,19 +306,11 @@ export default function View() {
                         <LazyImage
                           src={img.image_secure_url}
                           alt={img.caption || `Post image ${index + 2}`}
-                          className="w-full h-64 rounded-xl shadow-lg object-cover"
+                          className="w-full h-64 shadow-sm object-cover"
                           imageType="VIEW_MAIN"
                         />
                         {img.caption && (
-                          <div
-                            className="absolute bottom-0 left-0 right-0 p-4 rounded-b-xl"
-                            style={{
-                              background:
-                                "linear-gradient(to top, rgba(0, 0, 0, 0.7), transparent)",
-                              backdropFilter: "blur(10px)",
-                              WebkitBackdropFilter: "blur(10px)",
-                            }}
-                          >
+                          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
                             <p className="text-white text-sm mb-0">
                               {img.caption}
                             </p>
@@ -337,48 +323,48 @@ export default function View() {
             )}
 
             {/* Content */}
-            <div className="mb-6">
+            <div className="mb-10 max-w-[700px] mx-auto">
               {readingTime > 0 && (
-                <div className="mb-4 text-sm text-text-muted flex items-center gap-2">
-                  <span>📖</span>
+                <div className="mb-6 flex items-center gap-2 text-sm text-gray-500 font-medium">
+                  <i className="bi bi-book"></i>
                   <span>{readingTime} min read</span>
                 </div>
               )}
               <div
-                className="text-lg leading-relaxed text-text-primary prose prose-lg max-w-none rich-text-content"
+                className="text-lg md:text-xl leading-relaxed text-gray-800 prose prose-lg prose-headings:font-serif prose-headings:font-bold prose-p:font-serif prose-p:leading-8 max-w-none"
+                style={{ fontFamily: "'Lora', serif" }}
                 dangerouslySetInnerHTML={{ __html: p_data.post_text || "" }}
               />
             </div>
 
             {/* Actions */}
-            <PostActions
-              post={p_data}
-              user={user}
-              onLikesCountChange={handleLikesCountChange}
-              onDeleteSuccess={handleDeletePost}
-            />
+            <div className="border-t border-b border-gray-100 py-6 my-12 max-w-[700px] mx-auto">
+              <PostActions
+                post={p_data}
+                user={user}
+                onLikesCountChange={handleLikesCountChange}
+                onDeleteSuccess={handleDeletePost}
+              />
+            </div>
           </div>
         </article>
 
         {/* Related Posts Section */}
         {relatedPosts.length > 0 && (
-          <div
-            className="mt-12 mb-6 animate-fadeIn"
-            style={{
-              animation: "fadeIn 0.5s ease-in-out 0.3s both",
-            }}
-          >
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold text-text-primary mb-2">
-                Related Posts
+          <div className="mt-16 mb-16 border-t border-gray-200 pt-16">
+            <div className="mb-8 text-center">
+              <h2
+                className="text-3xl font-bold text-gray-900 mb-2"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
+                More to Read
               </h2>
-              <p className="text-text-muted">You might also like</p>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {relatedPosts.map((post) => (
                 <div
                   key={post.post_id}
-                  className="border-t border-l border-r border-b border-border-color p-4 cursor-pointer group transition-all duration-300 hover:opacity-90"
+                  className="cursor-pointer group"
                   onClick={() => redirectx(String(post.post_id))}
                 >
                   <PostCard
@@ -391,22 +377,14 @@ export default function View() {
           </div>
         )}
 
-        {/* Comments Section with Grid Borders */}
-        <div
-          id="comments-section"
-          className="border-t border-l border-r border-b border-border-color animate-fadeIn"
-          style={{
-            animation: "fadeIn 0.5s ease-in-out 0.2s both",
-          }}
-        >
-          <div className="p-6 md:p-8">
-            <CommentSection
-              post_id={p_data.post_id}
-              onCommentsCountChange={handleCommentsCountChange}
-              initialComments={comments}
-              initialLoading={false}
-            />
-          </div>
+        {/* Comments Section */}
+        <div id="comments-section" className="max-w-[800px] mx-auto">
+          <CommentSection
+            post_id={p_data.post_id}
+            onCommentsCountChange={handleCommentsCountChange}
+            initialComments={comments}
+            initialLoading={false}
+          />
         </div>
       </div>
 
@@ -414,17 +392,10 @@ export default function View() {
       {showScrollTop && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-40 p-4 rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl"
-          style={{
-            background: "rgba(255, 255, 255, 0.9)",
-            backdropFilter: "blur(20px) saturate(180%)",
-            WebkitBackdropFilter: "blur(20px) saturate(180%)",
-            border: "1px solid rgba(255, 255, 255, 0.3)",
-            animation: "fadeIn 0.3s ease-in-out",
-          }}
+          className="fixed bottom-8 right-8 z-40 p-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-white border border-gray-100 group"
           aria-label="Scroll to top"
         >
-          <FiArrowUp className="text-2xl text-text-primary" />
+          <FiArrowUp className="text-xl text-gray-900 group-hover:text-red-600 transition-colors" />
         </button>
       )}
     </div>

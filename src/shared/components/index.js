@@ -11,6 +11,7 @@ export { default as LazyImage } from './LazyImage';
 
 // UI Components
 export { default as CardSkeleton } from './CardSkeleton';
+export { default as ArticleSkeleton } from './ArticleSkeleton';
 export { default as ProfileSkeleton } from './ProfileSkeleton';
 export { default as ThemeToggle } from './ThemeToggle';
 
