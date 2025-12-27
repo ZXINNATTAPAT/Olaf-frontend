@@ -130,7 +130,10 @@ export default function View() {
       setLoading(true);
       setError(null);
 
-      const result = await ApiController.getPostById(id);
+      // Extract numeric ID if slug is present (e.g. "123-my-post" -> "123")
+      const realId = id.includes("-") ? id.split("-")[0] : id;
+
+      const result = await ApiController.getPostById(realId);
       if (!result.success) {
         throw new Error(result.error || "Failed to fetch post");
       }
@@ -260,7 +263,9 @@ export default function View() {
               Feeds
             </Link>
             <span className="mx-3 text-gray-400">/</span>
-            <span className="text-gray-900 font-medium truncate max-w-[200px]">{p_data.header}</span>
+            <span className="text-gray-900 font-medium truncate max-w-[200px]">
+              {p_data.header}
+            </span>
           </nav>
         </div>
 
@@ -365,11 +370,11 @@ export default function View() {
                 <div
                   key={post.post_id}
                   className="cursor-pointer group"
-                  onClick={() => redirectx(String(post.post_id))}
+                  onClick={() => redirectx(String(post.post_id), post.header)}
                 >
                   <PostCard
                     post={post}
-                    onClick={() => redirectx(String(post.post_id))}
+                    onClick={() => redirectx(String(post.post_id), post.header)}
                   />
                 </div>
               ))}

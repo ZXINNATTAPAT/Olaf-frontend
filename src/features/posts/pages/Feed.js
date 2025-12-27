@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+import React, {
+  useEffect,
+  useState,
+  useRef,
+  useCallback,
+  useMemo,
+} from "react";
 import { Link } from "react-router-dom";
-import {
-  Footer,
-  CardSkeleton,
-  ThemeToggle,
-  LazyImage,
-} from "../../../shared/components";
+import { Footer, CardSkeleton, LazyImage } from "../../../shared/components";
 import { useRedirect } from "../../../shared/hooks";
 import ApiController from "../../../shared/services/ApiController";
 import {
@@ -32,7 +33,7 @@ export default function Feed() {
   // Extract unique categories from posts, with mock data fallback
   const categories = useMemo(() => {
     const categorySet = new Set();
-    p_data.forEach(post => {
+    p_data.forEach((post) => {
       if (post.topic) {
         categorySet.add(post.topic);
       }
@@ -40,7 +41,7 @@ export default function Feed() {
 
     // Mock categories if no data available
     if (categorySet.size === 0) {
-      return ['Technology', 'Design', 'Business', 'Lifestyle', 'Culture'];
+      return ["Technology", "Design", "Business", "Lifestyle", "Culture"];
     }
 
     return Array.from(categorySet).sort();
@@ -186,9 +187,11 @@ export default function Feed() {
           // Handle user object or string
           let userName = "Unknown User";
           if (post.user) {
-            if (typeof post.user === 'object' && post.user.first_name) {
-              userName = `${post.user.first_name} ${post.user.last_name || ''}`.trim();
-            } else if (typeof post.user === 'string') {
+            if (typeof post.user === "object" && post.user.first_name) {
+              userName = `${post.user.first_name} ${
+                post.user.last_name || ""
+              }`.trim();
+            } else if (typeof post.user === "string") {
               userName = post.user;
             }
           }
@@ -296,7 +299,8 @@ export default function Feed() {
               ? FEED_CONFIG.RENDER_FREE_TIER_DELAY
               : FEED_CONFIG.RETRY_DELAY;
           console.log(
-            `🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES
+            `🔄 Retrying in ${delay}ms (attempt ${retryCount + 1}/${
+              FEED_CONFIG.MAX_RETRIES
             })`
           );
           isRetrying.current = false;
@@ -339,7 +343,6 @@ export default function Feed() {
 
   return (
     <div className="min-h-screen bg-white">
-      <ThemeToggle />
       <div className="w-full md:container md:mx-auto px-4 mt-8 mb-6">
         {/* Breadcrumb - No Border */}
         <nav className="text-sm text-black flex items-center mb-10">
@@ -370,17 +373,21 @@ export default function Feed() {
         <div className="w-full mb-4">
           <div className="w-full md:container md:mx-auto px-4 py-2">
             <div className="flex flex-col sm:flex-row items-center gap-6">
-              <span className="text-sm font-bold text-gray-400 uppercase tracking-[0.15em] shrink-0" style={{ fontFamily: "'Playfair Display', serif" }}>
+              <span
+                className="text-sm font-bold text-gray-400 uppercase tracking-[0.15em] shrink-0"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
                 Categories:
               </span>
               <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
                 <button
-                  onClick={() => setActiveFilter('all')}
+                  onClick={() => setActiveFilter("all")}
                   className={`
                     px-6 py-2 text-xs font-bold rounded-full transition-all duration-300 uppercase tracking-widest border
-                    ${activeFilter === 'all'
-                      ? 'bg-red-600 text-white border-red-600'
-                      : 'bg-white text-gray-400 border-gray-200 hover:border-red-600 hover:text-red-600'
+                    ${
+                      activeFilter === "all"
+                        ? "bg-red-600 text-white border-red-600"
+                        : "bg-white text-gray-400 border-gray-200 hover:border-red-600 hover:text-red-600"
                     }
                   `}
                   style={{ fontFamily: "'Playfair Display', serif" }}
@@ -395,9 +402,10 @@ export default function Feed() {
                       onClick={() => setActiveFilter(`category:${category}`)}
                       className={`
                         px-6 py-2 text-xs font-bold rounded-full transition-all duration-300 uppercase tracking-widest border
-                        ${isActive
-                          ? 'bg-red-600 text-white border-red-600'
-                          : 'bg-white text-gray-400 border-gray-200 hover:border-red-600 hover:text-red-600'
+                        ${
+                          isActive
+                            ? "bg-red-600 text-white border-red-600"
+                            : "bg-white text-gray-400 border-gray-200 hover:border-red-600 hover:text-red-600"
                         }
                       `}
                       style={{ fontFamily: "'Playfair Display', serif" }}
@@ -429,13 +437,12 @@ export default function Feed() {
                   </>
                 ) : filteredData.length > 0 ? (
                   filteredData.map((post) => (
-                    <div
-                      key={post.post_id}
-                      className="col-span-1"
-                    >
+                    <div key={post.post_id} className="col-span-1">
                       <PostCard
                         post={post}
-                        onClick={() => redirectx(String(post.post_id))}
+                        onClick={() =>
+                          redirectx(String(post.post_id), post.header)
+                        }
                       />
                     </div>
                   ))
@@ -453,10 +460,13 @@ export default function Feed() {
                                 className="spinner-border spinner-border-sm text-red-600"
                                 role="status"
                               >
-                                <span className="visually-hidden">Loading...</span>
+                                <span className="visually-hidden">
+                                  Loading...
+                                </span>
                               </div>
                               <span className="text-sm text-gray-500">
-                                Retrying... ({retryCount}/{FEED_CONFIG.MAX_RETRIES})
+                                Retrying... ({retryCount}/
+                                {FEED_CONFIG.MAX_RETRIES})
                               </span>
                             </div>
                           )}
@@ -489,7 +499,9 @@ export default function Feed() {
                         {/* Centered Overlay Text */}
                         <div className="absolute inset-0 flex items-center justify-center z-10">
                           <div className="px-8 py-4 bg-white/80 backdrop-blur-[2px] border border-gray-100 rounded-lg shadow-sm text-center">
-                            <span className="text-lg font-medium text-gray-500 uppercase tracking-widest">No posts found</span>
+                            <span className="text-lg font-medium text-gray-500 uppercase tracking-widest">
+                              No posts found
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -529,7 +541,9 @@ export default function Feed() {
                     <div
                       key={post.post_id}
                       className="cursor-pointer group py-8 first:pt-0"
-                      onClick={() => redirectx(String(post.post_id))}
+                      onClick={() =>
+                        redirectx(String(post.post_id), post.header)
+                      }
                     >
                       <div className="flex flex-col md:flex-row gap-8 items-start">
                         {/* Text Content */}
@@ -538,14 +552,20 @@ export default function Feed() {
                             <div className="flex items-center gap-2">
                               <div className="w-5 h-5 rounded-full bg-gray-200 overflow-hidden">
                                 {post.user_image ? (
-                                  <img src={post.user_image} alt={post.user} className="w-full h-full object-cover" />
+                                  <img
+                                    src={post.user_image}
+                                    alt={post.user}
+                                    className="w-full h-full object-cover"
+                                  />
                                 ) : (
                                   <div className="w-full h-full flex items-center justify-center bg-gray-300 text-gray-500 text-[10px]">
-                                    {post.user ? post.user.charAt(0) : 'U'}
+                                    {post.user ? post.user.charAt(0) : "U"}
                                   </div>
                                 )}
                               </div>
-                              <span className="text-gray-900 font-semibold">{post.user || 'Author'}</span>
+                              <span className="text-gray-900 font-semibold">
+                                {post.user || "Author"}
+                              </span>
                             </div>
                             <span className="text-gray-300">•</span>
                             <span>{post.post_datetime}</span>
@@ -567,9 +587,12 @@ export default function Feed() {
 
                           <div className="flex items-center gap-4 text-xs text-gray-500">
                             <div className="px-2 py-1 bg-gray-100 rounded-full text-gray-700 font-medium">
-                              {post.topic || 'General'}
+                              {post.topic || "General"}
                             </div>
-                            <span>{Math.ceil((post.short?.length || 0) / 200)} min read</span>
+                            <span>
+                              {Math.ceil((post.short?.length || 0) / 200)} min
+                              read
+                            </span>
                           </div>
                         </div>
 
@@ -592,7 +615,7 @@ export default function Feed() {
                   {visiblePosts < filteredData.length && (
                     <div className="mt-8 text-center border-t border-gray-100 pt-8">
                       <button
-                        onClick={() => setVisiblePosts(prev => prev + 5)}
+                        onClick={() => setVisiblePosts((prev) => prev + 5)}
                         className="px-6 py-2 border border-red-600 text-red-600 text-sm font-medium rounded-full hover:bg-red-600 hover:text-white transition-all duration-300"
                       >
                         Show more
@@ -606,7 +629,9 @@ export default function Feed() {
               <div className="w-full lg:w-1/3 space-y-12">
                 {/* Staff Picks Section */}
                 <div>
-                  <h3 className="text-base font-bold text-black mb-6 uppercase tracking-wider">Staff Picks</h3>
+                  <h3 className="text-base font-bold text-black mb-6 uppercase tracking-wider">
+                    Staff Picks
+                  </h3>
                   <div className="space-y-6">
                     {/* MOCK DATA: Limit to 3 items similar to provided design */}
                     {[1, 2, 3].map((_, idx) => (
@@ -614,26 +639,38 @@ export default function Feed() {
                         <div className="flex items-center gap-2 mb-2 text-xs">
                           <div className="w-5 h-5 rounded-full bg-gray-900 overflow-hidden">
                             {/* Mock Avatar */}
-                            <img src={`https://i.pravatar.cc/150?u=${idx}`} alt="avatar" className="w-full h-full object-cover" />
+                            <img
+                              src={`https://i.pravatar.cc/150?u=${idx}`}
+                              alt="avatar"
+                              className="w-full h-full object-cover"
+                            />
                           </div>
-                          <span className="font-semibold text-gray-900">Staff Writer {idx + 1}</span>
-                          {idx === 0 && <i className="bi bi-patch-check-fill text-red-500 text-[10px]"></i>}
+                          <span className="font-semibold text-gray-900">
+                            Staff Writer {idx + 1}
+                          </span>
+                          {idx === 0 && (
+                            <i className="bi bi-patch-check-fill text-red-500 text-[10px]"></i>
+                          )}
                         </div>
                         <h4 className="text-base font-bold text-gray-900 mb-1 leading-snug group-hover:text-red-600 transition-colors">
                           {idx === 0
                             ? "Here Are My Favorite Books, Movies, and Music of 2024"
                             : idx === 1
-                              ? "I'm a Psychologist and I Let My Kids Have Screen Time"
-                              : "You Can't Save the Web With Biz Dev Deals"
-                          }
+                            ? "I'm a Psychologist and I Let My Kids Have Screen Time"
+                            : "You Can't Save the Web With Biz Dev Deals"}
                         </h4>
                         {idx === 1 && (
                           <p className="text-xs text-gray-500 line-clamp-2 mt-1 mb-1">
-                            Current research suggests that screen time isn't the enemy we think it is.
+                            Current research suggests that screen time isn't the
+                            enemy we think it is.
                           </p>
                         )}
                         <div className="text-xs text-gray-500 mt-1">
-                          {idx === 0 ? "1d ago" : idx === 1 ? "6d ago" : "Dec 13"}
+                          {idx === 0
+                            ? "1d ago"
+                            : idx === 1
+                            ? "6d ago"
+                            : "Dec 13"}
                         </div>
                       </div>
                     ))}
@@ -646,8 +683,12 @@ export default function Feed() {
                 {/* Promo Box */}
                 <div className="bg-red-50 p-6 rounded-lg relative overflow-hidden">
                   <div className="relative z-10">
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">Writing on Olaf</h3>
-                    <p className="text-sm text-gray-700 mb-4">New to writing? Output your stories here.</p>
+                    <h3 className="text-lg font-bold text-gray-900 mb-2">
+                      Writing on Olaf
+                    </h3>
+                    <p className="text-sm text-gray-700 mb-4">
+                      New to writing? Output your stories here.
+                    </p>
                     <button className="px-4 py-2 bg-red-600 text-white rounded-full text-sm font-medium hover:bg-red-700 transition-colors">
                       Start writing
                     </button>
@@ -659,10 +700,23 @@ export default function Feed() {
 
                 {/* Recommended Topics */}
                 <div>
-                  <h3 className="text-base font-bold text-black mb-4">Recommended topics</h3>
+                  <h3 className="text-base font-bold text-black mb-4">
+                    Recommended topics
+                  </h3>
                   <div className="flex flex-wrap gap-2">
-                    {['Technology', 'Psychology', 'Writing', 'Business', 'Design', 'Life', 'Politics'].map(tag => (
-                      <span key={tag} className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 hover:text-red-600 cursor-pointer transition-colors no-underline">
+                    {[
+                      "Technology",
+                      "Psychology",
+                      "Writing",
+                      "Business",
+                      "Design",
+                      "Life",
+                      "Politics",
+                    ].map((tag) => (
+                      <span
+                        key={tag}
+                        className="px-3 py-1.5 bg-gray-100 rounded-full text-xs font-medium text-gray-600 hover:bg-gray-200 hover:text-red-600 cursor-pointer transition-colors no-underline"
+                      >
                         {tag}
                       </span>
                     ))}

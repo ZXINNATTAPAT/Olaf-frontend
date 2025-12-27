@@ -1,13 +1,23 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from "react-router-dom";
 
 export function useRedirect() {
   const navigate = useNavigate();
 
-  const redirect = (s) => {
-    if (typeof s !== 'string') {
-      throw new Error('Invalid input');
+  const redirect = (id, title = "") => {
+    let target = String(id);
+    if (title) {
+      const slug = title
+        .trim()
+        .replace(/\s+/g, "-") // Replace spaces with -
+        .replace(/[^\w\u0E00-\u0E7F-]+/g, "") // Remove special chars (keep Thai & English)
+        .replace(/-+/g, "-") // Remove multiple -
+        .toLowerCase();
+
+      if (slug) {
+        target = `${id}-${slug}`;
+      }
     }
-    navigate(`/vFeed/${s}`);
+    navigate(`/vFeed/${target}`);
   };
 
   return redirect;

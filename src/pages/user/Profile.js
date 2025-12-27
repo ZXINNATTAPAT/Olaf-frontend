@@ -1,10 +1,18 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import useAuth from "../../shared/hooks/useAuth";
-import { ThemeToggle, ProfileSkeleton, CardSkeleton } from "../../shared/components";
+import { ProfileSkeleton, CardSkeleton } from "../../shared/components";
 import ApiController from "../../shared/services/ApiController";
-import { ERROR_MESSAGES, FEED_CONFIG } from "../../shared/constants/apiConstants";
-import { ProfileHeader, ProfileSidebar, PostCard, Button } from "../../shared/components";
+import {
+  ERROR_MESSAGES,
+  FEED_CONFIG,
+} from "../../shared/constants/apiConstants";
+import {
+  ProfileHeader,
+  ProfileSidebar,
+  PostCard,
+  Button,
+} from "../../shared/components";
 import { useRedirect } from "../../shared/hooks";
 
 export default function Profile() {
@@ -21,168 +29,195 @@ export default function Profile() {
   const cacheRef = useRef({ data: null, timestamp: 0 });
   const isRetrying = useRef(false);
 
-  const fetchProfileData = useCallback(async (page = 1, isLoadMore = false, isRetry = false) => {
-    let isMounted = true;
+  const fetchProfileData = useCallback(
+    async (page = 1, isLoadMore = false, isRetry = false) => {
+      let isMounted = true;
 
-    if (!isLoadMore && !isRetry) {
-      const now = Date.now();
-      if (cacheRef.current.data && (now - cacheRef.current.timestamp) < FEED_CONFIG.CACHE_DURATION) {
-        console.log('✅ Profile Cache HIT - Using cached data');
-        setp_data(cacheRef.current.data);
-        setIsLoading(false);
-        return;
-      }
-      console.log('❌ Profile Cache MISS - Fetching from API');
-    }
-
-    try {
-      if (isLoadMore) {
-        setIsLoadingMore(true);
-      } else if (!isRetry) {
-        setIsLoading(true);
-      }
-      setError(null);
-
-      if (!isLoadMore) {
-        if (user && user.id) {
-          setProfileData(user);
-        } else {
-          const profileResult = await ApiController.getUserProfile();
-          if (!isMounted) return;
-          if (!profileResult.success) {
-            throw new Error(profileResult.error || "Fetching profile failed");
-          }
-          setProfileData(profileResult.data);
+      if (!isLoadMore && !isRetry) {
+        const now = Date.now();
+        if (
+          cacheRef.current.data &&
+          now - cacheRef.current.timestamp < FEED_CONFIG.CACHE_DURATION
+        ) {
+          console.log("✅ Profile Cache HIT - Using cached data");
+          setp_data(cacheRef.current.data);
+          setIsLoading(false);
+          return;
         }
+        console.log("❌ Profile Cache MISS - Fetching from API");
       }
 
-      const postsResult = await ApiController.getPosts({
-        user: profileData?.id || user.id,
-        page: page,
-        limit: 10,
-      });
+      try {
+        if (isLoadMore) {
+          setIsLoadingMore(true);
+        } else if (!isRetry) {
+          setIsLoading(true);
+        }
+        setError(null);
 
-      if (!isMounted) return;
-
-      if (!postsResult.success) {
-        throw new Error(postsResult.error || "Fetching posts failed");
-      }
-
-      const postData = postsResult.data;
-      const totalCount = postsResult.count || postData.length;
-
-      const updatedPosts = postData.map((post) => {
-        const userName = post.user && typeof post.user === "object"
-          ? `${post.user.first_name} ${post.user.last_name}`
-          : "Unknown User";
-
-        const calculateTimePassed = (postDate) => {
-          const postDateTime = new Date(postDate);
-          const now = new Date();
-          const timeDiff = now - postDateTime;
-          const diffHours = Math.floor(timeDiff / (1000 * 60 * 60));
-          const diffMinutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-
-          if (diffHours < 24) {
-            if (diffHours === 0) return `${diffMinutes} minutes ago`;
-            return `${diffHours} hr ${diffMinutes} min ago`;
+        if (!isLoadMore) {
+          if (user && user.id) {
+            setProfileData(user);
           } else {
-            const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
-            if (diffDays < 30) return `${diffDays} days ago`;
-            else if (diffDays < 365) {
-              const diffMonths = Math.floor(diffDays / 30);
-              return `${diffMonths} months ago`;
-            } else {
-              const diffYears = Math.floor(diffDays / 365);
-              return `${diffYears} years ago`;
+            const profileResult = await ApiController.getUserProfile();
+            if (!isMounted) return;
+            if (!profileResult.success) {
+              throw new Error(profileResult.error || "Fetching profile failed");
             }
+            setProfileData(profileResult.data);
           }
-        };
-
-        let imageUrl = null;
-        if (post.primary_image_url) {
-          imageUrl = post.primary_image_url;
-        } else if (post.primary_image && post.primary_image.image_secure_url) {
-          imageUrl = post.primary_image.image_secure_url;
-        } else if (post.images && post.images.length > 0 && post.images[0].image_secure_url) {
-          imageUrl = post.images[0].image_secure_url;
         }
 
-        return {
-          post_id: post.post_id,
-          user: userName,
-          header: post.header,
-          short: post.short,
-          image: imageUrl,
-          post_datetime: calculateTimePassed(post.post_datetime),
-          likesCount: post.like_count !== undefined ? post.like_count : 0,
-          commentsCount: post.comment_count !== undefined ? post.comment_count : 0,
-        };
-      });
+        const postsResult = await ApiController.getPosts({
+          user: profileData?.id || user.id,
+          page: page,
+          limit: 10,
+        });
 
-      if (isLoadMore) {
-        setp_data((prev) => [...prev, ...updatedPosts]);
-        setCurrentPage(page);
-      } else {
-        setp_data(updatedPosts);
-        cacheRef.current = {
-          data: updatedPosts,
-          timestamp: Date.now()
-        };
-      }
+        if (!isMounted) return;
 
-      setHasMore(updatedPosts.length === 10 && p_data.length + updatedPosts.length < totalCount);
-      setRetryCount(0);
-      isRetrying.current = false;
-    } catch (error) {
-      console.error("Error fetching profile data:", error);
+        if (!postsResult.success) {
+          throw new Error(postsResult.error || "Fetching posts failed");
+        }
 
-      const isNetworkError = (
-        error.message?.includes("Network error") ||
-        error.message?.includes("Backend server is not responding") ||
-        error.message?.includes("Network Error") ||
-        error.message?.includes("ECONNREFUSED") ||
-        error.message?.includes("ETIMEDOUT") ||
-        error.message?.includes("timeout")
-      );
+        const postData = postsResult.data;
+        const totalCount = postsResult.count || postData.length;
 
-      const shouldRetry = isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES && !isLoadMore;
+        const updatedPosts = postData.map((post) => {
+          const userName =
+            post.user && typeof post.user === "object"
+              ? `${post.user.first_name} ${post.user.last_name}`
+              : "Unknown User";
 
-      if (shouldRetry) {
-        isRetrying.current = true;
-        setRetryCount(prev => prev + 1);
-        const delay = retryCount === 0 ? FEED_CONFIG.RENDER_FREE_TIER_DELAY : FEED_CONFIG.RETRY_DELAY;
-        console.log(`🔄 Profile retrying in ${delay}ms (attempt ${retryCount + 1}/${FEED_CONFIG.MAX_RETRIES})`);
-        isRetrying.current = false;
-        fetchProfileData(page, isLoadMore, true);
-        return;
-      }
+          const calculateTimePassed = (postDate) => {
+            const postDateTime = new Date(postDate);
+            const now = new Date();
+            const timeDiff = now - postDateTime;
+            const diffHours = Math.floor(timeDiff / (1000 * 60 * 60));
+            const diffMinutes = Math.floor(
+              (timeDiff % (1000 * 60 * 60)) / (1000 * 60)
+            );
 
-      let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
-      if (isNetworkError) {
-        if (retryCount >= 2) {
-          errorMessage = ERROR_MESSAGES.COLD_START;
-        } else if (retryCount >= 1) {
-          errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER;
+            if (diffHours < 24) {
+              if (diffHours === 0) return `${diffMinutes} minutes ago`;
+              return `${diffHours} hr ${diffMinutes} min ago`;
+            } else {
+              const diffDays = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+              if (diffDays < 30) return `${diffDays} days ago`;
+              else if (diffDays < 365) {
+                const diffMonths = Math.floor(diffDays / 30);
+                return `${diffMonths} months ago`;
+              } else {
+                const diffYears = Math.floor(diffDays / 365);
+                return `${diffYears} years ago`;
+              }
+            }
+          };
+
+          let imageUrl = null;
+          if (post.primary_image_url) {
+            imageUrl = post.primary_image_url;
+          } else if (
+            post.primary_image &&
+            post.primary_image.image_secure_url
+          ) {
+            imageUrl = post.primary_image.image_secure_url;
+          } else if (
+            post.images &&
+            post.images.length > 0 &&
+            post.images[0].image_secure_url
+          ) {
+            imageUrl = post.images[0].image_secure_url;
+          }
+
+          return {
+            post_id: post.post_id,
+            user: userName,
+            header: post.header,
+            short: post.short,
+            image: imageUrl,
+            post_datetime: calculateTimePassed(post.post_datetime),
+            likesCount: post.like_count !== undefined ? post.like_count : 0,
+            commentsCount:
+              post.comment_count !== undefined ? post.comment_count : 0,
+          };
+        });
+
+        if (isLoadMore) {
+          setp_data((prev) => [...prev, ...updatedPosts]);
+          setCurrentPage(page);
         } else {
-          errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING;
+          setp_data(updatedPosts);
+          cacheRef.current = {
+            data: updatedPosts,
+            timestamp: Date.now(),
+          };
         }
-      } else if (error.message?.includes("timeout")) {
-        errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
 
-      setError(errorMessage);
-    } finally {
-      if (isLoadMore) {
-        setIsLoadingMore(false);
-      } else {
-        setIsLoading(false);
+        setHasMore(
+          updatedPosts.length === 10 &&
+            p_data.length + updatedPosts.length < totalCount
+        );
+        setRetryCount(0);
+        isRetrying.current = false;
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+
+        const isNetworkError =
+          error.message?.includes("Network error") ||
+          error.message?.includes("Backend server is not responding") ||
+          error.message?.includes("Network Error") ||
+          error.message?.includes("ECONNREFUSED") ||
+          error.message?.includes("ETIMEDOUT") ||
+          error.message?.includes("timeout");
+
+        const shouldRetry =
+          isNetworkError && retryCount < FEED_CONFIG.MAX_RETRIES && !isLoadMore;
+
+        if (shouldRetry) {
+          isRetrying.current = true;
+          setRetryCount((prev) => prev + 1);
+          const delay =
+            retryCount === 0
+              ? FEED_CONFIG.RENDER_FREE_TIER_DELAY
+              : FEED_CONFIG.RETRY_DELAY;
+          console.log(
+            `🔄 Profile retrying in ${delay}ms (attempt ${retryCount + 1}/${
+              FEED_CONFIG.MAX_RETRIES
+            })`
+          );
+          isRetrying.current = false;
+          fetchProfileData(page, isLoadMore, true);
+          return;
+        }
+
+        let errorMessage = ERROR_MESSAGES.UNKNOWN_ERROR;
+        if (isNetworkError) {
+          if (retryCount >= 2) {
+            errorMessage = ERROR_MESSAGES.COLD_START;
+          } else if (retryCount >= 1) {
+            errorMessage = ERROR_MESSAGES.RENDER_FREE_TIER;
+          } else {
+            errorMessage = ERROR_MESSAGES.BACKEND_NOT_RESPONDING;
+          }
+        } else if (error.message?.includes("timeout")) {
+          errorMessage = ERROR_MESSAGES.TIMEOUT_ERROR;
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+
+        setError(errorMessage);
+      } finally {
+        if (isLoadMore) {
+          setIsLoadingMore(false);
+        } else {
+          setIsLoading(false);
+        }
+        isRetrying.current = false;
       }
-      isRetrying.current = false;
-    }
-  }, [profileData?.id, user, p_data.length, retryCount]);
+    },
+    [profileData?.id, user, p_data.length, retryCount]
+  );
 
   const loadMorePosts = async () => {
     if (!isLoadingMore && hasMore) {
@@ -197,7 +232,6 @@ export default function Profile() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-bg-primary">
-        <ThemeToggle />
         <div className="container mx-auto px-4 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             <div className="lg:col-span-1">
@@ -229,20 +263,28 @@ export default function Profile() {
     );
   }
 
-  const totalLikes = p_data.reduce((sum, post) => sum + (post.likesCount || 0), 0);
-  const totalComments = p_data.reduce((sum, post) => sum + (post.commentsCount || 0), 0);
+  const totalLikes = p_data.reduce(
+    (sum, post) => sum + (post.likesCount || 0),
+    0
+  );
+  const totalComments = p_data.reduce(
+    (sum, post) => sum + (post.commentsCount || 0),
+    0
+  );
 
   return (
     <div className="min-h-screen bg-bg-primary">
-      <ThemeToggle />
-      <ProfileHeader profileData={profileData || user} currentUserId={user?.id} />
+      <ProfileHeader
+        profileData={profileData || user}
+        currentUserId={user?.id}
+      />
 
       <div className="container mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Profile Sidebar */}
           <div className="lg:col-span-1">
-            <ProfileSidebar 
-              profileData={profileData || user} 
+            <ProfileSidebar
+              profileData={profileData || user}
               postsCount={p_data.length}
             />
             <div className="mt-4 bg-bg-secondary border border-border-color rounded-xl p-4">
@@ -276,7 +318,8 @@ export default function Profile() {
                 Your Stories
               </h2>
               <p className="text-text-muted text-sm">
-                {p_data.length} {p_data.length === 1 ? "story" : "stories"} published
+                {p_data.length} {p_data.length === 1 ? "story" : "stories"}{" "}
+                published
               </p>
             </div>
 
@@ -303,7 +346,10 @@ export default function Profile() {
                     >
                       {isLoadingMore ? (
                         <>
-                          <span className="spinner-border spinner-border-sm me-2" role="status"></span>
+                          <span
+                            className="spinner-border spinner-border-sm me-2"
+                            role="status"
+                          ></span>
                           Loading...
                         </>
                       ) : (
