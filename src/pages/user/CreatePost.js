@@ -276,7 +276,6 @@ export default function CreatePost() {
 
       if (imageUrl) {
         // Use DTO structure
-        // Note: Axios interceptor will automatically handle authentication and token refresh
         const postData = sanitizeDTO(
           {
             header: values.header,
@@ -290,75 +289,17 @@ export default function CreatePost() {
           CreatePostWithImageRequestDTO
         );
 
-        // Use fetch instead of axios to ensure cookies are sent
-        // Axios may have issues with withCredentials in some browsers
-        const baseURL =
-          axiosInstance.defaults.baseURL || "http://localhost:8000/api";
+        const response = await axiosInstance.post(
+          "/posts/create-with-image/",
+          postData
+        );
+        const responseData = response.data;
 
-        // IMPORTANT: Check if cookies exist before making request
-        // Note: HttpOnly cookies cannot be read via document.cookie
-        // But we can check Application tab → Cookies → localhost:8000
-        if (process.env.NODE_ENV === "development") {
-          console.log("🔵 POST Request (fetch):", {
-            url: `${baseURL}/posts/create-with-image/`,
-            method: "POST",
-            credentials: "include",
-            hasCSRFToken: !!authService.csrfToken,
-            postData: postData,
-            note: "Check Network tab → Request Headers → Cookie to verify cookies are sent",
-          });
-          console.log("🍪 Cookie Check:", {
-            note: "HttpOnly cookies (access, refresh) cannot be read via JavaScript",
-            instruction:
-              "Please check DevTools → Application → Cookies → http://localhost:8000",
-            expectedCookies: ["access", "refresh", "csrftoken"],
-          });
-        }
-
-        // CRITICAL: Use credentials: 'include' to send cookies with cross-origin requests
-        // This is equivalent to withCredentials: true in axios
-        const response = await fetch(`${baseURL}/posts/create-with-image/`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": authService.csrfToken || "",
-          },
-          credentials: "include", // CRITICAL: This ensures cookies are sent with cross-origin requests
-          body: JSON.stringify(postData),
-        });
-
-        if (!response.ok) {
-          const errorData = await response
-            .json()
-            .catch(() => ({ detail: "Unknown error" }));
-
-          // If 401, check if cookies are being sent
-          if (response.status === 401) {
-            if (process.env.NODE_ENV === "development") {
-              console.error("❌ 401 Unauthorized - Cookies may not be sent");
-              console.error("🔍 Debug Info:", {
-                status: response.status,
-                statusText: response.statusText,
-                url: `${baseURL}/posts/create-with-image/`,
-                credentials: "include",
-                note: "Check Network tab → Request Headers → Cookie to verify cookies are sent",
-              });
-              runFullCookieDiagnostic();
-            }
-          }
-
-          throw new Error(
-            errorData.detail || errorData.error || "Failed to create post"
-          );
-        }
-
-        const responseData = await response.json();
+        console.log("Post created successfully:", responseData);
 
         console.log("Post created successfully:", responseData);
         setMessage("โพสต์ถูกสร้างสำเร็จแล้ว!");
         setMessageType("success");
-
-        // Clear draft on success
         clearDraft();
       } else {
         const postData = {
@@ -463,21 +404,24 @@ export default function CreatePost() {
   return (
     <>
       <Loader />
-      <div className="min-h-screen bg-bg-primary py-8">
+      <div className="min-h-screen bg-white py-12">
         <div className="container mx-auto px-4 max-w-6xl">
-          <h2 className="text-3xl font-bold text-text-primary mb-8">
+          <h2
+            className="text-4xl font-bold text-gray-900 mb-12 text-center md:text-left"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
             Create a New Post
           </h2>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-24">
             {/* Form Section */}
             <div>
-              <div className="bg-bg-secondary border border-border-color rounded-xl shadow-sm p-6">
+              <div className="bg-white">
                 <PostForm
                   initialValues={formData}
                   onSubmit={handleSubmit}
                   isSubmitting={isSubmitting}
-                  submitLabel="Create Post"
+                  submitLabel="Publish Post"
                   onImageChange={handleImageChange}
                   onFormChange={(values) =>
                     setFormData((prev) => ({ ...prev, ...values }))
@@ -485,46 +429,46 @@ export default function CreatePost() {
                 />
                 {/* Draft Restore Banner */}
                 {showDraftRestore && hasDraft() && (
-                  <div className="mt-4 p-4 rounded-lg bg-blue-50 text-blue-700 border border-blue-200">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">พบแบบร่างที่บันทึกไว้</p>
-                        <p className="text-sm text-blue-600">
-                          {formatDraftAge(getDraftAge())}
-                        </p>
-                      </div>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={restoreDraft}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                        >
-                          กู้คืน
-                        </button>
-                        <button
-                          onClick={discardDraft}
-                          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm"
-                        >
-                          ยกเลิก
-                        </button>
-                      </div>
+                  <div className="mt-8 p-4 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-gray-900 font-serif">
+                        Unsaved Draft Found
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDraftAge(getDraftAge())}
+                      </p>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        onClick={restoreDraft}
+                        className="px-4 py-2 bg-gray-900 text-white rounded-full hover:bg-black transition-colors text-xs font-medium uppercase tracking-wide"
+                      >
+                        Restore
+                      </button>
+                      <button
+                        onClick={discardDraft}
+                        className="px-4 py-2 border border-gray-200 text-gray-500 rounded-full hover:border-gray-400 hover:text-gray-900 transition-colors text-xs font-medium uppercase tracking-wide"
+                      >
+                        Discard
+                      </button>
                     </div>
                   </div>
                 )}
 
                 {/* Upload Progress */}
                 {uploadProgress > 0 && uploadProgress < 100 && (
-                  <div className="mt-4">
+                  <div className="mt-6">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-text-secondary">
-                        กำลังอัปโหลดรูปภาพ...
+                      <span className="text-sm font-medium text-gray-900">
+                        Uploading Image...
                       </span>
-                      <span className="text-sm text-text-secondary">
+                      <span className="text-sm text-gray-500">
                         {uploadProgress}%
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div className="w-full bg-gray-100 rounded-full h-1">
                       <div
-                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                        className="bg-red-600 h-1 rounded-full transition-all duration-300"
                         style={{ width: `${uploadProgress}%` }}
                       ></div>
                     </div>
@@ -534,37 +478,40 @@ export default function CreatePost() {
                 {/* Message Display */}
                 {message && (
                   <div
-                    className={`mt-4 p-4 rounded-lg ${
+                    className={`mt-6 p-4 rounded-lg flex items-center justify-between ${
                       messageType === "success"
-                        ? "bg-green-50 text-green-700 border border-green-200"
+                        ? "bg-green-50 text-green-800"
                         : messageType === "error"
-                        ? "bg-red-50 text-red-700 border border-red-200"
-                        : "bg-blue-50 text-blue-700 border border-blue-200"
+                        ? "bg-red-50 text-red-800"
+                        : "bg-blue-50 text-blue-800"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>{message}</span>
-                      <button
-                        onClick={() => {
-                          setMessage("");
-                          setMessageType("");
-                        }}
-                        className="ml-4 text-current opacity-70 hover:opacity-100"
-                      >
-                        ×
-                      </button>
-                    </div>
+                    <span className="text-sm font-medium">{message}</span>
+                    <button
+                      onClick={() => {
+                        setMessage("");
+                        setMessageType("");
+                      }}
+                      className="ml-4 text-current opacity-60 hover:opacity-100"
+                    >
+                      <i className="bi bi-x-lg"></i>
+                    </button>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Preview Section */}
-            <div>
-              <h3 className="text-xl font-semibold text-text-primary mb-4">
+            <div className="hidden lg:block sticky top-24 self-start">
+              <h3
+                className="text-2xl font-bold text-gray-900 mb-8"
+                style={{ fontFamily: "'Playfair Display', serif" }}
+              >
                 Preview
               </h3>
-              <PostPreview formData={formData} user={user} />
+              <div className="border border-gray-100 rounded-2xl p-6 shadow-sm">
+                <PostPreview formData={formData} user={user} />
+              </div>
             </div>
           </div>
         </div>
