@@ -25,9 +25,8 @@ const mockAxios = {
 };
 
 // Mock the specific exports that the axios/index.js file provides
-export const axiosInstance = mockAxiosInstance;
-export const axiosInstanceGet = mockAxiosInstance;
-export const axiosPrivateInstance = mockAxiosInstance;
-
-// Export both the instance and the main axios object
-export default mockAxios;
+module.exports = mockAxios;
+module.exports.axiosInstance = mockAxiosInstance;
+module.exports.axiosInstanceGet = mockAxiosInstance;
+module.exports.axiosPrivateInstance = mockAxiosInstance;
+module.exports.default = mockAxios;

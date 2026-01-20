@@ -12,7 +12,7 @@ module.exports = {
     '^../axios/index.js$': '<rootDir>/__mocks__/axios.js'
   },
   
-  // Transform ES modules in node_modules
+  // Transform ES modules in node_modules (exclude axios since we're mocking it)
   transformIgnorePatterns: [
     'node_modules/(?!(axios)/)'
   ],
