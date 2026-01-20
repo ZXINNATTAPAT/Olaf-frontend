@@ -4,24 +4,36 @@
 // learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom";
 
-// Suppress ReactDOMTestUtils.act deprecation warning
-// This warning comes from @testing-library/react and will be fixed in future versions
 const originalError = console.error;
+const originalWarn = console.warn;
+
 beforeAll(() => {
   console.error = (...args) => {
     if (
       typeof args[0] === "string" &&
-      args[0].includes("ReactDOMTestUtils.act") &&
-      args[0].includes("deprecated")
+      (args[0].includes("ReactDOMTestUtils.act") ||
+        args[0].includes("was not wrapped in act") ||
+        args[0].includes("API Error:"))
     ) {
       return;
     }
     originalError.call(console, ...args);
   };
+
+  console.warn = (...args) => {
+    if (
+      typeof args[0] === "string" &&
+      args[0].includes("React Router Future Flag Warning")
+    ) {
+      return;
+    }
+    originalWarn.call(console, ...args);
+  };
 });
 
 afterAll(() => {
   console.error = originalError;
+  console.warn = originalWarn;
 });
 
 // Mock axios globally before any imports
