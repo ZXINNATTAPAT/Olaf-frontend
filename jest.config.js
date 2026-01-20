@@ -6,7 +6,9 @@ module.exports = {
   moduleNameMapper: {
     '^axios$': '<rootDir>/__mocks__/axios.js',
     '^../axios/index$': '<rootDir>/__mocks__/axios.js',
-    '^../axios/index.js$': '<rootDir>/__mocks__/axios.js'
+    '^../axios/index.js$': '<rootDir>/__mocks__/axios.js',
+    // Mock CSS and style imports
+    '\\.(css|less|scss|sass)$': '<rootDir>/__mocks__/fileMock.js'
   },
   
   // Transform ES modules in node_modules
