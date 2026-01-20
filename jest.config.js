@@ -23,23 +23,38 @@ module.exports = {
   // Setup files
   setupFilesAfterEnv: ['<rootDir>/src/setupTests.js'],
   
-  // Coverage configuration
+  // Coverage configuration - exclude unnecessary files
   collectCoverageFrom: [
     'src/**/*.{js,jsx}',
     '!src/index.js',
     '!src/reportWebVitals.js',
-    '!src/setupTests.js'
+    '!src/setupTests.js',
+    '!src/**/*.test.{js,jsx}',
+    '!src/**/*.spec.{js,jsx}',
+    '!src/debug/**',
+    '!src/**/index.js',
+    '!src/**/CloudinaryUsageExample.js',
+    '!src/features/**/index.js',
+    '!src/pages/**/index.js',
+    '!src/shared/**/index.js',
+    '!src/shared/types/index.js',
+    '!src/shared/utils/index.js',
+    '!src/shared/hooks/index.js',
+    '!src/shared/components/ui/index.js'
   ],
   
-  // Coverage thresholds
+  // Coverage thresholds - 100% coverage required for included files
   coverageThreshold: {
     global: {
-      branches: 80,
-      functions: 80,
-      lines: 80,
-      statements: 80
+      branches: 100,
+      functions: 100,
+      lines: 100,
+      statements: 100
     }
   },
+  
+  // Coverage reporters
+  coverageReporters: ['text', 'lcov', 'html'],
   
   // Test timeout
   testTimeout: 10000,
