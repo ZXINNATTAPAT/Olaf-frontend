@@ -1,34 +1,36 @@
-import React from 'react';
-import { render, screen } from '@testing-library/react';
-import { BrowserRouter } from 'react-router-dom';
-import Navbar from './Navbar';
+import React from "react";
+import { render, screen } from "@testing-library/react";
+import { BrowserRouter } from "react-router-dom";
+import Navbar from "./Navbar";
 
 // Mock dependencies
-jest.mock('../../hooks/useAuth', () => ({
+jest.mock("../../hooks/useAuth", () => ({
   __esModule: true,
-  default: jest.fn(() => ({ user: { id: 1, username: 'testuser' } }))
+  default: jest.fn(),
 }));
 
-jest.mock('../../hooks/useLogout', () => {
+beforeEach(() => {
+  require("../../hooks/useAuth").default.mockReturnValue({
+    user: { id: 1, username: "testuser" },
+  });
+});
+
+jest.mock("../../hooks/useLogout", () => {
   return jest.fn(() => jest.fn());
 });
 
 const renderWithRouter = (component) => {
-  return render(
-    <BrowserRouter>
-      {component}
-    </BrowserRouter>
-  );
+  return render(<BrowserRouter>{component}</BrowserRouter>);
 };
 
-test('renders Navbar component', () => {
+test("renders Navbar component", () => {
   renderWithRouter(<Navbar />);
-  expect(screen.getByRole('navigation')).toBeInTheDocument();
+  expect(screen.getByRole("navigation")).toBeInTheDocument();
 });
 
-test('renders Navbar links', () => {
+test("renders Navbar links", () => {
   renderWithRouter(<Navbar />);
   // Check for common navbar links
-  const navLinks = screen.getAllByRole('link');
+  const navLinks = screen.getAllByRole("link");
   expect(navLinks.length).toBeGreaterThan(0);
 });

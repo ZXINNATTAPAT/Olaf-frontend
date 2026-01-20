@@ -1,24 +1,23 @@
 // Mock authService before importing httpClient
-const mockGetCSRFToken = jest.fn();
-jest.mock('./AuthService', () => ({
+jest.mock("./AuthService", () => ({
   __esModule: true,
   default: {
-    csrfToken: 'test-csrf-token',
-    getCSRFToken: mockGetCSRFToken
-  }
+    csrfToken: "test-csrf-token",
+    getCSRFToken: jest.fn(),
+  },
 }));
 
-import axiosInstance from './httpClient';
+import axiosInstance from "./httpClient";
 
-test('axiosInstance is created', () => {
+test("axiosInstance is created", () => {
   expect(axiosInstance).toBeDefined();
   expect(axiosInstance.defaults).toBeDefined();
 });
 
-test('axiosInstance has withCredentials configured', () => {
+test("axiosInstance has withCredentials configured", () => {
   expect(axiosInstance.defaults.withCredentials).toBe(true);
 });
 
-test('axiosInstance has timeout configured', () => {
+test("axiosInstance has timeout configured", () => {
   expect(axiosInstance.defaults.timeout).toBe(10000);
 });
