@@ -7,12 +7,15 @@ module.exports = {
     // Mock CSS and style imports - must be first to catch all CSS imports
     // Use a more specific pattern that matches CSS files from any location
     '^.+\\.(css|less|scss|sass)$': '<rootDir>/__mocks__/fileMock.js',
+    // Mock axios - must match before Jest tries to resolve from node_modules
     '^axios$': '<rootDir>/__mocks__/axios.js',
+    '^axios/(.*)$': '<rootDir>/__mocks__/axios.js',
     '^../axios/index$': '<rootDir>/__mocks__/axios.js',
     '^../axios/index.js$': '<rootDir>/__mocks__/axios.js'
   },
   
-  // Transform ES modules in node_modules (exclude axios since we're mocking it)
+  // Transform ES modules in node_modules
+  // Exclude axios from transformation since we're mocking it
   transformIgnorePatterns: [
     'node_modules/(?!(axios)/)'
   ],
