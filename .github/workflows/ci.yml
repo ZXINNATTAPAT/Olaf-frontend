@@ -101,32 +101,15 @@ jobs:
         with:
           args: |
             **React App CI/CD**
-
-            **Repository**
-            `${{ github.repository }}`
-
-            **Branch**
-            `${{ github.head_ref || github.ref_name }}`
-
-            **Event**
-            `${{ github.event_name }}`
-
-            **Triggered by**
-            `${{ github.actor }}`
-
-            **Status**
-            `${{ job.status }}`
-
+            **Repository** `${{ github.repository }}`
+            **Branch** `${{ github.head_ref || github.ref_name }}`
+            **Event** `${{ github.event_name }}`
+            **Triggered by** `${{ github.actor }}`
+            **Status** `${{ job.status }}`
             **Checks**
             Install: ${{ steps.install.outputs.status }}
-
             Audit: ${{ steps.audit.outputs.status }}
-
             Lint: ${{ steps.lint.outputs.status }}
-
             Test: ${{ steps.test.outputs.status }}
-
             Build: ${{ steps.build.outputs.status }}
-
-            **Run**
-            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
+            **Run** <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
