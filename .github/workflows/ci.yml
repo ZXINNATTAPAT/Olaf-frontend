@@ -94,25 +94,39 @@ jobs:
           retention-days: 7
 
       - name: Notify Discord
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && matrix.node-version == '18.x' }}
         uses: Ilshidur/action-discord@0.4.0
         env:
           DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
         with:
-          args: >
+          args: |
             **React App CI/CD**
 
-            Repository: **${{ github.repository }}**
-            Event: **${{ github.event_name }}**
-            Branch: **${{ github.head_ref || github.ref_name }}**
-            Triggered by: **${{ github.actor }}**
-            Node.js: **${{ matrix.node-version }}**
-            Result: **${{ job.status }}**
+            **Repository**
+            `${{ github.repository }}`
 
+            **Branch**
+            `${{ github.head_ref || github.ref_name }}`
+
+            **Event**
+            `${{ github.event_name }}`
+
+            **Triggered by**
+            `${{ github.actor }}`
+
+            **Status**
+            `${{ job.status }}`
+
+            **Checks**
             Install: ${{ steps.install.outputs.status }}
+
             Audit: ${{ steps.audit.outputs.status }}
+
             Lint: ${{ steps.lint.outputs.status }}
+
             Test: ${{ steps.test.outputs.status }}
+
             Build: ${{ steps.build.outputs.status }}
 
-            Run: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
+            **Run**
+            <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
