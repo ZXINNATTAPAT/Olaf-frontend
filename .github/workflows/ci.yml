@@ -8,10 +8,11 @@ on:
 
 jobs:
   test-and-build:
-    name: Test and Build
+    name: Test and Build (Node ${{ matrix.node-version }})
     runs-on: ubuntu-latest
 
     strategy:
+      fail-fast: false
       matrix:
         node-version: [18.x, 20.x]
 
@@ -23,19 +24,46 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          cache: npm
 
       - name: Install dependencies
-        run: npm install
+        id: install
+        run: |
+          if npm ci; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Security Audit
-        run: npm audit --audit-level=high || true
+        id: audit
+        run: |
+          if npm audit --audit-level=high; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          else
+            echo "status=⚠️ Vulnerabilities found" >> $GITHUB_OUTPUT
+          fi
 
       - name: Run Linter
-        run: npm run lint --if-present
+        id: lint
+        run: |
+          if npm run lint --if-present; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Run tests
-        run: npm run test:ci
+        id: test
+        run: |
+          if npm run test:ci; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Upload coverage report
         if: success()
@@ -46,14 +74,45 @@ jobs:
           retention-days: 7
 
       - name: Build application
+        id: build
         env:
           CI: false
-        run: npm run build
+        run: |
+          if npm run build; then
+            echo "status=✅ Passed" >> $GITHUB_OUTPUT
+          else
+            echo "status=❌ Failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
 
       - name: Upload build artifacts
-        if: matrix.node-version == '18.x'
+        if: success() && matrix.node-version == '18.x'
         uses: actions/upload-artifact@v4
         with:
           name: build-files
           path: build/
           retention-days: 7
+
+      - name: Notify Discord
+        if: ${{ !cancelled() }}
+        uses: Ilshidur/action-discord@0.4.0
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        with:
+          args: >
+            **React App CI/CD**
+            
+            Repository: **${{ github.repository }}**
+            Event: **${{ github.event_name }}**
+            Branch: **${{ github.head_ref || github.ref_name }}**
+            Triggered by: **${{ github.actor }}**
+            Node.js: **${{ matrix.node-version }}**
+            Result: **${{ job.status }}**
+            
+            Install: ${{ steps.install.outputs.status }}
+            Audit: ${{ steps.audit.outputs.status }}
+            Lint: ${{ steps.lint.outputs.status }}
+            Test: ${{ steps.test.outputs.status }}
+            Build: ${{ steps.build.outputs.status }}
+            
+            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
