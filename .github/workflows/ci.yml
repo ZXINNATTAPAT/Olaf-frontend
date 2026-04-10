@@ -29,7 +29,7 @@ jobs:
       - name: Install dependencies
         id: install
         run: |
-          if npm ci; then
+          if npm install; then
             echo "status=✅ Passed" >> $GITHUB_OUTPUT
           else
             echo "status=❌ Failed" >> $GITHUB_OUTPUT
@@ -101,18 +101,18 @@ jobs:
         with:
           args: >
             **React App CI/CD**
-            
+
             Repository: **${{ github.repository }}**
             Event: **${{ github.event_name }}**
             Branch: **${{ github.head_ref || github.ref_name }}**
             Triggered by: **${{ github.actor }}**
             Node.js: **${{ matrix.node-version }}**
             Result: **${{ job.status }}**
-            
+
             Install: ${{ steps.install.outputs.status }}
             Audit: ${{ steps.audit.outputs.status }}
             Lint: ${{ steps.lint.outputs.status }}
             Test: ${{ steps.test.outputs.status }}
             Build: ${{ steps.build.outputs.status }}
-            
-            Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+            Run: <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}>
